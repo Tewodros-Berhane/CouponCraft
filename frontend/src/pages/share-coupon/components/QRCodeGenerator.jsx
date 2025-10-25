@@ -1,0 +1,228 @@
+import React, { useState, useEffect } from 'react';
+import Icon from '../../../components/AppIcon';
+import Button from '../../../components/ui/Button';
+import Select from '../../../components/ui/Select';
+
+const QRCodeGenerator = ({ couponData, onClose, isVisible }) => {
+  const [qrSize, setQrSize] = useState('medium');
+  const [qrFormat, setQrFormat] = useState('png');
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [qrCodeUrl, setQrCodeUrl] = useState('');
+
+  const sizeOptions = [
+    { value: 'small', label: 'Small (200x200px)', description: 'Perfect for business cards' },
+    { value: 'medium', label: 'Medium (400x400px)', description: 'Ideal for flyers and posters' },
+    { value: 'large', label: 'Large (800x800px)', description: 'Best for banners and displays' }
+  ];
+
+  const formatOptions = [
+    { value: 'png', label: 'PNG', description: 'High quality with transparency' },
+    { value: 'jpg', label: 'JPG', description: 'Smaller file size' },
+    { value: 'svg', label: 'SVG', description: 'Vector format, scalable' }
+  ];
+
+  useEffect(() => {
+    if (isVisible) {
+      generateQRCode();
+    }
+  }, [isVisible, qrSize, qrFormat]);
+
+  const generateQRCode = async () => {
+    setIsGenerating(true);
+    
+    // Simulate QR code generation
+    await new Promise(resolve => setTimeout(resolve, 1500));
+    
+    // Mock QR code URL - in real app, this would be generated
+    const mockQRUrl = `https://api.qrserver.com/v1/create-qr-code/?size=${getSizePixels()}&data=${encodeURIComponent(couponData?.shareUrl)}`;
+    setQrCodeUrl(mockQRUrl);
+    setIsGenerating(false);
+  };
+
+  const getSizePixels = () => {
+    const sizes = {
+      small: '200x200',
+      medium: '400x400',
+      large: '800x800'
+    };
+    return sizes?.[qrSize];
+  };
+
+  const handleDownload = () => {
+    // Mock download functionality
+    const link = document.createElement('a');
+    link.href = qrCodeUrl;
+    link.download = `coupon-qr-${qrSize}.${qrFormat}`;
+    document.body?.appendChild(link);
+    link?.click();
+    document.body?.removeChild(link);
+  };
+
+  const handlePrint = () => {
+    const printWindow = window.open('', '_blank');
+    printWindow?.document?.write(`
+      <html>
+        <head>
+          <title>Print QR Code</title>
+          <style>
+            body { margin: 0; padding: 20px; text-align: center; }
+            img { max-width: 100%; height: auto; }
+            .info { margin-top: 20px; font-family: Arial, sans-serif; }
+          </style>
+        </head>
+        <body>
+          <img src="${qrCodeUrl}" alt="Coupon QR Code" />
+          <div class="info">
+            <h3>${couponData?.title}</h3>
+            <p>Scan to redeem your coupon</p>
+            <p>Valid until: ${couponData?.expiryDate}</p>
+          </div>
+        </body>
+      </html>
+    `);
+    printWindow?.document?.close();
+    printWindow?.print();
+  };
+
+  if (!isVisible) return null;
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+      <div className="bg-white rounded-xl shadow-level-4 w-full max-w-2xl mx-4 max-h-[90vh] overflow-y-auto">
+        <div className="flex items-center justify-between p-6 border-b border-border">
+          <div>
+            <h2 className="text-xl font-semibold text-foreground">Generate QR Code</h2>
+            <p className="text-sm text-muted-foreground">Create a scannable QR code for your coupon</p>
+          </div>
+          <Button variant="ghost" size="sm" onClick={onClose} iconName="X" />
+        </div>
+
+        <div className="p-6">
+          <div className="grid md:grid-cols-2 gap-6">
+            {/* QR Code Preview */}
+            <div className="space-y-4">
+              <div className="bg-muted rounded-lg p-6 text-center">
+                {isGenerating ? (
+                  <div className="flex flex-col items-center justify-center h-64">
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mb-4"></div>
+                    <p className="text-muted-foreground">Generating QR code...</p>
+                  </div>
+                ) : qrCodeUrl ? (
+                  <div className="space-y-4">
+                    <img 
+                      src={qrCodeUrl} 
+                      alt="Generated QR Code" 
+                      className="mx-auto rounded-lg shadow-level-1"
+                      style={{ maxWidth: '200px', height: 'auto' }}
+                    />
+                    <div className="text-sm text-muted-foreground">
+                      <p>Size: {getSizePixels()}px</p>
+                      <p>Format: {qrFormat?.toUpperCase()}</p>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="h-64 flex items-center justify-center">
+                    <p className="text-muted-foreground">QR code will appear here</p>
+                  </div>
+                )}
+              </div>
+
+              {qrCodeUrl && (
+                <div className="flex space-x-2">
+                  <Button
+                    variant="default"
+                    size="sm"
+                    onClick={handleDownload}
+                    iconName="Download"
+                    iconPosition="left"
+                    fullWidth
+                  >
+                    Download
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handlePrint}
+                    iconName="Printer"
+                    iconPosition="left"
+                    fullWidth
+                  >
+                    Print
+                  </Button>
+                </div>
+              )}
+            </div>
+
+            {/* Configuration Options */}
+            <div className="space-y-6">
+              <div>
+                <h3 className="font-medium text-foreground mb-4">QR Code Settings</h3>
+                
+                <div className="space-y-4">
+                  <Select
+                    label="Size"
+                    description="Choose the dimensions for your QR code"
+                    options={sizeOptions}
+                    value={qrSize}
+                    onChange={setQrSize}
+                  />
+
+                  <Select
+                    label="Format"
+                    description="Select the file format for download"
+                    options={formatOptions}
+                    value={qrFormat}
+                    onChange={setQrFormat}
+                  />
+                </div>
+              </div>
+
+              <div className="bg-muted rounded-lg p-4">
+                <h4 className="font-medium text-foreground mb-2">Usage Tips</h4>
+                <ul className="text-sm text-muted-foreground space-y-1">
+                  <li>• Small: Business cards, receipts</li>
+                  <li>• Medium: Flyers, table tents</li>
+                  <li>• Large: Posters, window displays</li>
+                  <li>• PNG: Best for web and print</li>
+                  <li>• SVG: Scalable for any size</li>
+                </ul>
+              </div>
+
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                <div className="flex items-start space-x-2">
+                  <Icon name="Info" size={16} color="#2563eb" className="mt-0.5" />
+                  <div className="text-sm">
+                    <p className="font-medium text-blue-900">Tracking Enabled</p>
+                    <p className="text-blue-700">This QR code includes analytics tracking to monitor scans and redemptions.</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="flex items-center justify-between p-6 border-t border-border bg-muted/30">
+          <div className="text-sm text-muted-foreground">
+            QR code links to: <span className="font-mono text-xs">{couponData?.shareUrl}</span>
+          </div>
+          <div className="flex space-x-2">
+            <Button variant="ghost" onClick={onClose}>
+              Close
+            </Button>
+            <Button 
+              variant="default" 
+              onClick={handleDownload}
+              disabled={!qrCodeUrl || isGenerating}
+              iconName="Download"
+              iconPosition="left"
+            >
+              Download QR Code
+            </Button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default QRCodeGenerator;
