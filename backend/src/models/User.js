@@ -10,7 +10,6 @@ const userSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
-  // Add other fields as needed, e.g., business info
 });
 
 const User = mongoose.model('User', userSchema);
