@@ -9,6 +9,7 @@ import CreateCoupon from './pages/create-coupon';
 import BusinessRegistration from './pages/business-registration';
 import BusinessDashboard from './pages/business-dashboard';
 import BusinessLogin from './pages/business-login';
+import BusinessProfile from './pages/business-profile';
 import CouponPreview from './pages/coupon-preview';
 import ShareCoupon from './pages/share-coupon';
 import ProtectedRoute from './ProtectedRoute';
@@ -27,6 +28,7 @@ const Routes = () => {
             <Route path="/business-login" element={<BusinessLogin />} />
             <Route path="/create-coupon" element={<ProtectedRoute><CreateCoupon /></ProtectedRoute>} />
             <Route path="/business-dashboard" element={<ProtectedRoute><BusinessDashboard /></ProtectedRoute>} />
+            <Route path="/profile" element={<ProtectedRoute><BusinessProfile /></ProtectedRoute>} />
             <Route path="/coupon-preview" element={<ProtectedRoute><CouponPreview /></ProtectedRoute>} />
             <Route path="/share-coupon" element={<ProtectedRoute><ShareCoupon /></ProtectedRoute>} />
             <Route path="*" element={<NotFound />} />
