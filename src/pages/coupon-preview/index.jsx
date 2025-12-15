@@ -8,6 +8,7 @@ import CustomerRedemptionFlow from './components/CustomerRedemptionFlow';
 import Icon from '../../components/AppIcon';
 import Button from '../../components/ui/Button';
 import api from '../../apiClient';
+import { useToast } from '../../components/ui/ToastProvider';
 
 const CouponPreview = () => {
   const navigate = useNavigate();
@@ -17,6 +18,7 @@ const CouponPreview = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [couponData, setCouponData] = useState(location?.state?.couponData || null);
   const couponId = location?.state?.couponId || location?.state?.couponData?.id;
+  const toast = useToast();
 
   const fallbackCoupon = {
     id: 'coup_preview',
@@ -118,7 +120,7 @@ const CouponPreview = () => {
       setTimeout(() => {
         setIsLoading(false);
         // Simulate sharing success
-        alert(`Coupon shared to ${channel} successfully!`);
+        toast.success(`Coupon shared to ${channel} successfully!`);
       }, 1500);
     } else {
       // Navigate to share page
@@ -135,7 +137,7 @@ const CouponPreview = () => {
     setIsLoading(true);
     setTimeout(() => {
       setIsLoading(false);
-      alert('Coupon saved to your library successfully!');
+      toast.success('Coupon saved to your library successfully!');
     }, 1000);
   };
 
@@ -150,7 +152,7 @@ const CouponPreview = () => {
       document.body?.appendChild(link);
       link?.click();
       document.body?.removeChild(link);
-      alert(`Coupon exported as ${format?.toUpperCase()} successfully!`);
+      toast.success(`Coupon exported as ${format?.toUpperCase()} successfully!`);
     }, 2000);
   };
 

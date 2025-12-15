@@ -8,6 +8,7 @@ import TemplatePreview from './components/TemplatePreview';
 import TrustSignals from './components/TrustSignals';
 import SuccessModal from './components/SuccessModal';
 import { useAuth } from '../../AuthContext';
+import { useToast } from '../../components/ui/ToastProvider';
 
 const BusinessRegistration = () => {
   const [isLoading, setIsLoading] = useState(false);
@@ -16,6 +17,7 @@ const BusinessRegistration = () => {
   const [registeredEmail, setRegisteredEmail] = useState('');
   const navigate = useNavigate();
   const { register: registerUser } = useAuth();
+  const toast = useToast();
 
   const handleRegistration = async (formData) => {
     setIsLoading(true);
@@ -33,7 +35,7 @@ const BusinessRegistration = () => {
       setTimeout(() => navigate('/business-dashboard'), 1000);
     } catch (error) {
       console.error('Registration failed:', error);
-      alert(error?.response?.data?.message || 'Registration failed. Please try again.');
+      toast.error(error?.response?.data?.message || 'Registration failed. Please try again.');
     } finally {
       setIsLoading(false);
     }

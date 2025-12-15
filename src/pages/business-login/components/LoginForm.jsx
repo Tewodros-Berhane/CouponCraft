@@ -4,6 +4,7 @@ import Button from '../../../components/ui/Button';
 import Input from '../../../components/ui/Input';
 import Icon from '../../../components/AppIcon';
 import { useAuth } from '../../../AuthContext';
+import { useToast } from '../../../components/ui/ToastProvider';
 
 const LoginForm = () => {
   const navigate = useNavigate();
@@ -15,6 +16,7 @@ const LoginForm = () => {
   const [errors, setErrors] = useState({});
   const [isLoading, setIsLoading] = useState(false);
   const { login } = useAuth();
+  const toast = useToast();
 
   // Mock credentials for demonstration
   // const mockCredentials = {
@@ -77,7 +79,7 @@ const handleSubmit = async (e) => {
 
   const handleForgotPassword = () => {
     // In a real app, this would navigate to forgot password page
-    alert('Password reset functionality would be implemented here. For demo, use: business@couponcraft.com / CouponCraft2024!');
+    toast.info('Password reset would be implemented here. Demo login: business@couponcraft.com / CouponCraft2024!');
   };
 
   return (
