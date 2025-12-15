@@ -3,6 +3,7 @@ import Icon from '../../../components/AppIcon';
 import Input from '../../../components/ui/Input';
 import Button from '../../../components/ui/Button';
 import { Checkbox } from '../../../components/ui/Checkbox';
+import api from '../../../apiClient';
 
 const CustomizationTools = ({ customizationData, onCustomizationChange }) => {
   const [activeColorPicker, setActiveColorPicker] = useState(null);
@@ -35,18 +36,22 @@ const CustomizationTools = ({ customizationData, onCustomizationChange }) => {
     setActiveColorPicker(null);
   };
 
-  const handleLogoUpload = (event) => {
+  const handleLogoUpload = async (event) => {
     const file = event?.target?.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        handleInputChange('logo', {
-          file: file,
-          url: e?.target?.result,
-          name: file?.name
-        });
-      };
-      reader?.readAsDataURL(file);
+    if (!file) return;
+    try {
+      const { data } = await api.post('/uploads/sign', {
+        filename: file.name,
+        contentType: file.type,
+      });
+      // For now, skip actual PUT upload; store signed URL as asset URL.
+      handleInputChange('logo', {
+        file: file,
+        url: data?.assetUrl || data?.uploadUrl,
+        name: file?.name
+      });
+    } catch (err) {
+      console.error('Logo upload failed', err);
     }
   };
 
