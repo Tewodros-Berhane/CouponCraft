@@ -10,6 +10,9 @@ import { authRouter } from "./routes/auth.js";
 import { couponsRouter } from "./routes/coupons.js";
 import { businessRouter } from "./routes/business.js";
 import { uploadsRouter } from "./routes/uploads.js";
+import { sharesRouter } from "./routes/shares.js";
+import { analyticsRouter } from "./routes/analytics.js";
+import { redemptionRouter } from "./routes/redemption.js";
 
 export const createApp = async () => {
   const app = express();
@@ -47,6 +50,9 @@ export const createApp = async () => {
   app.use("/api/coupons", couponsRouter);
   app.use("/api/business", businessRouter);
   app.use("/api/uploads", uploadsRouter);
+  app.use("/api/shares", sharesRouter);
+  app.use("/api/analytics", analyticsRouter);
+  app.use("/api/redemption", redemptionRouter);
 
   app.use((_req, res) => res.status(404).json({ message: "Not found" }));
   app.use(errorHandler);

@@ -77,3 +77,26 @@ export const signUploadSchema = Joi.object({
   filename: Joi.string().min(1).max(255).required(),
   contentType: Joi.string().min(3).max(255).required(),
 });
+
+export const createShareSchema = Joi.object({
+  couponId: Joi.string().required(),
+  type: Joi.string().valid("qr", "email", "facebook", "instagram", "twitter", "whatsapp", "link", "other").required(),
+  channel: Joi.string().allow("", null).optional(),
+  config: Joi.object().unknown(true).optional(),
+});
+
+export const analyticsEventSchema = Joi.object({
+  couponId: Joi.string().required(),
+  eventType: Joi.string().valid("view", "click", "redemption").required(),
+  meta: Joi.object().unknown(true).optional(),
+});
+
+export const redemptionValidateSchema = Joi.object({
+  couponId: Joi.string().required(),
+});
+
+export const redemptionConfirmSchema = Joi.object({
+  couponId: Joi.string().required(),
+  customerRef: Joi.string().allow("", null).optional(),
+  context: Joi.object().unknown(true).optional(),
+});
