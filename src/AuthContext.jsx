@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useEffect, useMemo, useState } from "react";
-import api from "./apiClient";
+import api, { tokenStore } from "./apiClient";
 
 const AuthContext = createContext(null);
 
@@ -36,10 +36,7 @@ export const AuthProvider = ({ children }) => {
   const persistTokens = (access, refresh) => {
     setToken(access);
     setRefreshToken(refresh);
-    localStorage.setItem("authToken", access);
-    if (refresh) {
-      localStorage.setItem("refreshToken", refresh);
-    }
+    tokenStore.setTokens(access, refresh);
   };
 
   const login = async (email, password) => {
@@ -59,8 +56,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   const logout = () => {
-    localStorage.removeItem("authToken");
-    localStorage.removeItem("refreshToken");
+    tokenStore.clear();
     setUser(null);
     setBusiness(null);
     setToken(null);
