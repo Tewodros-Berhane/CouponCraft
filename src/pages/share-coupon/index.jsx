@@ -24,6 +24,7 @@ const ShareCoupon = () => {
   });
   const [couponData, setCouponData] = useState(location?.state?.couponData || null);
   const couponId = location?.state?.couponId || location?.state?.couponData?.id;
+  const [shareHistory, setShareHistory] = useState([]);
 
   // Mock coupon data - in real app, this would come from props or API
   const fallbackCoupon = {
@@ -61,7 +62,6 @@ const ShareCoupon = () => {
       }
     : fallbackCoupon;
 
-  // Mock sharing methods
   const sharingMethods = [
     {
       id: 'qr',
@@ -126,38 +126,6 @@ const ShareCoupon = () => {
     }
   ];
 
-  // Mock share history
-  const shareHistory = [
-    {
-      id: 1,
-      channel: 'instagram',
-      sharedAt: new Date(Date.now() - 2 * 60 * 60 * 1000), // 2 hours ago
-      clicks: 156,
-      redemptions: 41
-    },
-    {
-      id: 2,
-      channel: 'facebook',
-      sharedAt: new Date(Date.now() - 4 * 60 * 60 * 1000), // 4 hours ago
-      clicks: 89,
-      redemptions: 23
-    },
-    {
-      id: 3,
-      channel: 'email',
-      sharedAt: new Date(Date.now() - 6 * 60 * 60 * 1000), // 6 hours ago
-      clicks: 128,
-      redemptions: 34
-    },
-    {
-      id: 4,
-      channel: 'qr',
-      sharedAt: new Date(Date.now() - 8 * 60 * 60 * 1000), // 8 hours ago
-      clicks: 45,
-      redemptions: 12
-    }
-  ];
-
   // Mock available channels for bulk sharing
   const availableChannels = [
     { id: 'email', type: 'email', name: 'Email Newsletter', audience: '2.5K' },
@@ -181,6 +149,26 @@ const ShareCoupon = () => {
     };
     loadCoupon();
   }, [couponData, couponId]);
+
+  useEffect(() => {
+    const loadShares = async () => {
+      if (!couponId) return;
+      try {
+        const { data } = await api.get(`/shares/${couponId}`);
+        const history = (data?.data || []).map((item) => ({
+          ...item,
+          channel: item?.type || item?.channel,
+          sharedAt: item?.createdAt,
+          clicks: item?.clicks || 0,
+          redemptions: item?.redemptions || 0,
+        }));
+        setShareHistory(history);
+      } catch (err) {
+        console.error('Failed to load share history', err);
+      }
+    };
+    loadShares();
+  }, [couponId]);
 
   useEffect(() => {
     // Calculate total stats
@@ -209,6 +197,28 @@ const ShareCoupon = () => {
     // Simulate sharing process for other methods
     console.log(`Sharing via ${method?.type}:`, method);
     
+    if (couponId) {
+      try {
+        await api.post('/shares', {
+          couponId,
+          type: method?.type,
+          channel: method?.type,
+          config: method,
+        });
+        const { data } = await api.get(`/shares/${couponId}`);
+        const history = (data?.data || []).map((item) => ({
+          ...item,
+          channel: item?.type || item?.channel,
+          sharedAt: item?.createdAt,
+          clicks: item?.clicks || 0,
+          redemptions: item?.redemptions || 0,
+        }));
+        setShareHistory(history);
+      } catch (err) {
+        console.error('Failed to record share', err);
+      }
+    }
+
     // In a real app, this would integrate with respective APIs
     switch (method?.type) {
       case 'email':
