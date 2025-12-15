@@ -12,3 +12,5 @@ server/.env
 server/.env.*
 server/.env.local
 server/.env.development.local
+server/prisma/migrations
+server/node_modules
