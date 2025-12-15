@@ -13,6 +13,7 @@ const BusinessDashboard = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [coupons, setCoupons] = useState([]);
   const [metricsData, setMetricsData] = useState([]);
+  const [chartData, setChartData] = useState([]);
   const { user } = useAuth();
 
   const formatDiscount = (discount = {}) => {
@@ -73,6 +74,24 @@ const BusinessDashboard = () => {
             trend: 0,
           },
         ]);
+        // Load analytics for first coupon for chart preview
+        if (list.length > 0) {
+          const firstId = list[0].id;
+          try {
+            const analytics = await api.get(`/analytics/coupons/${firstId}`);
+            const events = analytics?.data?.data?.events || [];
+            const daily = events.reduce((acc, ev) => {
+              const day = new Date(ev.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+              if (!acc[day]) acc[day] = { date: day, views: 0, redemptions: 0 };
+              if (ev.eventType === 'view') acc[day].views += 1;
+              if (ev.eventType === 'redemption') acc[day].redemptions += 1;
+              return acc;
+            }, {});
+            setChartData(Object.values(daily));
+          } catch (err) {
+            console.error('Failed to load analytics', err);
+          }
+        }
       } catch (err) {
         console.error('Failed to load coupons', err);
       } finally {
@@ -129,16 +148,14 @@ const BusinessDashboard = () => {
     }
   ];
 
-  // Mock data for redemption chart
-  const chartData = [
-    { date: "Sep 16", redemptions: 45, views: 180 },
-    { date: "Sep 17", redemptions: 52, views: 210 },
-    { date: "Sep 18", redemptions: 38, views: 165 },
-    { date: "Sep 19", redemptions: 67, views: 245 },
-    { date: "Sep 20", redemptions: 71, views: 280 },
-    { date: "Sep 21", redemptions: 89, views: 320 },
-    { date: "Sep 22", redemptions: 94, views: 350 },
-    { date: "Sep 23", redemptions: 78, views: 295 }
+  const chartDataFallback = [
+    { date: "Mon", redemptions: 0, views: 0 },
+    { date: "Tue", redemptions: 0, views: 0 },
+    { date: "Wed", redemptions: 0, views: 0 },
+    { date: "Thu", redemptions: 0, views: 0 },
+    { date: "Fri", redemptions: 0, views: 0 },
+    { date: "Sat", redemptions: 0, views: 0 },
+    { date: "Sun", redemptions: 0, views: 0 },
   ];
 
   useEffect(() => {
@@ -207,7 +224,7 @@ const BusinessDashboard = () => {
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
             {/* Left Column - Charts and Tables */}
             <div className="lg:col-span-2 space-y-8">
-              <RedemptionChart data={chartData} />
+              <RedemptionChart data={chartData?.length ? chartData : chartDataFallback} />
               <CouponActivityTable coupons={couponActivityData} />
             </div>
 
