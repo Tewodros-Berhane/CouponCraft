@@ -85,6 +85,22 @@ const CouponPreview = () => {
     loadCoupon();
   }, [couponId, couponData]);
 
+  useEffect(() => {
+    const sendViewEvent = async () => {
+      if (!displayCoupon?.id) return;
+      try {
+        await api.post('/analytics/events', {
+          couponId: displayCoupon.id,
+          eventType: 'view',
+          meta: { source: 'preview' },
+        });
+      } catch (err) {
+        console.error('Failed to record view', err);
+      }
+    };
+    sendViewEvent();
+  }, [displayCoupon?.id]);
+
   const handleEdit = () => {
     navigate('/create-coupon', { 
       state: { 
