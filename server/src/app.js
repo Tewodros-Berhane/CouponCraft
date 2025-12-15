@@ -8,6 +8,8 @@ import { errorHandler } from "./middlewares/errorHandler.js";
 import { healthRouter } from "./routes/health.js";
 import { authRouter } from "./routes/auth.js";
 import { couponsRouter } from "./routes/coupons.js";
+import { businessRouter } from "./routes/business.js";
+import { uploadsRouter } from "./routes/uploads.js";
 
 export const createApp = async () => {
   const app = express();
@@ -43,6 +45,8 @@ export const createApp = async () => {
   app.use("/api/health", healthRouter);
   app.use("/api/auth", authLimiter, authRouter);
   app.use("/api/coupons", couponsRouter);
+  app.use("/api/business", businessRouter);
+  app.use("/api/uploads", uploadsRouter);
 
   app.use((_req, res) => res.status(404).json({ message: "Not found" }));
   app.use(errorHandler);

@@ -14,6 +14,12 @@ export const loginSchema = Joi.object({
   password: Joi.string().min(6).max(128).required(),
 });
 
+export const businessUpdateSchema = Joi.object({
+  name: Joi.string().min(2).max(120).required(),
+  phone: Joi.string().min(7).max(32).allow(null, "").optional(),
+  type: Joi.string().min(2).max(60).allow(null, "").optional(),
+});
+
 export const couponSchema = Joi.object({
   template: Joi.any(),
   discount: Joi.object({
@@ -65,4 +71,9 @@ export const couponSchema = Joi.object({
   }).required(),
   status: Joi.string().valid("draft", "active").default("draft"),
   currentStep: Joi.number().integer().min(1).max(10).optional(),
+});
+
+export const signUploadSchema = Joi.object({
+  filename: Joi.string().min(1).max(255).required(),
+  contentType: Joi.string().min(3).max(255).required(),
 });
