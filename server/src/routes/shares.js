@@ -4,6 +4,7 @@ import { prisma } from "../db/prisma.js";
 import { requireAuth } from "../middlewares/auth.js";
 import { validate } from "../middlewares/validate.js";
 import { createShareSchema } from "../validators.js";
+import { config } from "../config.js";
 
 export const sharesRouter = Router();
 
@@ -31,13 +32,17 @@ sharesRouter.post("/", validate(createShareSchema), async (req, res) => {
   if (!business || coupon.businessId !== business.id) {
     return res.status(403).json({ message: "Access denied" });
   }
+  const shareId = nanoid();
+  const shareUrlBase = (config.clientOrigin || "http://localhost:5173").replace(/\/+$/, "");
+  const shareUrl = `${shareUrlBase}/redeem/${shareId}`;
+
   const share = await prisma.share.create({
     data: {
-      id: nanoid(),
+      id: shareId,
       couponId,
       type,
       channel: channel || null,
-      config: config || {},
+      config: { ...(config || {}), shareUrl },
     },
   });
   return res.status(201).json({ data: share });
