@@ -229,16 +229,22 @@ const ShareCoupon = () => {
     // In a real app, this would integrate with respective APIs
     switch (method?.type) {
       case 'email':
-        // Open email composer or redirect to email campaign tool
+        if (displayCoupon?.shareUrl) {
+          window.open(`mailto:?subject=${encodeURIComponent(displayCoupon?.title || 'Exclusive Offer')}&body=${encodeURIComponent(displayCoupon?.shareUrl)}`);
+        }
         break;
       case 'facebook':
-        // Use Facebook SDK to post
+        if (displayCoupon?.shareUrl) {
+          window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(displayCoupon?.shareUrl)}`, '_blank');
+        }
         break;
       case 'instagram':
-        // Redirect to Instagram with pre-filled content
+        toast.info('Instagram sharing requires mobile app; copy link instead.');
         break;
       case 'twitter':
-        // Use Twitter API or redirect to Twitter compose
+        if (displayCoupon?.shareUrl) {
+          window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(displayCoupon?.title || 'Exclusive offer')}&url=${encodeURIComponent(displayCoupon?.shareUrl)}`, '_blank');
+        }
         break;
       case 'whatsapp':
         // Open WhatsApp with pre-filled message

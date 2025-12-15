@@ -3,7 +3,7 @@ import Icon from '../../../components/AppIcon';
 import Button from '../../../components/ui/Button';
 import Select from '../../../components/ui/Select';
 
-const QRCodeGenerator = ({ couponData, onClose, isVisible }) => {
+const QRCodeGenerator = ({ couponData, shareId, onClose, isVisible }) => {
   const [qrSize, setQrSize] = useState('medium');
   const [qrFormat, setQrFormat] = useState('png');
   const [isGenerating, setIsGenerating] = useState(false);
@@ -29,14 +29,19 @@ const QRCodeGenerator = ({ couponData, onClose, isVisible }) => {
 
   const generateQRCode = async () => {
     setIsGenerating(true);
-    
-    // Simulate QR code generation
-    await new Promise(resolve => setTimeout(resolve, 1500));
-    
-    // Mock QR code URL - in real app, this would be generated
-    const mockQRUrl = `https://api.qrserver.com/v1/create-qr-code/?size=${getSizePixels()}&data=${encodeURIComponent(couponData?.shareUrl)}`;
-    setQrCodeUrl(mockQRUrl);
-    setIsGenerating(false);
+    try {
+      if (shareId) {
+        // Use backend QR endpoint
+        const qrUrl = `${import.meta.env.VITE_API_URL || 'http://localhost:4000/api'}/qr/${shareId}`;
+        setQrCodeUrl(qrUrl);
+      } else {
+        // Fallback to client QR service
+        const fallbackUrl = `https://api.qrserver.com/v1/create-qr-code/?size=${getSizePixels()}&data=${encodeURIComponent(couponData?.shareUrl)}`;
+        setQrCodeUrl(fallbackUrl);
+      }
+    } finally {
+      setIsGenerating(false);
+    }
   };
 
   const getSizePixels = () => {
@@ -49,7 +54,7 @@ const QRCodeGenerator = ({ couponData, onClose, isVisible }) => {
   };
 
   const handleDownload = () => {
-    // Mock download functionality
+    if (!qrCodeUrl) return;
     const link = document.createElement('a');
     link.href = qrCodeUrl;
     link.download = `coupon-qr-${qrSize}.${qrFormat}`;
