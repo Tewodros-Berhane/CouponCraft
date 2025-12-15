@@ -8,6 +8,8 @@ const required = [
   "DATABASE_URL",
 ];
 
+const sanitizeOrigin = (origin) => origin?.replace(/\/+$/, "");
+
 const missing = required.filter((key) => !process.env[key]);
 if (missing.length) {
   // Warn instead of crash to ease local onboarding, but log clearly.
@@ -25,7 +27,9 @@ export const config = {
   jsonLimit: process.env.JSON_BODY_LIMIT || "1mb",
   corsOrigins: (process.env.CLIENT_ORIGIN || "http://localhost:5173")
     .split(",")
-    .map((o) => o.trim())
+    .map((o) => sanitizeOrigin(o.trim()))
     .filter(Boolean),
   databaseUrl: process.env.DATABASE_URL,
 };
+
+export { sanitizeOrigin };

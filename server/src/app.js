@@ -2,7 +2,7 @@ import express from "express";
 import cors from "cors";
 import helmet from "helmet";
 import rateLimit from "express-rate-limit";
-import { config } from "./config.js";
+import { config, sanitizeOrigin } from "./config.js";
 import { logger, httpLogger } from "./logger.js";
 import { errorHandler } from "./middlewares/errorHandler.js";
 import { healthRouter } from "./routes/health.js";
@@ -27,7 +27,8 @@ export const createApp = async () => {
     cors({
       origin: (origin, callback) => {
         if (!origin) return callback(null, true);
-        if (config.corsOrigins.includes(origin)) {
+        const normalized = sanitizeOrigin(origin);
+        if (config.corsOrigins.includes(normalized)) {
           return callback(null, true);
         }
         return callback(new Error("Not allowed by CORS"));
