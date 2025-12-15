@@ -81,17 +81,35 @@ export const couponSchema = Joi.object({
   discount: Joi.alternatives().conditional("status", {
     is: "active",
     then: Joi.object(discountShape).required(),
-    otherwise: Joi.object(discountShape).optional(),
+    otherwise: Joi.object(discountShape)
+      .fork(
+        Object.keys(discountShape),
+        (schema) => schema.allow(null, "").optional()
+      )
+      .optional()
+      .unknown(true),
   }),
   validity: Joi.alternatives().conditional("status", {
     is: "active",
     then: Joi.object(validityShape).required(),
-    otherwise: Joi.object(validityShape).optional(),
+    otherwise: Joi.object(validityShape)
+      .fork(
+        Object.keys(validityShape),
+        (schema) => schema.allow(null, "").optional()
+      )
+      .optional()
+      .unknown(true),
   }),
   customization: Joi.alternatives().conditional("status", {
     is: "active",
     then: Joi.object(customizationShapeActive).required(),
-    otherwise: Joi.object(customizationShapeDraft).optional(),
+    otherwise: Joi.object(customizationShapeDraft)
+      .fork(
+        Object.keys(customizationShapeDraft),
+        (schema) => (schema.allow ? schema.allow(null, "") : schema)
+      )
+      .optional()
+      .unknown(true),
   }),
   status: Joi.string().valid("draft", "active").default("draft"),
   currentStep: Joi.number().integer().min(1).max(10).optional(),
