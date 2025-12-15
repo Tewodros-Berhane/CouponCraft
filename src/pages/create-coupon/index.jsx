@@ -158,6 +158,7 @@ const CreateCoupon = () => {
     } catch (error) {
       console.error('Error saving draft:', error);
       toast.error(error?.response?.data?.message || 'Failed to save draft');
+      throw error;
     } finally {
       if (showNotification) {
         setTimeout(() => setIsSaving(false), 1000);
@@ -228,6 +229,20 @@ const CreateCoupon = () => {
           }
         }
       });
+    }
+  };
+
+  const handlePublish = async () => {
+    if (!validateCurrentStep(true)) {
+      toast.error('Please complete required fields before publishing');
+      return;
+    }
+    try {
+      const id = await saveDraft(true, 'active');
+      toast.success('Coupon published');
+      navigate('/share-coupon', { state: { couponId: id || couponId } });
+    } catch (err) {
+      // toast handled in saveDraft
     }
   };
 
@@ -324,6 +339,7 @@ const CreateCoupon = () => {
                   onStepChange={handleStepChange}
                   onSaveDraft={() => saveDraft(true)}
                   onPreview={handlePreview}
+                  onPublish={handlePublish}
                   isValid={validateCurrentStep()}
                   isSaving={isSaving}
                 />

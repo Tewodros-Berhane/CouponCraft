@@ -2,14 +2,15 @@ import React from 'react';
 import Icon from '../../../components/AppIcon';
 import Button from '../../../components/ui/Button';
 
-const FormNavigation = ({ 
-  currentStep, 
-  totalSteps, 
-  onStepChange, 
-  onSaveDraft, 
-  onPreview, 
+const FormNavigation = ({
+  currentStep,
+  totalSteps,
+  onStepChange,
+  onSaveDraft,
+  onPreview,
+  onPublish,
   isValid,
-  isSaving 
+  isSaving
 }) => {
   const steps = [
     { id: 1, name: 'Template', icon: 'Palette', description: 'Choose design' },
@@ -157,15 +158,27 @@ const FormNavigation = ({
           </Button>
 
           {currentStep === totalSteps && (
-            <Button
-              variant="outline"
-              onClick={onPreview}
-              iconName="ExternalLink"
-              iconPosition="left"
-              className="flex-1"
-            >
-              Preview & Share
-            </Button>
+            <>
+              <Button
+                variant="outline"
+                onClick={onPreview}
+                iconName="ExternalLink"
+                iconPosition="left"
+                className="flex-1"
+              >
+                Preview
+              </Button>
+              <Button
+                variant="default"
+                onClick={onPublish}
+                iconName="Send"
+                iconPosition="left"
+                className="flex-1"
+                disabled={!isValid}
+              >
+                Publish & Share
+              </Button>
+            </>
           )}
         </div>
       </div>
