@@ -2,9 +2,13 @@ import React, { useState } from 'react';
 import Icon from '../../../components/AppIcon';
 import Button from '../../../components/ui/Button';
 
+import api from '../../../apiClient';
+
 const CustomerRedemptionFlow = ({ couponData }) => {
   const [currentStep, setCurrentStep] = useState(1);
   const [isScanning, setIsScanning] = useState(false);
+  const [validationResult, setValidationResult] = useState(null);
+  const [redeemMessage, setRedeemMessage] = useState(null);
 
   const redemptionSteps = [
     {
@@ -37,12 +41,26 @@ const CustomerRedemptionFlow = ({ couponData }) => {
     setCurrentStep(step);
   };
 
-  const handleScanSimulation = () => {
+  const handleScanSimulation = async () => {
+    setRedeemMessage(null);
+    setValidationResult(null);
     setIsScanning(true);
-    setTimeout(() => {
-      setIsScanning(false);
+    try {
+      const { data } = await api.post('/redemption/validate', { couponId: couponData?.id });
+      setValidationResult(data?.data);
       setCurrentStep(3);
-    }, 2000);
+      if (data?.data?.valid) {
+        const confirm = await api.post('/redemption/confirm', { couponId: couponData?.id, context: { source: 'preview' } });
+        if (confirm?.data?.data) {
+          setRedeemMessage('Redemption confirmed');
+          setCurrentStep(4);
+        }
+      }
+    } catch (err) {
+      setRedeemMessage(err?.response?.data?.message || 'Validation failed');
+    } finally {
+      setIsScanning(false);
+    }
   };
 
   const CustomerView = () => {
