@@ -10,6 +10,7 @@ import FormNavigation from './components/FormNavigation';
 import Icon from '../../components/AppIcon';
 import Button from '../../components/ui/Button';
 import api from '../../apiClient';
+import { useToast } from '../../components/ui/ToastProvider';
 
 const CreateCoupon = () => {
   const navigate = useNavigate();
@@ -17,6 +18,7 @@ const CreateCoupon = () => {
   const [isSaving, setIsSaving] = useState(false);
   const [showExitModal, setShowExitModal] = useState(false);
   const [couponId, setCouponId] = useState(null);
+  const toast = useToast();
 
   // Form Data States
   const [templateData, setTemplateData] = useState(null);
@@ -151,11 +153,12 @@ const CreateCoupon = () => {
       );
 
       if (showNotification) {
-        console.log('Draft saved successfully');
+        toast.success('Draft saved successfully');
       }
       return saved?.id || couponId;
     } catch (error) {
       console.error('Error saving draft:', error);
+      toast.error(error?.response?.data?.message || 'Failed to save draft');
     } finally {
       if (showNotification) {
         setTimeout(() => setIsSaving(false), 1000);
