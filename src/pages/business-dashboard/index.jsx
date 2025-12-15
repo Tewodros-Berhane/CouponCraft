@@ -14,6 +14,7 @@ const BusinessDashboard = () => {
   const [coupons, setCoupons] = useState([]);
   const [metricsData, setMetricsData] = useState([]);
   const [chartData, setChartData] = useState([]);
+  const [analyticsByCoupon, setAnalyticsByCoupon] = useState({});
   const { user } = useAuth();
 
   const formatDiscount = (discount = {}) => {
@@ -40,6 +41,61 @@ const BusinessDashboard = () => {
         setCoupons(list);
         const activeCount = list.filter((c) => c.status === 'active').length;
         const draftCount = list.filter((c) => c.status === 'draft').length;
+        let totalRedemptions = 0;
+        let totalViews = 0;
+
+        const analyticsResults = await Promise.all(
+          list.map(async (c) => {
+            try {
+              const analytics = await api.get(`/analytics/coupons/${c.id}`);
+              const events = analytics?.data?.data?.events || [];
+              const byDate = events.reduce((acc, ev) => {
+                const dateKey = new Date(ev.createdAt).toISOString().slice(0, 10);
+                const label = new Date(ev.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+                if (!acc[dateKey]) acc[dateKey] = { date: label, views: 0, redemptions: 0 };
+                if (ev.eventType === 'view') acc[dateKey].views += 1;
+                if (ev.eventType === 'redemption') acc[dateKey].redemptions += 1;
+                return acc;
+              }, {});
+              const totals = Object.values(byDate).reduce(
+                (tot, cur) => {
+                  tot.views += cur.views;
+                  tot.redemptions += cur.redemptions;
+                  return tot;
+                },
+                { views: 0, redemptions: 0 }
+              );
+              totalRedemptions += totals.redemptions;
+              totalViews += totals.views;
+              return { id: c.id, byDate, totals };
+            } catch (err) {
+              console.error('Failed to load analytics', err);
+              return { id: c.id, byDate: {}, totals: { views: 0, redemptions: 0 } };
+            }
+          })
+        );
+
+        const analyticsMap = analyticsResults.reduce((acc, item) => {
+          acc[item.id] = item;
+          return acc;
+        }, {});
+        setAnalyticsByCoupon(analyticsMap);
+
+        const dateAccumulator = {};
+        analyticsResults.forEach((item) => {
+          Object.entries(item.byDate).forEach(([key, value]) => {
+            if (!dateAccumulator[key]) {
+              dateAccumulator[key] = { date: value.date, views: 0, redemptions: 0 };
+            }
+            dateAccumulator[key].views += value.views;
+            dateAccumulator[key].redemptions += value.redemptions;
+          });
+        });
+        const aggregatedDates = Object.entries(dateAccumulator)
+          .sort(([a], [b]) => (a > b ? 1 : -1))
+          .map(([, val]) => val);
+        setChartData(aggregatedDates);
+
         setMetricsData([
           {
             title: "Active Coupons",
@@ -67,31 +123,13 @@ const BusinessDashboard = () => {
           },
           {
             title: "Redemptions",
-            value: "0",
-            change: "Coming soon",
-            changeType: "neutral",
+            value: totalRedemptions.toString(),
+            change: `${totalRedemptions} total`,
+            changeType: totalRedemptions > 0 ? "positive" : "neutral",
             icon: "TrendingUp",
-            trend: 0,
+            trend: totalRedemptions,
           },
         ]);
-        // Load analytics for first coupon for chart preview
-        if (list.length > 0) {
-          const firstId = list[0].id;
-          try {
-            const analytics = await api.get(`/analytics/coupons/${firstId}`);
-            const events = analytics?.data?.data?.events || [];
-            const daily = events.reduce((acc, ev) => {
-              const day = new Date(ev.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-              if (!acc[day]) acc[day] = { date: day, views: 0, redemptions: 0 };
-              if (ev.eventType === 'view') acc[day].views += 1;
-              if (ev.eventType === 'redemption') acc[day].redemptions += 1;
-              return acc;
-            }, {});
-            setChartData(Object.values(daily));
-          } catch (err) {
-            console.error('Failed to load analytics', err);
-          }
-        }
       } catch (err) {
         console.error('Failed to load coupons', err);
       } finally {
@@ -106,7 +144,7 @@ const BusinessDashboard = () => {
     id: c.id,
     name: c.customization?.title || 'Untitled coupon',
     discount: formatDiscount(c.discount),
-    redemptions: c.redemptions || "0",
+    redemptions: analyticsByCoupon?.[c.id]?.totals?.redemptions || "0",
     limit: c.validity?.totalLimit || c.validity?.usageLimit || 'unlimited',
     expiration: c.validity?.endDate || 'N/A',
     status: c.status,
@@ -115,7 +153,7 @@ const BusinessDashboard = () => {
   const topPerformingData = couponActivityData.slice(0, 4).map((c) => ({
     id: c.id,
     name: c.name,
-    performance: 75,
+    performance: Math.min(100, (analyticsByCoupon?.[c.id]?.totals?.views || 0) * 5 || 0),
     redemptions: `${c.redemptions} uses`,
     revenue: '$0',
   }));
