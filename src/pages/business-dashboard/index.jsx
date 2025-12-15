@@ -6,126 +6,100 @@ import TopPerformingCoupons from './components/TopPerformingCoupons';
 import OptimizationSuggestions from './components/OptimizationSuggestions';
 import RedemptionChart from './components/RedemptionChart';
 import QuickActions from './components/QuickActions';
+import api from '../../apiClient';
+import { useAuth } from '../../AuthContext';
 
 const BusinessDashboard = () => {
   const [isLoading, setIsLoading] = useState(true);
+  const [coupons, setCoupons] = useState([]);
+  const [metricsData, setMetricsData] = useState([]);
+  const { user } = useAuth();
 
-  // Mock data for dashboard metrics
-  const metricsData = [
-    {
-      title: "Active Coupons",
-      value: "12",
-      change: "+3 this week",
-      changeType: "positive",
-      icon: "Ticket",
-      trend: 75
-    },
-    {
-      title: "Total Redemptions",
-      value: "1,247",
-      change: "+18.2% vs last month",
-      changeType: "positive",
-      icon: "TrendingUp",
-      trend: 82
-    },
-    {
-      title: "Conversion Rate",
-      value: "24.8%",
-      change: "+2.1% improvement",
-      changeType: "positive",
-      icon: "Target",
-      trend: 68
-    },
-    {
-      title: "Revenue Generated",
-      value: "$8,945",
-      change: "+$1,234 this month",
-      changeType: "positive",
-      icon: "DollarSign",
-      trend: 91
+  const formatDiscount = (discount = {}) => {
+    switch (discount.type) {
+      case 'percentage':
+        return discount.percentage ? `${discount.percentage}% OFF` : 'Percentage';
+      case 'fixed':
+        return discount.amount ? `$${discount.amount} OFF` : 'Fixed';
+      case 'bogo':
+        return discount.bogoType || 'BOGO';
+      case 'free_shipping':
+        return 'Free Shipping';
+      default:
+        return 'Special Offer';
     }
-  ];
+  };
 
-  // Mock data for coupon activity
-  const couponActivityData = [
-    {
-      id: 1,
-      name: "Summer Sale 2024",
-      discount: "25% OFF",
-      redemptions: "156",
-      limit: "500",
-      expiration: "Dec 31, 2024",
-      status: "active"
-    },
-    {
-      id: 2,
-      name: "New Customer Welcome",
-      discount: "$10 OFF",
-      redemptions: "89",
-      limit: "unlimited",
-      expiration: "Jan 15, 2025",
-      status: "active"
-    },
-    {
-      id: 3,
-      name: "Black Friday Special",
-      discount: "40% OFF",
-      redemptions: "234",
-      limit: "200",
-      expiration: "Nov 29, 2024",
-      status: "expired"
-    },
-    {
-      id: 4,
-      name: "Holiday Bundle Deal",
-      discount: "Buy 2 Get 1 Free",
-      redemptions: "67",
-      limit: "300",
-      expiration: "Dec 25, 2024",
-      status: "paused"
-    },
-    {
-      id: 5,
-      name: "Spring Cleaning Sale",
-      discount: "30% OFF",
-      redemptions: "0",
-      limit: "150",
-      expiration: "Mar 31, 2025",
-      status: "draft"
-    }
-  ];
+  useEffect(() => {
+    const loadCoupons = async () => {
+      setIsLoading(true);
+      try {
+        const { data } = await api.get('/coupons');
+        const list = data?.data || [];
+        setCoupons(list);
+        const activeCount = list.filter((c) => c.status === 'active').length;
+        const draftCount = list.filter((c) => c.status === 'draft').length;
+        setMetricsData([
+          {
+            title: "Active Coupons",
+            value: activeCount.toString(),
+            change: `${activeCount} total`,
+            changeType: "positive",
+            icon: "Ticket",
+            trend: activeCount * 10,
+          },
+          {
+            title: "Drafts",
+            value: draftCount.toString(),
+            change: `${draftCount} awaiting publish`,
+            changeType: "neutral",
+            icon: "ClipboardList",
+            trend: draftCount * 10,
+          },
+          {
+            title: "Total Coupons",
+            value: list.length.toString(),
+            change: "All time",
+            changeType: "neutral",
+            icon: "Layers",
+            trend: list.length * 10,
+          },
+          {
+            title: "Redemptions",
+            value: "0",
+            change: "Coming soon",
+            changeType: "neutral",
+            icon: "TrendingUp",
+            trend: 0,
+          },
+        ]);
+      } catch (err) {
+        console.error('Failed to load coupons', err);
+      } finally {
+        setIsLoading(false);
+      }
+    };
 
-  // Mock data for top performing coupons
-  const topPerformingData = [
-    {
-      id: 1,
-      name: "Summer Sale 2024",
-      performance: 92,
-      redemptions: "156 uses",
-      revenue: "$3,420"
-    },
-    {
-      id: 2,
-      name: "New Customer Welcome",
-      performance: 87,
-      redemptions: "89 uses",
-      revenue: "$890"
-    },
-    {
-      id: 3,
-      name: "Weekend Flash Sale",
-      performance: 76,
-      redemptions: "234 uses",
-      revenue: "$2,340"
-    },
-    {
-      id: 4,
-      name: "Loyalty Reward 20%",
-      performance: 68,
-      redemptions: "45 uses",
-      revenue: "$675"
-    }
-  ];
+    loadCoupons();
+  }, []);
+
+  const couponActivityData = coupons.map((c) => ({
+    id: c.id,
+    name: c.customization?.title || 'Untitled coupon',
+    discount: formatDiscount(c.discount),
+    redemptions: c.redemptions || "0",
+    limit: c.validity?.totalLimit || c.validity?.usageLimit || 'unlimited',
+    expiration: c.validity?.endDate || 'N/A',
+    status: c.status,
+  }));
+
+  const topPerformingData = couponActivityData.slice(0, 4).map((c) => ({
+    id: c.id,
+    name: c.name,
+    performance: 75,
+    redemptions: `${c.redemptions} uses`,
+    revenue: '$0',
+  }));
 
   // Mock data for AI optimization suggestions
   const optimizationSuggestions = [
@@ -210,7 +184,7 @@ const BusinessDashboard = () => {
             <div className="flex flex-col md:flex-row md:items-center md:justify-between">
               <div>
                 <h1 className="text-3xl font-bold text-foreground mb-2">
-                  Welcome back, Sarah! 👋
+                  Welcome back, {user?.ownerName || user?.email || 'there'}!
                 </h1>
                 <p className="text-muted-foreground">
                   Here's what's happening with your coupons today.
