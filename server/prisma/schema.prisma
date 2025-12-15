@@ -1,0 +1,56 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String         @id @default(uuid())
+  email         String         @unique
+  passwordHash  String
+  ownerName     String?
+  role          String         @default("owner")
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  business      Business?
+  refreshTokens RefreshToken[]
+}
+
+model Business {
+  id        String    @id @default(uuid())
+  ownerId   String    @unique
+  owner     User      @relation(fields: [ownerId], references: [id])
+  name      String
+  phone     String?
+  type      String?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  coupons   Coupon[]
+}
+
+model Coupon {
+  id            String    @id @default(uuid())
+  businessId    String
+  business      Business  @relation(fields: [businessId], references: [id])
+  status        String    @default("draft")
+  template      Json?
+  discount      Json?
+  validity      Json?
+  customization Json?
+  currentStep   Int       @default(1)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+}
+
+model RefreshToken {
+  id        String   @id @default(uuid())
+  token     String   @unique
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  expiresAt DateTime?
+  revoked   Boolean  @default(false)
+  createdAt DateTime @default(now())
+}

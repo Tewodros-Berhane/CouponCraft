@@ -1,0 +1,77 @@
+import { Router } from "express";
+import { nanoid } from "nanoid";
+import { requireAuth } from "../middlewares/auth.js";
+import { validate } from "../middlewares/validate.js";
+import { couponSchema } from "../validators.js";
+import { prisma } from "../db/prisma.js";
+
+export const couponsRouter = Router();
+
+couponsRouter.use(requireAuth);
+
+couponsRouter.get("/", async (req, res) => {
+  const business = await prisma.business.findUnique({ where: { ownerId: req.user.id } });
+  if (!business) {
+    return res.status(404).json({ message: "Business not found" });
+  }
+  const coupons = await prisma.coupon.findMany({
+    where: { businessId: business.id },
+    orderBy: { createdAt: "desc" },
+  });
+  return res.json({ data: coupons });
+});
+
+couponsRouter.post("/", validate(couponSchema), async (req, res) => {
+  const business = await prisma.business.findUnique({ where: { ownerId: req.user.id } });
+  if (!business) {
+    return res.status(404).json({ message: "Business not found" });
+  }
+  const coupon = await prisma.coupon.create({
+    data: {
+      id: nanoid(),
+      businessId: business.id,
+      status: req.body.status || "draft",
+      template: req.body.template,
+      discount: req.body.discount,
+      validity: req.body.validity,
+      customization: req.body.customization,
+      currentStep: req.body.currentStep || 1,
+    },
+  });
+  return res.status(201).json({ data: coupon });
+});
+
+couponsRouter.get("/:id", async (req, res) => {
+  const coupon = await prisma.coupon.findUnique({ where: { id: req.params.id } });
+  if (!coupon) {
+    return res.status(404).json({ message: "Coupon not found" });
+  }
+  const business = await prisma.business.findUnique({ where: { ownerId: req.user.id } });
+  if (!business || coupon.businessId !== business.id) {
+    return res.status(403).json({ message: "Access denied" });
+  }
+  return res.json({ data: coupon });
+});
+
+couponsRouter.patch("/:id", validate(couponSchema), async (req, res) => {
+  const coupon = await prisma.coupon.findUnique({ where: { id: req.params.id } });
+  if (!coupon) {
+    return res.status(404).json({ message: "Coupon not found" });
+  }
+  const business = await prisma.business.findUnique({ where: { ownerId: req.user.id } });
+  if (!business || coupon.businessId !== business.id) {
+    return res.status(403).json({ message: "Access denied" });
+  }
+  const updated = await prisma.coupon.update({
+    where: { id: req.params.id },
+    data: {
+      status: req.body.status || coupon.status,
+      template: req.body.template,
+      discount: req.body.discount,
+      validity: req.body.validity,
+      customization: req.body.customization,
+      currentStep: req.body.currentStep ?? coupon.currentStep,
+    },
+  });
+  return res.json({ data: updated });
+});

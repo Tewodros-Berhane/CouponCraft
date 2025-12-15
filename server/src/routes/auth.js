@@ -1,0 +1,134 @@
+import { Router } from "express";
+import bcrypt from "bcryptjs";
+import { nanoid } from "nanoid";
+import { validate } from "../middlewares/validate.js";
+import { loginSchema, registerSchema } from "../validators.js";
+import { generateTokens } from "../utils/tokens.js";
+import { requireAuth } from "../middlewares/auth.js";
+import { prisma } from "../db/prisma.js";
+
+export const authRouter = Router();
+
+authRouter.post("/register", validate(registerSchema), async (req, res) => {
+  const { email, password, businessName, ownerName, phone, businessType } = req.body;
+  const existing = await prisma.user.findUnique({ where: { email } });
+  if (existing) {
+    return res.status(409).json({ message: "Email already registered" });
+  }
+
+  const passwordHash = await bcrypt.hash(password, 10);
+  const userId = nanoid();
+  const businessId = nanoid();
+
+  const [user, business] = await prisma.$transaction([
+    prisma.user.create({
+      data: {
+        id: userId,
+        email,
+        passwordHash,
+        role: "owner",
+        ownerName,
+      },
+    }),
+    prisma.business.create({
+      data: {
+        id: businessId,
+        ownerId: userId,
+        name: businessName,
+        phone,
+        type: businessType,
+      },
+    }),
+  ]);
+
+  const tokens = generateTokens(userId);
+  await prisma.refreshToken.create({
+    data: {
+      token: tokens.refreshToken,
+      userId,
+    },
+  });
+
+  return res.status(201).json({
+    user: { id: user.id, email: user.email, role: user.role, ownerName: user.ownerName },
+    business,
+    tokens,
+  });
+});
+
+authRouter.post("/login", validate(loginSchema), async (req, res) => {
+  const { email, password } = req.body;
+  const user = await prisma.user.findUnique({ where: { email } });
+  if (!user) {
+    return res.status(401).json({ message: "Invalid credentials" });
+  }
+  const valid = await bcrypt.compare(password, user.passwordHash);
+  if (!valid) {
+    return res.status(401).json({ message: "Invalid credentials" });
+  }
+  const tokens = generateTokens(user.id);
+  await prisma.refreshToken.create({
+    data: {
+      token: tokens.refreshToken,
+      userId: user.id,
+    },
+  });
+  const business = await prisma.business.findUnique({ where: { ownerId: user.id } });
+  return res.json({
+    user: { id: user.id, email: user.email, role: user.role, ownerName: user.ownerName },
+    business,
+    tokens,
+  });
+});
+
+authRouter.post("/refresh", async (req, res) => {
+  const { refreshToken } = req.body || {};
+  if (!refreshToken) {
+    return res.status(400).json({ message: "Missing refreshToken" });
+  }
+  try {
+    const payload = JSON.parse(
+      Buffer.from(refreshToken.split(".")[1], "base64").toString("utf8")
+    );
+    // Validate structure before verify to avoid unhandled errors.
+    if (!payload?.sub) {
+      return res.status(401).json({ message: "Invalid token" });
+    }
+  } catch {
+    return res.status(401).json({ message: "Invalid token" });
+  }
+
+  try {
+    const jwt = await import("jsonwebtoken");
+    const decoded = jwt.default.verify(refreshToken, process.env.JWT_SECRET || "dev-secret-change-me");
+    const stored = await prisma.refreshToken.findUnique({ where: { token: refreshToken } });
+    if (!stored || stored.revoked || stored.userId !== decoded.sub) {
+      return res.status(401).json({ message: "Invalid or reused refresh token" });
+    }
+    await prisma.refreshToken.update({
+      where: { token: refreshToken },
+      data: { revoked: true },
+    });
+    const tokens = generateTokens(decoded.sub);
+    await prisma.refreshToken.create({
+      data: { token: tokens.refreshToken, userId: decoded.sub },
+    });
+    const user = await prisma.user.findUnique({ where: { id: decoded.sub } });
+    const business = await prisma.business.findUnique({ where: { ownerId: decoded.sub } });
+    return res.json({
+      user: { id: user.id, email: user.email, role: user.role, ownerName: user.ownerName },
+      business,
+      tokens,
+    });
+  } catch (err) {
+    return res.status(401).json({ message: "Invalid or expired refresh token" });
+  }
+});
+
+authRouter.get("/me", requireAuth, async (req, res) => {
+  const business = await prisma.business.findUnique({ where: { ownerId: req.user.id } });
+  return res.json({
+    user: { id: req.user.id, email: req.user.email, role: req.user.role, ownerName: req.user.ownerName },
+    business,
+  });
+});
