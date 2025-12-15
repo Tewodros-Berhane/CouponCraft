@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import Header from '../../components/ui/Header';
 import DevicePreview from './components/DevicePreview';
@@ -9,6 +9,8 @@ import Icon from '../../components/AppIcon';
 import Button from '../../components/ui/Button';
 import api from '../../apiClient';
 import { useToast } from '../../components/ui/ToastProvider';
+import { toPng, toJpeg, toSvg } from 'html-to-image';
+import jsPDF from 'jspdf';
 
 const CouponPreview = () => {
   const navigate = useNavigate();
@@ -19,6 +21,7 @@ const CouponPreview = () => {
   const [couponData, setCouponData] = useState(location?.state?.couponData || null);
   const couponId = location?.state?.couponId || location?.state?.couponData?.id;
   const toast = useToast();
+  const previewRef = useRef(null);
 
   const fallbackCoupon = {
     id: 'coup_preview',
@@ -141,19 +144,50 @@ const CouponPreview = () => {
     }, 1000);
   };
 
-  const handleExport = (format) => {
+  const handleExport = async (format) => {
+    const node = previewRef?.current;
+    if (!node) {
+      toast.error('Preview not ready to export');
+      return;
+    }
     setIsLoading(true);
-    setTimeout(() => {
+    try {
+      if (format === 'png') {
+        const dataUrl = await toPng(node);
+        const link = document.createElement('a');
+        link.download = `coupon-${displayCoupon?.id || 'preview'}.png`;
+        link.href = dataUrl;
+        link.click();
+      } else if (format === 'jpg' || format === 'jpeg') {
+        const dataUrl = await toJpeg(node);
+        const link = document.createElement('a');
+        link.download = `coupon-${displayCoupon?.id || 'preview'}.jpg`;
+        link.href = dataUrl;
+        link.click();
+      } else if (format === 'svg') {
+        const dataUrl = await toSvg(node);
+        const link = document.createElement('a');
+        link.download = `coupon-${displayCoupon?.id || 'preview'}.svg`;
+        link.href = dataUrl;
+        link.click();
+      } else if (format === 'pdf') {
+        const dataUrl = await toPng(node);
+        const pdf = new jsPDF('p', 'mm', 'a4');
+        const imgProps = pdf.getImageProperties(dataUrl);
+        const pdfWidth = pdf.internal.pageSize.getWidth() - 20;
+        const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
+        pdf.addImage(dataUrl, 'PNG', 10, 10, pdfWidth, pdfHeight);
+        pdf.save(`coupon-${displayCoupon?.id || 'preview'}.pdf`);
+      } else {
+        toast.info('Unsupported format');
+      }
+      toast.success(`Exported as ${format.toUpperCase()}`);
+    } catch (err) {
+      console.error('Export failed', err);
+      toast.error('Failed to export coupon');
+    } finally {
       setIsLoading(false);
-      // Simulate file download
-      const link = document.createElement('a');
-      link.href = '#';
-      link.download = `coupon-${displayCoupon?.id}.${format}`;
-      document.body?.appendChild(link);
-      link?.click();
-      document.body?.removeChild(link);
-      toast.success(`Coupon exported as ${format?.toUpperCase()} successfully!`);
-    }, 2000);
+    }
   };
 
   const handleDeviceChange = (device) => {
@@ -172,6 +206,7 @@ const CouponPreview = () => {
             couponData={displayCoupon}
             selectedDevice={selectedDevice}
             onDeviceChange={handleDeviceChange}
+            previewRef={previewRef}
           />
         );
       case 'validation':

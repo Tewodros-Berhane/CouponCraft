@@ -1,7 +1,7 @@
 import React from 'react';
 import Icon from '../../../components/AppIcon';
 
-const DevicePreview = ({ couponData, selectedDevice, onDeviceChange }) => {
+const DevicePreview = ({ couponData, selectedDevice, onDeviceChange, previewRef }) => {
   const devices = [
     {
       id: 'desktop',
@@ -34,7 +34,10 @@ const DevicePreview = ({ couponData, selectedDevice, onDeviceChange }) => {
       className={`${device?.frame} shadow-level-3 mx-auto`}
       style={{ width: device?.width, height: device?.height }}
     >
-      <div className="bg-white rounded-lg h-full overflow-hidden relative">
+      <div
+        className="bg-white rounded-lg h-full overflow-hidden relative"
+        ref={previewRef}
+      >
         {/* Coupon Header */}
         <div 
           className="px-4 py-3 text-white relative"
