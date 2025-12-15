@@ -27,6 +27,8 @@ const ShareCoupon = () => {
   const couponId = location?.state?.couponId || location?.state?.couponData?.id;
   const [shareHistory, setShareHistory] = useState([]);
   const toast = useToast();
+  const [shareLinks, setShareLinks] = useState({});
+  const [qrShareId, setQrShareId] = useState(null);
 
   // Mock coupon data - in real app, this would come from props or API
   const fallbackCoupon = {
@@ -166,6 +168,13 @@ const ShareCoupon = () => {
           shareUrl: item?.config?.shareUrl,
         }));
         setShareHistory(history);
+        const linksMap = {};
+        history.forEach((item) => {
+          if (item?.type) {
+            linksMap[item.type] = { id: item.id, url: item.shareUrl };
+          }
+        });
+        setShareLinks(linksMap);
       } catch (err) {
         console.error('Failed to load share history', err);
         toast.error('Failed to load share history');
@@ -186,10 +195,35 @@ const ShareCoupon = () => {
     });
   }, [shareHistory]);
 
+  const ensureShare = async (method) => {
+    if (shareLinks[method?.type]) return shareLinks[method.type];
+    const { data } = await api.post('/shares', {
+      couponId,
+      type: method?.type,
+      channel: method?.type,
+      config: method,
+    });
+    const share = data?.data;
+    setShareLinks((prev) => ({
+      ...prev,
+      [method?.type]: { id: share?.id, url: share?.config?.shareUrl },
+    }));
+    return { id: share?.id, url: share?.config?.shareUrl };
+  };
+
   const handleShare = async (method) => {
     if (method?.type === 'qr') {
       setIsGeneratingQR(true);
-      setIsQRModalVisible(true);
+      try {
+        const share = await ensureShare(method);
+        setQrShareId(share?.id);
+        setIsQRModalVisible(true);
+      } catch (err) {
+        toast.error('Failed to prepare QR code');
+        console.error(err);
+      } finally {
+        setIsGeneratingQR(false);
+      }
       return;
     }
 
@@ -203,12 +237,7 @@ const ShareCoupon = () => {
     
     if (couponId) {
       try {
-        await api.post('/shares', {
-          couponId,
-          type: method?.type,
-          channel: method?.type,
-          config: method,
-        });
+        const share = await ensureShare(method);
         const { data } = await api.get(`/shares/${couponId}`);
         const history = (data?.data || []).map((item) => ({
           ...item,
@@ -220,6 +249,11 @@ const ShareCoupon = () => {
         }));
         setShareHistory(history);
         toast.success(`Shared via ${method?.title || method?.type}`);
+
+        // fire tracking event for click when sharing out
+        if (share?.id) {
+          api.post(`/shares/${share.id}/track`, { event: 'click' }).catch(() => {});
+        }
       } catch (err) {
         console.error('Failed to record share', err);
         toast.error('Failed to record share');
