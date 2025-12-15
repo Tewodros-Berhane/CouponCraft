@@ -109,13 +109,12 @@ const CreateCoupon = () => {
     loadDraft();
   }, []);
 
-  // Auto-save draft periodically
+  // Auto-save draft periodically with debounce
   useEffect(() => {
-    const autoSave = setInterval(() => {
+    const timer = setTimeout(() => {
       saveDraft(false);
-    }, 30000); // Auto-save every 30 seconds
-
-    return () => clearInterval(autoSave);
+    }, 5000);
+    return () => clearTimeout(timer);
   }, [templateData, discountData, validityData, customizationData, currentStep]);
 
   const buildPayload = (status = 'draft') => ({
@@ -166,39 +165,39 @@ const CreateCoupon = () => {
     }
   };
 
-  const validateCurrentStep = () => {
+  const validateCurrentStep = (strict = false) => {
     switch (currentStep) {
       case 1: // Template Selection
-        return templateData !== null;
+        return templateData !== null || !strict;
       
       case 2: // Discount Configuration
-        if (!discountData?.type) return false;
+        if (!discountData?.type) return !strict;
         
         switch (discountData?.type) {
           case 'percentage':
-            return discountData?.percentage && 
+            return !strict || (discountData?.percentage && 
                    parseFloat(discountData?.percentage) > 0 && 
-                   parseFloat(discountData?.percentage) <= 100;
+                   parseFloat(discountData?.percentage) <= 100);
           case 'fixed':
-            return discountData?.amount && parseFloat(discountData?.amount) > 0;
+            return !strict || (discountData?.amount && parseFloat(discountData?.amount) > 0);
           case 'bogo':
-            return discountData?.bogoType;
+            return !strict || discountData?.bogoType;
           case 'free_shipping':
             return true;
           default:
-            return false;
+            return !strict;
         }
       
       case 3: // Validity Settings
         if (validityData?.type === 'date_range') {
-          return validityData?.startDate && validityData?.endDate;
+          return !strict || (validityData?.startDate && validityData?.endDate);
         } else if (validityData?.type === 'duration') {
-          return validityData?.durationDays && parseInt(validityData?.durationDays) > 0;
+          return !strict || (validityData?.durationDays && parseInt(validityData?.durationDays) > 0);
         }
         return true;
       
       case 4: // Customization
-        return customizationData?.businessName && customizationData?.title;
+        return !strict || (customizationData?.businessName && customizationData?.title);
       
       case 5: // Preview
         return true;
@@ -216,7 +215,7 @@ const CreateCoupon = () => {
   };
 
   const handlePreview = async () => {
-    if (validateCurrentStep()) {
+    if (validateCurrentStep(true)) {
       const id = await saveDraft(false);
       navigate('/coupon-preview', { 
         state: { 
