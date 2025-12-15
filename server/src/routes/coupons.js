@@ -9,16 +9,31 @@ export const couponsRouter = Router();
 
 couponsRouter.use(requireAuth);
 
+const parsePagination = (req) => {
+  const page = Math.max(parseInt(req.query.page, 10) || 1, 1);
+  const limit = Math.min(Math.max(parseInt(req.query.limit, 10) || 20, 1), 100);
+  return { page, limit, skip: (page - 1) * limit };
+};
+
 couponsRouter.get("/", async (req, res) => {
+  const { page, limit, skip } = parsePagination(req);
   const business = await prisma.business.findUnique({ where: { ownerId: req.user.id } });
   if (!business) {
     return res.status(404).json({ message: "Business not found" });
   }
-  const coupons = await prisma.coupon.findMany({
-    where: { businessId: business.id },
-    orderBy: { createdAt: "desc" },
+  const [total, coupons] = await Promise.all([
+    prisma.coupon.count({ where: { businessId: business.id } }),
+    prisma.coupon.findMany({
+      where: { businessId: business.id },
+      orderBy: { createdAt: "desc" },
+      skip,
+      take: limit,
+    }),
+  ]);
+  return res.json({
+    data: coupons,
+    meta: { page, limit, total, totalPages: Math.ceil(total / limit) || 1 },
   });
-  return res.json({ data: coupons });
 });
 
 couponsRouter.post("/", validate(couponSchema), async (req, res) => {

@@ -12,14 +12,25 @@ import { couponsRouter } from "./routes/coupons.js";
 export const createApp = async () => {
   const app = express();
   app.disable("x-powered-by");
-  app.use(helmet());
+  app.use(
+    helmet({
+      contentSecurityPolicy: config.env === "production" ? undefined : false,
+      crossOriginEmbedderPolicy: false,
+    })
+  );
   app.use(
     cors({
-      origin: config.clientOrigin,
+      origin: (origin, callback) => {
+        if (!origin) return callback(null, true);
+        if (config.corsOrigins.includes(origin)) {
+          return callback(null, true);
+        }
+        return callback(new Error("Not allowed by CORS"));
+      },
       credentials: true,
     })
   );
-  app.use(express.json({ limit: "1mb" }));
+  app.use(express.json({ limit: config.jsonLimit || "1mb" }));
   app.use(httpLogger);
 
   const authLimiter = rateLimit({
@@ -29,10 +40,8 @@ export const createApp = async () => {
     legacyHeaders: false,
   });
 
-  app.use(authLimiter);
-
   app.use("/api/health", healthRouter);
-  app.use("/api/auth", authRouter);
+  app.use("/api/auth", authLimiter, authRouter);
   app.use("/api/coupons", couponsRouter);
 
   app.use((_req, res) => res.status(404).json({ message: "Not found" }));

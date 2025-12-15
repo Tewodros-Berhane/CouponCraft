@@ -22,5 +22,10 @@ export const config = {
   jwtExpiresIn: process.env.JWT_EXPIRES_IN || "1h",
   refreshExpiresIn: process.env.JWT_REFRESH_EXPIRES_IN || "7d",
   clientOrigin: process.env.CLIENT_ORIGIN || "http://localhost:5173",
+  jsonLimit: process.env.JSON_BODY_LIMIT || "1mb",
+  corsOrigins: (process.env.CLIENT_ORIGIN || "http://localhost:5173")
+    .split(",")
+    .map((o) => o.trim())
+    .filter(Boolean),
   databaseUrl: process.env.DATABASE_URL,
 };
