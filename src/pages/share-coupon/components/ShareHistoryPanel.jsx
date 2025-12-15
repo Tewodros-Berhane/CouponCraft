@@ -2,7 +2,7 @@ import React from 'react';
 import Icon from '../../../components/AppIcon';
 import Button from '../../../components/ui/Button';
 
-const ShareHistoryPanel = ({ shareHistory, onViewDetails }) => {
+const ShareHistoryPanel = ({ shareHistory, onViewDetails, onCopyLink }) => {
   const getChannelIcon = (channel) => {
     const icons = {
       qr: 'QrCode',
@@ -121,6 +121,17 @@ const ShareHistoryPanel = ({ shareHistory, onViewDetails }) => {
                   </div>
                   <div className="text-xs text-muted-foreground">conversion</div>
                 </div>
+                {item?.shareUrl && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => onCopyLink?.(item.shareUrl)}
+                    iconName="Copy"
+                    iconPosition="left"
+                  >
+                    Copy link
+                  </Button>
+                )}
                 <Button
                   variant="ghost"
                   size="sm"

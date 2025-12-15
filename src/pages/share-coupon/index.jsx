@@ -9,6 +9,7 @@ import ShareHistoryPanel from './components/ShareHistoryPanel';
 import BulkShareModal from './components/BulkShareModal';
 import ShareLinkCustomizer from './components/ShareLinkCustomizer';
 import api from '../../apiClient';
+import { useToast } from '../../components/ui/ToastProvider';
 
 const ShareCoupon = () => {
   const navigate = useNavigate();
@@ -25,6 +26,7 @@ const ShareCoupon = () => {
   const [couponData, setCouponData] = useState(location?.state?.couponData || null);
   const couponId = location?.state?.couponId || location?.state?.couponData?.id;
   const [shareHistory, setShareHistory] = useState([]);
+  const toast = useToast();
 
   // Mock coupon data - in real app, this would come from props or API
   const fallbackCoupon = {
@@ -161,10 +163,12 @@ const ShareCoupon = () => {
           sharedAt: item?.createdAt,
           clicks: item?.clicks || 0,
           redemptions: item?.redemptions || 0,
+          shareUrl: item?.config?.shareUrl,
         }));
         setShareHistory(history);
       } catch (err) {
         console.error('Failed to load share history', err);
+        toast.error('Failed to load share history');
       }
     };
     loadShares();
@@ -212,10 +216,13 @@ const ShareCoupon = () => {
           sharedAt: item?.createdAt,
           clicks: item?.clicks || 0,
           redemptions: item?.redemptions || 0,
+          shareUrl: item?.config?.shareUrl,
         }));
         setShareHistory(history);
+        toast.success(`Shared via ${method?.title || method?.type}`);
       } catch (err) {
         console.error('Failed to record share', err);
+        toast.error('Failed to record share');
       }
     }
 
@@ -410,6 +417,10 @@ const ShareCoupon = () => {
               <ShareHistoryPanel
                 shareHistory={shareHistory}
                 onViewDetails={handleViewDetails}
+                onCopyLink={(url) => {
+                  navigator.clipboard?.writeText(url);
+                  toast.success('Share link copied');
+                }}
               />
             </div>
           </div>
