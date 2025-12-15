@@ -44,7 +44,15 @@ const CustomizationTools = ({ customizationData, onCustomizationChange }) => {
         filename: file.name,
         contentType: file.type,
       });
-      // For now, skip actual PUT upload; store signed URL as asset URL.
+      if (data?.uploadUrl) {
+        await fetch(data.uploadUrl, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': file.type,
+          },
+          body: file,
+        });
+      }
       handleInputChange('logo', {
         file: file,
         url: data?.assetUrl || data?.uploadUrl,
