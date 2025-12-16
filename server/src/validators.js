@@ -139,6 +139,7 @@ export const redemptionValidateSchema = Joi.object({
 
 export const redemptionConfirmSchema = Joi.object({
   couponId: Joi.string().required(),
+  shareId: Joi.string().allow("", null).optional(),
   customerRef: Joi.string().allow("", null).optional(),
   context: Joi.object().unknown(true).optional(),
 });

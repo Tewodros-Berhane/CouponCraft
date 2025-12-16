@@ -16,6 +16,7 @@ import { sharesRouter } from "./routes/shares.js";
 import { analyticsRouter } from "./routes/analytics.js";
 import { redemptionRouter } from "./routes/redemption.js";
 import { qrRouter } from "./routes/qr.js";
+import { redeemRouter } from "./routes/redeem.js";
 
 export const createApp = async () => {
   const app = express();
@@ -60,6 +61,7 @@ export const createApp = async () => {
   app.use("/api/analytics", analyticsRouter);
   app.use("/api/redemption", redemptionRouter);
   app.use("/api/qr", qrRouter);
+  app.use("/api/redeem", redeemRouter);
 
   app.use((_req, res) => res.status(404).json({ message: "Not found" }));
   app.use(errorHandler);
