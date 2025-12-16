@@ -11,10 +11,10 @@ const PreviewControls = ({
   isLoading = false 
 }) => {
   const exportFormats = [
-    { id: 'png', name: 'PNG Image', size: '2.1 MB', icon: 'Image' },
-    { id: 'jpg', name: 'JPEG Image', size: '1.8 MB', icon: 'Image' },
-    { id: 'pdf', name: 'PDF Document', size: '1.2 MB', icon: 'FileText' },
-    { id: 'svg', name: 'SVG Vector', size: '0.3 MB', icon: 'Code' }
+    { id: 'png', name: 'PNG Image', icon: 'Image' },
+    { id: 'jpg', name: 'JPEG Image', icon: 'Image' },
+    { id: 'pdf', name: 'PDF Document', icon: 'FileText' },
+    { id: 'svg', name: 'SVG Vector', icon: 'Code' }
   ];
 
   const handleExportFormat = (format) => {
@@ -84,7 +84,6 @@ const PreviewControls = ({
                 </div>
                 <div>
                   <p className="text-sm font-medium text-foreground">{format?.name}</p>
-                  <p className="text-xs text-muted-foreground">Est. size: {format?.size}</p>
                 </div>
               </div>
               <Button
@@ -101,52 +100,6 @@ const PreviewControls = ({
           ))}
         </div>
       </div>
-      {/* Sharing Channels */}
-      <div className="bg-card rounded-lg border border-border p-6">
-        <h3 className="text-lg font-semibold text-foreground mb-4">Quick Share</h3>
-        <div className="grid grid-cols-2 gap-3">
-          <button
-            onClick={() => onShare('facebook')}
-            className="flex items-center space-x-2 p-3 rounded-lg border border-border hover:bg-muted/50 transition-colors duration-150"
-            disabled={isLoading}
-          >
-            <div className="w-6 h-6 bg-blue-600 rounded flex items-center justify-center">
-              <Icon name="Facebook" size={14} color="white" />
-            </div>
-            <span className="text-sm font-medium">Facebook</span>
-          </button>
-          <button
-            onClick={() => onShare('instagram')}
-            className="flex items-center space-x-2 p-3 rounded-lg border border-border hover:bg-muted/50 transition-colors duration-150"
-            disabled={isLoading}
-          >
-            <div className="w-6 h-6 bg-gradient-to-r from-purple-500 to-pink-500 rounded flex items-center justify-center">
-              <Icon name="Instagram" size={14} color="white" />
-            </div>
-            <span className="text-sm font-medium">Instagram</span>
-          </button>
-          <button
-            onClick={() => onShare('twitter')}
-            className="flex items-center space-x-2 p-3 rounded-lg border border-border hover:bg-muted/50 transition-colors duration-150"
-            disabled={isLoading}
-          >
-            <div className="w-6 h-6 bg-black rounded flex items-center justify-center">
-              <Icon name="Twitter" size={14} color="white" />
-            </div>
-            <span className="text-sm font-medium">Twitter</span>
-          </button>
-          <button
-            onClick={() => onShare('email')}
-            className="flex items-center space-x-2 p-3 rounded-lg border border-border hover:bg-muted/50 transition-colors duration-150"
-            disabled={isLoading}
-          >
-            <div className="w-6 h-6 bg-gray-600 rounded flex items-center justify-center">
-              <Icon name="Mail" size={14} color="white" />
-            </div>
-            <span className="text-sm font-medium">Email</span>
-          </button>
-        </div>
-      </div>
       {/* Coupon Stats */}
       <div className="bg-card rounded-lg border border-border p-6">
         <h3 className="text-lg font-semibold text-foreground mb-4">Coupon Details</h3>
@@ -154,34 +107,35 @@ const PreviewControls = ({
           <div className="flex justify-between items-center">
             <span className="text-sm text-muted-foreground">Discount Type</span>
             <span className="text-sm font-medium text-foreground capitalize">
-              {couponData?.discountType || 'Percentage'}
+              {couponData?.discountType || 'N/A'}
             </span>
           </div>
           <div className="flex justify-between items-center">
             <span className="text-sm text-muted-foreground">Discount Value</span>
             <span className="text-sm font-medium text-foreground">
-              {couponData?.discountType === 'percentage' 
-                ? `${couponData?.discountValue || '20'}%`
-                : `$${couponData?.discountValue || '10'}`
-              }
+              {couponData?.discountValue ? (
+                couponData?.discountType === 'percentage' ? `${couponData.discountValue}%` : `$${couponData.discountValue}`
+              ) : (
+                'N/A'
+              )}
             </span>
           </div>
           <div className="flex justify-between items-center">
             <span className="text-sm text-muted-foreground">Expiry Date</span>
             <span className="text-sm font-medium text-foreground">
-              {couponData?.expiryDate || '12/31/2024'}
+              {couponData?.expiryDate ? new Date(couponData.expiryDate).toLocaleDateString() : 'N/A'}
             </span>
           </div>
           <div className="flex justify-between items-center">
             <span className="text-sm text-muted-foreground">Usage Limit</span>
             <span className="text-sm font-medium text-foreground">
-              {couponData?.usageLimit || '100'} uses
+              {couponData?.usageLimit || 'Unlimited'}
             </span>
           </div>
           <div className="flex justify-between items-center">
             <span className="text-sm text-muted-foreground">Min. Order</span>
             <span className="text-sm font-medium text-foreground">
-              ${couponData?.minimumOrder || '25.00'}
+              {couponData?.minimumOrder ? `$${couponData.minimumOrder}` : 'None'}
             </span>
           </div>
         </div>

@@ -79,10 +79,10 @@ const DevicePreview = ({ couponData, selectedDevice, onDeviceChange, previewRef 
           {/* Terms */}
           <div className="border-t border-border pt-3 mt-3">
             <p className={`text-muted-foreground ${device?.id === 'mobile' ? 'text-xs' : 'text-sm'}`}>
-              Valid until: {couponData?.expiryDate || '12/31/2024'}
+              Valid until: {couponData?.expiryDate ? new Date(couponData.expiryDate).toLocaleDateString() : 'N/A'}
             </p>
             <p className={`text-muted-foreground ${device?.id === 'mobile' ? 'text-xs' : 'text-sm'}`}>
-              Min. order: ${couponData?.minimumOrder || '25.00'}
+              Min. order: {couponData?.minimumOrder ? `$${couponData.minimumOrder}` : 'None'}
             </p>
           </div>
         </div>

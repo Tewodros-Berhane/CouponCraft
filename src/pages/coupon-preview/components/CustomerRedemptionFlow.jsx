@@ -147,7 +147,9 @@ const CustomerRedemptionFlow = ({ couponData }) => {
               </div>
               <div className="flex justify-between items-center text-sm">
                 <span className="text-muted-foreground">Expires:</span>
-                <span className="text-foreground">{couponData?.expiryDate || '12/31/2024'}</span>
+                <span className="text-foreground">
+                  {couponData?.expiryDate ? new Date(couponData.expiryDate).toLocaleDateString() : 'N/A'}
+                </span>
               </div>
               <div className="flex justify-between items-center text-sm">
                 <span className="text-muted-foreground">Discount:</span>

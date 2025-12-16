@@ -24,22 +24,6 @@ const CouponPreview = () => {
   const toast = useToast();
   const previewRef = useRef(null);
 
-  const fallbackCoupon = {
-    id: 'coup_preview',
-    businessName: 'Bella Vista Restaurant',
-    businessType: 'Italian Restaurant & Pizzeria',
-    discountType: 'percentage',
-    discountValue: 25,
-    description: 'Valid on all dinner menu items including pasta, pizza, and appetizers',
-    expiryDate: '2024-12-31',
-    minimumOrder: 35.0,
-    usageLimit: 200,
-    primaryColor: '#d97706',
-    secondaryColor: '#f59e0b',
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString()
-  };
-
   const displayCoupon = couponData
     ? {
         id: couponData?.id,
@@ -59,9 +43,9 @@ const CouponPreview = () => {
         customization: couponData?.customization,
         discount: couponData?.discount,
         validity: couponData?.validity,
-        template: couponData?.template,
-      }
-    : fallbackCoupon;
+         template: couponData?.template,
+       }
+    : null;
 
   const tabs = [
     { id: 'preview', label: 'Device Preview', icon: 'Monitor' },
@@ -117,32 +101,17 @@ const CouponPreview = () => {
     });
   };
 
-  const handleShare = (channel = null) => {
-    if (channel) {
-      // Handle specific channel sharing
-      setIsLoading(true);
-      setTimeout(() => {
-        setIsLoading(false);
-        // Simulate sharing success
-        toast.success(`Coupon shared to ${channel} successfully!`);
-      }, 1500);
-    } else {
-      // Navigate to share page
-      navigate('/share-coupon', { 
-        state: { 
-          couponData: couponData || displayCoupon,
-          couponId: couponId || couponData?.id
-        } 
-      });
-    }
+  const handleShare = () => {
+    navigate('/share-coupon', {
+      state: {
+        couponData: couponData || displayCoupon,
+        couponId: couponId || couponData?.id,
+      },
+    });
   };
 
   const handleSave = () => {
-    setIsLoading(true);
-    setTimeout(() => {
-      setIsLoading(false);
-      toast.success('Coupon saved to your library successfully!');
-    }, 1000);
+    toast.info('This coupon is already saved');
   };
 
   const handleExport = async (format) => {
