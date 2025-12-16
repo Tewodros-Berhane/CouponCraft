@@ -3,7 +3,7 @@ import Icon from '../../../components/AppIcon';
 import Button from '../../../components/ui/Button';
 import Select from '../../../components/ui/Select';
 
-const QRCodeGenerator = ({ couponData, shareId, onClose, isVisible }) => {
+const QRCodeGenerator = ({ couponData, shareId, shareUrl, onClose, isVisible }) => {
   const [qrSize, setQrSize] = useState('medium');
   const [qrFormat, setQrFormat] = useState('png');
   const [isGenerating, setIsGenerating] = useState(false);
@@ -37,7 +37,7 @@ const QRCodeGenerator = ({ couponData, shareId, onClose, isVisible }) => {
         setQrCodeUrl(qrUrl);
       } else {
         // Fallback to client QR service
-        const fallbackUrl = `https://api.qrserver.com/v1/create-qr-code/?size=${getSizePixels()}&data=${encodeURIComponent(couponData?.shareUrl)}`;
+        const fallbackUrl = `https://api.qrserver.com/v1/create-qr-code/?size=${getSizePixels()}&data=${encodeURIComponent(shareUrl || couponData?.shareUrl || '')}`;
         setQrCodeUrl(fallbackUrl);
       }
     } finally {
@@ -242,7 +242,7 @@ const QRCodeGenerator = ({ couponData, shareId, onClose, isVisible }) => {
 
         <div className="flex items-center justify-between p-6 border-t border-border bg-muted/30">
           <div className="text-sm text-muted-foreground">
-            QR code links to: <span className="font-mono text-xs">{couponData?.shareUrl}</span>
+            QR code links to: <span className="font-mono text-xs">{shareUrl || couponData?.shareUrl || '—'}</span>
           </div>
           <div className="flex space-x-2">
             <Button variant="ghost" onClick={onClose}>
