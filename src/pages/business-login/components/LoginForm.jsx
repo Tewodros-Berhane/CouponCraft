@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate, useLocation, Link } from 'react-router-dom';
 import Button from '../../../components/ui/Button';
 import Input from '../../../components/ui/Input';
 import Icon from '../../../components/AppIcon';
@@ -81,11 +81,11 @@ const handleSubmit = async (e) => {
       <div className="bg-card rounded-xl shadow-level-2 p-8 border border-border">
         {/* Header */}
         <div className="text-center mb-8">
-          <a href="/">
-          <div className="w-16 h-16 bg-primary rounded-xl flex items-center justify-center mx-auto mb-4">
-            <Icon name="Scissors" size={32} color="white" />
-          </div>
-          </a>
+          <Link to="/" aria-label="Go to home">
+            <div className="w-16 h-16 bg-primary rounded-xl flex items-center justify-center mx-auto mb-4">
+              <Icon name="Scissors" size={32} color="white" />
+            </div>
+          </Link>
           <h1 className="text-2xl font-bold text-foreground mb-2">Welcome Back</h1>
           <p className="text-muted-foreground">Sign in to your CouponCraft business account</p>
         </div>
