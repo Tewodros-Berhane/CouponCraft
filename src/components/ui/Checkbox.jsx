@@ -1,5 +1,6 @@
 import React from "react";
 import { Check, Minus } from "lucide-react";
+import * as CheckboxPrimitive from "@radix-ui/react-checkbox";
 import { cn } from "../../utils/cn";
 
 const Checkbox = React.forwardRef(({
@@ -13,6 +14,9 @@ const Checkbox = React.forwardRef(({
     description,
     error,
     size = "default",
+    name,
+    onChange,
+    onCheckedChange,
     ...props
 }, ref) => {
     const generatedId = React.useId();
@@ -25,38 +29,58 @@ const Checkbox = React.forwardRef(({
         lg: "h-5 w-5"
     };
 
+    const state = indeterminate ? "indeterminate" : !!checked;
+
+    const handleCheckedChange = (next) => {
+        onCheckedChange?.(next);
+        if (onChange) {
+            const nextBool = next === true;
+            onChange({
+                target: { checked: nextBool, value: nextBool, name },
+                currentTarget: { checked: nextBool, value: nextBool, name },
+            });
+        }
+    };
+
     return (
         <div className={cn("flex items-start space-x-2", className)}>
             <div className="relative flex items-center">
-                <input
-                    type="checkbox"
+                <CheckboxPrimitive.Root
                     ref={ref}
                     id={checkboxId}
-                    checked={checked}
+                    checked={state}
                     disabled={disabled}
-                    required={required}
-                    className="sr-only"
-                    {...props}
-                />
-
-                <label
-                    htmlFor={checkboxId}
+                    onCheckedChange={handleCheckedChange}
                     className={cn(
-                        "peer shrink-0 rounded-sm border border-primary ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground cursor-pointer transition-colors",
+                        "shrink-0 rounded-sm border border-primary bg-background text-primary ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 transition-colors",
                         sizeClasses?.[size],
-                        checked && "bg-primary text-primary-foreground border-primary",
-                        indeterminate && "bg-primary text-primary-foreground border-primary",
+                        (checked || indeterminate) && "bg-primary text-primary-foreground border-primary",
                         error && "border-destructive",
                         disabled && "cursor-not-allowed opacity-50"
                     )}
+                    {...props}
                 >
-                    {checked && !indeterminate && (
-                        <Check className="h-3 w-3 text-current flex items-center justify-center" />
-                    )}
-                    {indeterminate && (
-                        <Minus className="h-3 w-3 text-current flex items-center justify-center" />
-                    )}
-                </label>
+                    <CheckboxPrimitive.Indicator className="flex items-center justify-center text-current">
+                        {indeterminate ? (
+                            <Minus className="h-3 w-3" />
+                        ) : (
+                            <Check className="h-3 w-3" />
+                        )}
+                    </CheckboxPrimitive.Indicator>
+                </CheckboxPrimitive.Root>
+
+                {name ? (
+                    <input
+                        type="checkbox"
+                        name={name}
+                        checked={!!checked}
+                        readOnly
+                        required={required}
+                        className="sr-only"
+                        tabIndex={-1}
+                        aria-hidden="true"
+                    />
+                ) : null}
             </div>
             {(label || description || error) && (
                 <div className="flex-1 space-y-1">
