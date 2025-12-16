@@ -3,17 +3,17 @@ import { useNavigate } from 'react-router-dom';
 import { Helmet } from 'react-helmet';
 import LoginForm from './components/LoginForm';
 import TrustSignals from './components/TrustSignals';
+import { useAuth } from '../../AuthContext';
 
 const BusinessLogin = () => {
   const navigate = useNavigate();
+  const { user, loading } = useAuth();
 
   useEffect(() => {
-    // Check if user is already authenticated
-    const authToken = localStorage.getItem('authToken');
-    if (authToken) {
-      navigate('/business-dashboard');
+    if (!loading && user) {
+      navigate('/business-dashboard', { replace: true });
     }
-  }, [navigate]);
+  }, [loading, user, navigate]);
 
   return (
     <>
