@@ -1,5 +1,4 @@
-import React, { createContext, useContext, useMemo, useState, useCallback, useEffect } from 'react';
-import { nanoid } from 'nanoid';
+import React, { createContext, useContext, useMemo, useState, useCallback } from 'react';
 import Icon from '../AppIcon';
 
 const ToastContext = createContext(null);
@@ -13,12 +12,17 @@ const typeStyles = {
 export const ToastProvider = ({ children }) => {
   const [toasts, setToasts] = useState([]);
 
+  const makeId = () => {
+    if (globalThis.crypto?.randomUUID) return globalThis.crypto.randomUUID();
+    return `${Date.now()}-${Math.random().toString(16).slice(2)}`;
+  };
+
   const removeToast = useCallback((id) => {
     setToasts((prev) => prev.filter((toast) => toast.id !== id));
   }, []);
 
   const addToast = useCallback((message, type = 'info', timeout = 3500) => {
-    const id = nanoid();
+    const id = makeId();
     setToasts((prev) => [...prev, { id, message, type }]);
     setTimeout(() => removeToast(id), timeout);
   }, [removeToast]);
