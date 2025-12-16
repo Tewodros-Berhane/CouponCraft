@@ -1,6 +1,7 @@
 import React from 'react';
 import Icon from '../../../components/AppIcon';
 import Button from '../../../components/ui/Button';
+import IconButton from '../../../components/ui/IconButton';
 
 const TopPerformingCoupons = ({ coupons }) => {
   const getPerformanceColor = (performance) => {
@@ -13,7 +14,7 @@ const TopPerformingCoupons = ({ coupons }) => {
     <div className="bg-card rounded-lg shadow-level-1 p-6">
       <div className="flex items-center justify-between mb-6">
         <h3 className="text-lg font-semibold text-foreground">Top Performing Coupons</h3>
-        <Button variant="ghost" size="sm" iconName="MoreHorizontal" />
+        <IconButton ariaLabel="More actions" iconName="MoreHorizontal" />
       </div>
       <div className="space-y-4">
         {coupons?.map((coupon, index) => (
@@ -53,7 +54,7 @@ const TopPerformingCoupons = ({ coupons }) => {
               </div>
             </div>
             
-            <Button variant="ghost" size="sm" iconName="ExternalLink" />
+            <IconButton ariaLabel="Open coupon details" iconName="ExternalLink" />
           </div>
         ))}
       </div>

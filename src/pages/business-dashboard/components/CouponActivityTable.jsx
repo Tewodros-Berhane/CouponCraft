@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import Icon from '../../../components/AppIcon';
 import Button from '../../../components/ui/Button';
+import IconButton from '../../../components/ui/IconButton';
 
 const CouponActivityTable = ({ coupons }) => {
   const [sortField, setSortField] = useState('name');
@@ -119,9 +120,9 @@ const CouponActivityTable = ({ coupons }) => {
                 </td>
                 <td className="px-6 py-4">
                   <div className="flex items-center space-x-2">
-                    <Button variant="ghost" size="sm" iconName="Eye" />
-                    <Button variant="ghost" size="sm" iconName="Edit" />
-                    <Button variant="ghost" size="sm" iconName="Share" />
+                    <IconButton ariaLabel="View coupon" iconName="Eye" />
+                    <IconButton ariaLabel="Edit coupon" iconName="Edit" />
+                    <IconButton ariaLabel="Share coupon" iconName="Share" />
                   </div>
                 </td>
               </tr>
@@ -157,15 +158,15 @@ const CouponActivityTable = ({ coupons }) => {
                   <p className="text-sm font-medium text-foreground">{coupon?.expiration}</p>
                 </div>
               </div>
-              
-              <div className="flex items-center space-x-2">
-                <Button variant="ghost" size="sm" iconName="Eye" />
-                <Button variant="ghost" size="sm" iconName="Edit" />
-                <Button variant="ghost" size="sm" iconName="Share" />
-              </div>
-            </div>
-          </div>
-        ))}
+               
+               <div className="flex items-center space-x-2">
+                 <IconButton ariaLabel="View coupon" iconName="Eye" />
+                 <IconButton ariaLabel="Edit coupon" iconName="Edit" />
+                 <IconButton ariaLabel="Share coupon" iconName="Share" />
+               </div>
+             </div>
+           </div>
+         ))}
       </div>
     </div>
   );
