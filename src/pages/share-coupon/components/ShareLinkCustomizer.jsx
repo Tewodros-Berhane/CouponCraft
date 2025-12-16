@@ -4,6 +4,8 @@ import Button from '../../../components/ui/Button';
 import Input from '../../../components/ui/Input';
 import { Checkbox } from '../../../components/ui/Checkbox';
 import { useToast } from '../../../components/ui/ToastProvider';
+import { Dialog, DialogClose, DialogContent } from '../../../components/ui/Dialog';
+import IconButton from '../../../components/ui/IconButton';
 
 const ShareLinkCustomizer = ({ baseUrl, onSave, isVisible, onClose }) => {
   const [customSlug, setCustomSlug] = useState('');
@@ -62,17 +64,22 @@ const ShareLinkCustomizer = ({ baseUrl, onSave, isVisible, onClose }) => {
       ?.catch(() => toast.error('Failed to copy link'));
   };
 
-  if (!isVisible) return null;
-
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
-      <div className="bg-white rounded-xl shadow-level-4 w-full max-w-2xl mx-4 max-h-[90vh] overflow-y-auto">
+    <Dialog
+      open={!!isVisible}
+      onOpenChange={(open) => {
+        if (!open) onClose?.();
+      }}
+    >
+      <DialogContent className="max-w-2xl p-0 max-h-[90vh] overflow-y-auto">
         <div className="flex items-center justify-between p-6 border-b border-border">
           <div>
             <h2 className="text-xl font-semibold text-foreground">Customize Share Link</h2>
             <p className="text-sm text-muted-foreground">Create a branded, trackable link for your coupon</p>
           </div>
-          <Button variant="ghost" size="sm" onClick={onClose} iconName="X" />
+          <DialogClose asChild>
+            <IconButton ariaLabel="Close dialog" iconName="X" onClick={onClose} />
+          </DialogClose>
         </div>
 
         <div className="p-6 space-y-6">
@@ -95,11 +102,10 @@ const ShareLinkCustomizer = ({ baseUrl, onSave, isVisible, onClose }) => {
               <code className="text-sm font-mono text-foreground truncate flex-1 mr-2">
                 {generateCustomUrl()}
               </code>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={copyToClipboard}
+              <IconButton
+                ariaLabel="Copy link"
                 iconName="Copy"
+                onClick={copyToClipboard}
                 className="flex-shrink-0"
               />
             </div>
@@ -239,8 +245,8 @@ const ShareLinkCustomizer = ({ baseUrl, onSave, isVisible, onClose }) => {
             </Button>
           </div>
         </div>
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
   );
 };
 
