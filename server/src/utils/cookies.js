@@ -61,6 +61,12 @@ export const clearSessionCookies = (res) => {
 export const ensureCsrfCookie = (req, res) => {
   if (req.cookies?.[COOKIE_NAMES.csrf]) return req.cookies[COOKIE_NAMES.csrf];
   const token = crypto.randomBytes(32).toString("hex");
-  res.cookie(COOKIE_NAMES.csrf, token, { ...baseCookieOptions(), httpOnly: false, path: "/" });
+  const csrfMaxAge = durationToMs(config.refreshExpiresIn, 7 * 24 * 60 * 60 * 1000);
+  res.cookie(COOKIE_NAMES.csrf, token, {
+    ...baseCookieOptions(),
+    httpOnly: false,
+    path: "/",
+    maxAge: csrfMaxAge,
+  });
   return token;
 };
