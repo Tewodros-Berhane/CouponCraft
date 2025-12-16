@@ -12,6 +12,7 @@ import BusinessLogin from './pages/business-login';
 import BusinessProfile from './pages/business-profile';
 import CouponPreview from './pages/coupon-preview';
 import ShareCoupon from './pages/share-coupon';
+import RedeemCoupon from './pages/redeem';
 import ProtectedRoute from './ProtectedRoute';
 import { AuthProvider } from './AuthContext';
 
@@ -31,6 +32,7 @@ const Routes = () => {
             <Route path="/profile" element={<ProtectedRoute><BusinessProfile /></ProtectedRoute>} />
             <Route path="/coupon-preview" element={<ProtectedRoute><CouponPreview /></ProtectedRoute>} />
             <Route path="/share-coupon" element={<ProtectedRoute><ShareCoupon /></ProtectedRoute>} />
+            <Route path="/redeem/:shareId" element={<RedeemCoupon />} />
             <Route path="*" element={<NotFound />} />
           </RouterRoutes>
         </ErrorBoundary>
