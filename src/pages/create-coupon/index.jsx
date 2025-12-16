@@ -9,6 +9,7 @@ import LivePreview from './components/LivePreview';
 import FormNavigation from './components/FormNavigation';
 import Icon from '../../components/AppIcon';
 import Button from '../../components/ui/Button';
+import { Dialog, DialogClose, DialogContent } from '../../components/ui/Dialog';
 import api from '../../apiClient';
 import { useToast } from '../../components/ui/ToastProvider';
 import { getApiErrorMessage } from '../../utils/apiError';
@@ -413,20 +414,19 @@ const CreateCoupon = () => {
         </div>
       </div>
       {/* Exit Confirmation Modal */}
-      {showExitModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center">
-          <div className="fixed inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setShowExitModal(false)} />
-          <div className="relative bg-card border border-border rounded-xl p-6 shadow-level-4 max-w-md mx-4">
-            <div className="flex items-start space-x-4">
-              <div className="w-10 h-10 bg-warning/10 rounded-lg flex items-center justify-center">
-                <Icon name="AlertTriangle" size={20} className="text-warning" />
-              </div>
-              <div className="flex-1">
-                <h3 className="font-semibold text-foreground mb-2">Exit Coupon Creation?</h3>
-                <p className="text-sm text-muted-foreground mb-4">
-                  Your progress will be saved as a draft. You can continue editing later from your dashboard.
-                </p>
-                <div className="flex space-x-3">
+      <Dialog open={showExitModal} onOpenChange={setShowExitModal}>
+        <DialogContent className="max-w-md bg-card">
+          <div className="flex items-start space-x-4">
+            <div className="w-10 h-10 bg-warning/10 rounded-lg flex items-center justify-center">
+              <Icon name="AlertTriangle" size={20} className="text-warning" />
+            </div>
+            <div className="flex-1">
+              <h3 className="font-semibold text-foreground mb-2">Exit Coupon Creation?</h3>
+              <p className="text-sm text-muted-foreground mb-4">
+                Your progress will be saved as a draft. You can continue editing later from your dashboard.
+              </p>
+              <div className="flex space-x-3">
+                <DialogClose asChild>
                   <Button
                     variant="outline"
                     size="sm"
@@ -434,19 +434,19 @@ const CreateCoupon = () => {
                   >
                     Continue Editing
                   </Button>
-                  <Button
-                    variant="default"
-                    size="sm"
-                    onClick={confirmExit}
-                  >
-                    Save & Exit
-                  </Button>
-                </div>
+                </DialogClose>
+                <Button
+                  variant="default"
+                  size="sm"
+                  onClick={confirmExit}
+                >
+                  Save & Exit
+                </Button>
               </div>
             </div>
           </div>
-        </div>
-      )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
