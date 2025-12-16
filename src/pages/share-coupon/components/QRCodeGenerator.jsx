@@ -31,7 +31,7 @@ const QRCodeGenerator = ({ couponData, shareId, shareUrl, onClose, isVisible }) 
     try {
       if (shareId) {
         // Use backend QR endpoint
-        const base = import.meta.env.VITE_API_URL || 'http://localhost:4000/api';
+        const base = import.meta.env.VITE_API_URL || '/api';
         const size = parseInt(getSizePixels()?.split('x')?.[0], 10) || 400;
         const qrUrl = `${base}/qr/${shareId}?format=${encodeURIComponent(qrFormat)}&size=${encodeURIComponent(size)}`;
         setQrCodeUrl(qrUrl);
