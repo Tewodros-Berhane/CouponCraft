@@ -28,6 +28,11 @@ const api = axios.create({
   withCredentials: false,
 });
 
+const authApi = axios.create({
+  baseURL: API_BASE_URL,
+  withCredentials: false,
+});
+
 api.interceptors.request.use((config) => {
   const token = tokenStore.getAccess();
   if (token) {
@@ -39,7 +44,7 @@ api.interceptors.request.use((config) => {
 const refreshAccessToken = async () => {
   if (!tokenStore.getRefresh()) throw new Error("No refresh token");
   if (!refreshPromise) {
-    refreshPromise = api
+    refreshPromise = authApi
       .post("/auth/refresh", { refreshToken: tokenStore.getRefresh() })
       .then((res) => {
         const newAccess = res?.data?.tokens?.accessToken;
@@ -59,6 +64,11 @@ api.interceptors.response.use(
   async (error) => {
     const originalRequest = error.config;
     const status = error?.response?.status;
+    const url = originalRequest?.url || "";
+    if (status === 401 && url.includes("/auth/refresh")) {
+      tokenStore.clear();
+      return Promise.reject(error);
+    }
     if (status === 401 && !originalRequest._retry) {
       originalRequest._retry = true;
       try {
