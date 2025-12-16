@@ -6,6 +6,7 @@ import { loginSchema, registerSchema } from "../validators.js";
 import { generateTokens } from "../utils/tokens.js";
 import { requireAuth } from "../middlewares/auth.js";
 import { prisma } from "../db/prisma.js";
+import { clearSessionCookies, ensureCsrfCookie, setSessionCookies, COOKIE_NAMES } from "../utils/cookies.js";
 
 export const authRouter = Router();
 
@@ -49,6 +50,9 @@ authRouter.post("/register", validate(registerSchema), async (req, res) => {
     },
   });
 
+  setSessionCookies(res, tokens);
+  ensureCsrfCookie(req, res);
+
   return res.status(201).json({
     user: { id: user.id, email: user.email, role: user.role, ownerName: user.ownerName },
     business,
@@ -74,6 +78,8 @@ authRouter.post("/login", validate(loginSchema), async (req, res) => {
     },
   });
   const business = await prisma.business.findUnique({ where: { ownerId: user.id } });
+  setSessionCookies(res, tokens);
+  ensureCsrfCookie(req, res);
   return res.json({
     user: { id: user.id, email: user.email, role: user.role, ownerName: user.ownerName },
     business,
@@ -82,7 +88,7 @@ authRouter.post("/login", validate(loginSchema), async (req, res) => {
 });
 
 authRouter.post("/refresh", async (req, res) => {
-  const { refreshToken } = req.body || {};
+  const refreshToken = (req.body || {})?.refreshToken || req.cookies?.[COOKIE_NAMES.refresh];
   if (!refreshToken) {
     return res.status(400).json({ message: "Missing refreshToken" });
   }
@@ -115,6 +121,8 @@ authRouter.post("/refresh", async (req, res) => {
     });
     const user = await prisma.user.findUnique({ where: { id: decoded.sub } });
     const business = await prisma.business.findUnique({ where: { ownerId: decoded.sub } });
+    setSessionCookies(res, tokens);
+    ensureCsrfCookie(req, res);
     return res.json({
       user: { id: user.id, email: user.email, role: user.role, ownerName: user.ownerName },
       business,
@@ -125,8 +133,21 @@ authRouter.post("/refresh", async (req, res) => {
   }
 });
 
+authRouter.post("/logout", async (req, res) => {
+  const refreshToken = req.cookies?.[COOKIE_NAMES.refresh] || (req.body || {})?.refreshToken;
+  if (refreshToken) {
+    await prisma.refreshToken.updateMany({
+      where: { token: refreshToken },
+      data: { revoked: true },
+    });
+  }
+  clearSessionCookies(res);
+  return res.status(204).send();
+});
+
 authRouter.get("/me", requireAuth, async (req, res) => {
   const business = await prisma.business.findUnique({ where: { ownerId: req.user.id } });
+  ensureCsrfCookie(req, res);
   return res.json({
     user: { id: req.user.id, email: req.user.email, role: req.user.role, ownerName: req.user.ownerName },
     business,

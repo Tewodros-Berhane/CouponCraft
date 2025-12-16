@@ -30,6 +30,11 @@ export const config = {
     .map((o) => sanitizeOrigin(o.trim()))
     .filter(Boolean),
   databaseUrl: process.env.DATABASE_URL,
+  cookieSecure:
+    typeof process.env.COOKIE_SECURE === "string"
+      ? process.env.COOKIE_SECURE === "true"
+      : (process.env.NODE_ENV || "development") === "production",
+  cookieSameSite: (process.env.COOKIE_SAMESITE || "lax").toLowerCase(),
 };
 
 export { sanitizeOrigin };

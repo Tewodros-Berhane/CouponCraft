@@ -2,9 +2,11 @@ import express from "express";
 import cors from "cors";
 import helmet from "helmet";
 import rateLimit from "express-rate-limit";
+import cookieParser from "cookie-parser";
 import { config, sanitizeOrigin } from "./config.js";
 import { logger, httpLogger } from "./logger.js";
 import { errorHandler } from "./middlewares/errorHandler.js";
+import { csrfProtection } from "./middlewares/csrf.js";
 import { healthRouter } from "./routes/health.js";
 import { authRouter } from "./routes/auth.js";
 import { couponsRouter } from "./routes/coupons.js";
@@ -37,6 +39,8 @@ export const createApp = async () => {
       credentials: true,
     })
   );
+  app.use(cookieParser());
+  app.use(csrfProtection);
   app.use(express.json({ limit: config.jsonLimit || "1mb" }));
   app.use(httpLogger);
 
