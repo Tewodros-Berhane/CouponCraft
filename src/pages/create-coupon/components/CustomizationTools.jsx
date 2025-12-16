@@ -4,10 +4,13 @@ import Input from '../../../components/ui/Input';
 import Button from '../../../components/ui/Button';
 import { Checkbox } from '../../../components/ui/Checkbox';
 import api from '../../../apiClient';
+import { useToast } from '../../../components/ui/ToastProvider';
+import { getApiErrorMessage } from '../../../utils/apiError';
 
 const CustomizationTools = ({ customizationData, onCustomizationChange }) => {
   const [activeColorPicker, setActiveColorPicker] = useState(null);
   const fileInputRef = useRef(null);
+  const toast = useToast();
 
   const predefinedColors = [
     '#1e40af', '#dc2626', '#059669', '#7c3aed', '#ea580c',
@@ -45,21 +48,25 @@ const CustomizationTools = ({ customizationData, onCustomizationChange }) => {
         contentType: file.type,
       });
       if (data?.uploadUrl) {
-        await fetch(data.uploadUrl, {
+        const resp = await fetch(data.uploadUrl, {
           method: 'PUT',
           headers: {
             'Content-Type': file.type,
           },
           body: file,
         });
+        if (!resp.ok) {
+          throw new Error('Upload failed');
+        }
       }
       handleInputChange('logo', {
         file: file,
-        url: data?.assetUrl || data?.uploadUrl,
+        url: data?.assetUrl,
         name: file?.name
       });
+      toast.success('Logo uploaded');
     } catch (err) {
-      console.error('Logo upload failed', err);
+      toast.error(getApiErrorMessage(err, 'Logo upload failed'));
     }
   };
 

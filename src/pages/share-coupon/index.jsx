@@ -10,6 +10,7 @@ import BulkShareModal from './components/BulkShareModal';
 import ShareLinkCustomizer from './components/ShareLinkCustomizer';
 import api from '../../apiClient';
 import { useToast } from '../../components/ui/ToastProvider';
+import { getApiErrorMessage } from '../../utils/apiError';
 
 const ShareCoupon = () => {
   const navigate = useNavigate();
@@ -148,7 +149,7 @@ const ShareCoupon = () => {
         const { data } = await api.get(`/coupons/${couponId}`);
         setCouponData(data?.data);
       } catch (err) {
-        console.error('Failed to load coupon for sharing', err);
+        toast.error(getApiErrorMessage(err, 'Failed to load coupon'));
       }
     };
     loadCoupon();
@@ -176,8 +177,7 @@ const ShareCoupon = () => {
         });
         setShareLinks(linksMap);
       } catch (err) {
-        console.error('Failed to load share history', err);
-        toast.error('Failed to load share history');
+        toast.error(getApiErrorMessage(err, 'Failed to load share history'));
       }
     };
     loadShares();
@@ -219,8 +219,7 @@ const ShareCoupon = () => {
         setQrShareId(share?.id);
         setIsQRModalVisible(true);
       } catch (err) {
-        toast.error('Failed to prepare QR code');
-        console.error(err);
+        toast.error(getApiErrorMessage(err, 'Failed to prepare QR code'));
       } finally {
         setIsGeneratingQR(false);
       }
@@ -232,12 +231,12 @@ const ShareCoupon = () => {
       return;
     }
 
-    // Simulate sharing process for other methods
-    console.log(`Sharing via ${method?.type}:`, method);
-    
+    let resolvedShareUrl = shareLinks?.[method?.type]?.url || displayCoupon?.shareUrl;
+
     if (couponId) {
       try {
         const share = await ensureShare(method);
+        resolvedShareUrl = share?.url || resolvedShareUrl;
         const { data } = await api.get(`/shares/${couponId}`);
         const history = (data?.data || []).map((item) => ({
           ...item,
@@ -249,40 +248,39 @@ const ShareCoupon = () => {
         }));
         setShareHistory(history);
         toast.success(`Shared via ${method?.title || method?.type}`);
-
-        // fire tracking event for click when sharing out
-        if (share?.id) {
-          api.post(`/shares/${share.id}/track`, { event: 'click' }).catch(() => {});
-        }
       } catch (err) {
-        console.error('Failed to record share', err);
-        toast.error('Failed to record share');
+        toast.error(getApiErrorMessage(err, 'Failed to record share'));
       }
     }
 
-    // In a real app, this would integrate with respective APIs
     switch (method?.type) {
       case 'email':
-        if (displayCoupon?.shareUrl) {
-          window.open(`mailto:?subject=${encodeURIComponent(displayCoupon?.title || 'Exclusive Offer')}&body=${encodeURIComponent(displayCoupon?.shareUrl)}`);
+        if (resolvedShareUrl) {
+          window.open(
+            `mailto:?subject=${encodeURIComponent(displayCoupon?.title || 'Exclusive Offer')}&body=${encodeURIComponent(resolvedShareUrl)}`
+          );
         }
         break;
       case 'facebook':
-        if (displayCoupon?.shareUrl) {
-          window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(displayCoupon?.shareUrl)}`, '_blank');
+        if (resolvedShareUrl) {
+          window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(resolvedShareUrl)}`, '_blank');
         }
         break;
       case 'instagram':
         toast.info('Instagram sharing requires mobile app; copy link instead.');
         break;
       case 'twitter':
-        if (displayCoupon?.shareUrl) {
-          window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(displayCoupon?.title || 'Exclusive offer')}&url=${encodeURIComponent(displayCoupon?.shareUrl)}`, '_blank');
+        if (resolvedShareUrl) {
+          window.open(
+            `https://twitter.com/intent/tweet?text=${encodeURIComponent(displayCoupon?.title || 'Exclusive offer')}&url=${encodeURIComponent(resolvedShareUrl)}`,
+            '_blank'
+          );
         }
         break;
       case 'whatsapp':
-        // Open WhatsApp with pre-filled message
-        window.open(`https://wa.me/?text=${encodeURIComponent(`Check out this amazing offer: ${displayCoupon?.shareUrl}`)}`);
+        if (resolvedShareUrl) {
+          window.open(`https://wa.me/?text=${encodeURIComponent(`Check out this amazing offer: ${resolvedShareUrl}`)}`);
+        }
         break;
       default:
         break;
@@ -290,18 +288,15 @@ const ShareCoupon = () => {
   };
 
   const handleBulkShare = (shareData) => {
-    console.log('Bulk sharing:', shareData);
-    // In a real app, this would process bulk sharing across selected channels
+    toast.info('Bulk sharing is not available yet');
   };
 
   const handleViewDetails = (shareItem) => {
-    console.log('Viewing details for:', shareItem);
-    // In a real app, this would show detailed analytics
+    toast.info('Detailed share analytics is not available yet');
   };
 
   const handleSaveCustomLink = (linkData) => {
-    console.log('Custom link saved:', linkData);
-    // In a real app, this would save the custom link configuration
+    toast.success('Custom link generated');
   };
 
   const handleBackToPreview = () => {

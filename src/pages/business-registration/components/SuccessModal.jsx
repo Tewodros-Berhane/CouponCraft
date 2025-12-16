@@ -2,9 +2,11 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import Button from '../../../components/ui/Button';
 import Icon from '../../../components/AppIcon';
+import { useToast } from '../../../components/ui/ToastProvider';
 
 const SuccessModal = ({ isOpen, onClose, userEmail }) => {
   const navigate = useNavigate();
+  const toast = useToast();
 
   if (!isOpen) return null;
 
@@ -13,8 +15,7 @@ const SuccessModal = ({ isOpen, onClose, userEmail }) => {
   };
 
   const handleResendEmail = () => {
-    // Mock email resend functionality
-    console.log('Resending verification email to:', userEmail);
+    toast.info('Verification email resend is not available yet');
   };
 
   return (

@@ -9,6 +9,7 @@ import TrustSignals from './components/TrustSignals';
 import SuccessModal from './components/SuccessModal';
 import { useAuth } from '../../AuthContext';
 import { useToast } from '../../components/ui/ToastProvider';
+import { getApiErrorMessage } from '../../utils/apiError';
 
 const BusinessRegistration = () => {
   const [isLoading, setIsLoading] = useState(false);
@@ -34,8 +35,7 @@ const BusinessRegistration = () => {
       setShowSuccessModal(true);
       setTimeout(() => navigate('/business-dashboard'), 1000);
     } catch (error) {
-      console.error('Registration failed:', error);
-      toast.error(error?.response?.data?.message || 'Registration failed. Please try again.');
+      toast.error(getApiErrorMessage(error, 'Registration failed. Please try again.'));
     } finally {
       setIsLoading(false);
     }

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Header from '../../components/ui/Header';
 import TemplateLibrary from './components/TemplateLibrary';
@@ -11,6 +11,7 @@ import Icon from '../../components/AppIcon';
 import Button from '../../components/ui/Button';
 import api from '../../apiClient';
 import { useToast } from '../../components/ui/ToastProvider';
+import { getApiErrorMessage } from '../../utils/apiError';
 
 const CreateCoupon = () => {
   const navigate = useNavigate();
@@ -20,6 +21,7 @@ const CreateCoupon = () => {
   const [showExitModal, setShowExitModal] = useState(false);
   const [couponId, setCouponId] = useState(null);
   const toast = useToast();
+  const lastAutosaveErrorAtRef = useRef(0);
 
   // Form Data States
   const [templateData, setTemplateData] = useState(null);
@@ -89,7 +91,7 @@ const CreateCoupon = () => {
           return;
         }
       } catch (error) {
-        console.warn('Unable to load draft from server, falling back to local storage', error);
+        toast.info('Unable to load draft from server. Trying local backup.');
       }
 
       const savedDraft = localStorage.getItem('coupon-draft');
@@ -102,7 +104,7 @@ const CreateCoupon = () => {
           setCustomizationData(prev => ({ ...prev, ...draft?.customizationData }));
           setCurrentStep(draft?.currentStep || 1);
         } catch (error) {
-          console.error('Error loading draft:', error);
+          toast.error(getApiErrorMessage(error, 'Failed to load draft backup'));
         }
       }
     };
@@ -113,7 +115,13 @@ const CreateCoupon = () => {
   // Auto-save draft periodically with debounce
   useEffect(() => {
     const timer = setTimeout(() => {
-      saveDraft(false, 'draft', null);
+      saveDraft(false, 'draft', 'autosave').catch((err) => {
+        const now = Date.now();
+        if (now - lastAutosaveErrorAtRef.current > 30_000) {
+          toast.error(getApiErrorMessage(err, 'Autosave failed'));
+          lastAutosaveErrorAtRef.current = now;
+        }
+      });
     }, 5000);
     return () => clearTimeout(timer);
   }, [templateData, discountData, validityData, customizationData, currentStep]);
@@ -158,8 +166,9 @@ const CreateCoupon = () => {
       }
       return saved?.id || couponId;
     } catch (error) {
-      console.error('Error saving draft:', error);
-      toast.error(error?.response?.data?.message || 'Failed to save draft');
+      if (showNotification) {
+        toast.error(getApiErrorMessage(error, 'Failed to save draft'));
+      }
       throw error;
     } finally {
       if (showNotification && mode === 'draft') {

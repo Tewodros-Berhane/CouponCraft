@@ -9,6 +9,7 @@ import Icon from '../../components/AppIcon';
 import Button from '../../components/ui/Button';
 import api from '../../apiClient';
 import { useToast } from '../../components/ui/ToastProvider';
+import { getApiErrorMessage } from '../../utils/apiError';
 import { toPng, toJpeg, toSvg } from 'html-to-image';
 import jsPDF from 'jspdf';
 
@@ -82,7 +83,7 @@ const CouponPreview = () => {
         const { data } = await api.get(`/coupons/${couponId}`);
         setCouponData(data?.data);
       } catch (error) {
-        console.error('Failed to load coupon', error);
+        toast.error(getApiErrorMessage(error, 'Failed to load coupon'));
       } finally {
         setIsLoading(false);
       }
@@ -100,7 +101,7 @@ const CouponPreview = () => {
           meta: { source: 'preview' },
         });
       } catch (err) {
-        console.error('Failed to record view', err);
+        // Ignore analytics failures for preview.
       }
     };
     sendViewEvent();
@@ -183,8 +184,7 @@ const CouponPreview = () => {
       }
       toast.success(`Exported as ${format.toUpperCase()}`);
     } catch (err) {
-      console.error('Export failed', err);
-      toast.error('Failed to export coupon');
+      toast.error(getApiErrorMessage(err, 'Failed to export coupon'));
     } finally {
       setIsLoading(false);
     }

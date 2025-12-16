@@ -8,6 +8,8 @@ import RedemptionChart from './components/RedemptionChart';
 import QuickActions from './components/QuickActions';
 import api from '../../apiClient';
 import { useAuth } from '../../AuthContext';
+import { useToast } from '../../components/ui/ToastProvider';
+import { getApiErrorMessage } from '../../utils/apiError';
 
 const BusinessDashboard = () => {
   const [isLoading, setIsLoading] = useState(true);
@@ -16,6 +18,7 @@ const BusinessDashboard = () => {
   const [chartData, setChartData] = useState([]);
   const [analyticsByCoupon, setAnalyticsByCoupon] = useState({});
   const { user } = useAuth();
+  const toast = useToast();
 
   const formatDiscount = (discount = {}) => {
     switch (discount.type) {
@@ -43,6 +46,7 @@ const BusinessDashboard = () => {
         const draftCount = list.filter((c) => c.status === 'draft').length;
         let totalRedemptions = 0;
         let totalViews = 0;
+        let hadAnalyticsError = false;
 
         const analyticsResults = await Promise.all(
           list.map(async (c) => {
@@ -69,11 +73,15 @@ const BusinessDashboard = () => {
               totalViews += totals.views;
               return { id: c.id, byDate, totals };
             } catch (err) {
-              console.error('Failed to load analytics', err);
+              hadAnalyticsError = true;
               return { id: c.id, byDate: {}, totals: { views: 0, redemptions: 0 } };
             }
           })
         );
+
+        if (hadAnalyticsError) {
+          toast.error("Some analytics could not be loaded");
+        }
 
         const analyticsMap = analyticsResults.reduce((acc, item) => {
           acc[item.id] = item;
@@ -131,7 +139,7 @@ const BusinessDashboard = () => {
           },
         ]);
       } catch (err) {
-        console.error('Failed to load coupons', err);
+        toast.error(getApiErrorMessage(err, "Failed to load dashboard data"));
       } finally {
         setIsLoading(false);
       }

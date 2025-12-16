@@ -2,9 +2,11 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import Icon from '../../../components/AppIcon';
 import Button from '../../../components/ui/Button';
+import { useToast } from '../../../components/ui/ToastProvider';
 
 const QuickActions = () => {
   const navigate = useNavigate();
+  const toast = useToast();
 
   const quickActions = [
     {
@@ -22,7 +24,7 @@ const QuickActions = () => {
       description: 'Detailed performance insights',
       icon: 'BarChart3',
       color: 'bg-accent',
-      action: () => console.log('Navigate to analytics'),
+      action: () => toast.info('Analytics dashboard is coming soon'),
       featured: false
     },
     {
@@ -31,7 +33,7 @@ const QuickActions = () => {
       description: 'Copy your top coupon settings',
       icon: 'Copy',
       color: 'bg-secondary',
-      action: () => console.log('Duplicate coupon'),
+      action: () => toast.info('Duplicate coupon is coming soon'),
       featured: false
     },
     {
@@ -40,7 +42,7 @@ const QuickActions = () => {
       description: 'Create multiple coupons at once',
       icon: 'Layers',
       color: 'bg-warning',
-      action: () => console.log('Bulk create'),
+      action: () => toast.info('Bulk create is coming soon'),
       featured: false
     }
   ];
@@ -102,10 +104,10 @@ const QuickActions = () => {
         <h4 className="text-sm font-semibold text-foreground mb-3">More Actions</h4>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
           {[
-            { icon: 'Settings', label: 'Settings', action: () => console.log('Settings') },
-            { icon: 'Users', label: 'Customers', action: () => console.log('Customers') },
-            { icon: 'Download', label: 'Export', action: () => console.log('Export') },
-            { icon: 'HelpCircle', label: 'Help', action: () => console.log('Help') }
+            { icon: 'Settings', label: 'Settings', action: () => navigate('/profile') },
+            { icon: 'Users', label: 'Customers', action: () => toast.info('Customers is coming soon') },
+            { icon: 'Download', label: 'Export', action: () => toast.info('Export is coming soon') },
+            { icon: 'HelpCircle', label: 'Help', action: () => toast.info('Help center is coming soon') }
           ]?.map((item) => (
             <button
               key={item?.label}
