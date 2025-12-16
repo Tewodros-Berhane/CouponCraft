@@ -7,6 +7,7 @@ export const redeemRouter = Router();
 // Public endpoint: resolve shareId -> coupon + business, and record a real "click" on open.
 redeemRouter.get("/:shareId", async (req, res) => {
   const { shareId } = req.params;
+  res.setHeader("Cache-Control", "no-store");
 
   const share = await prisma.share.findUnique({
     where: { id: shareId },
@@ -24,7 +25,7 @@ redeemRouter.get("/:shareId", async (req, res) => {
     return res.status(404).json({ message: "Coupon not available" });
   }
 
-  await prisma.$transaction([
+  const [updatedShare] = await prisma.$transaction([
     prisma.share.update({
       where: { id: shareId },
       data: { clicks: { increment: 1 } },
@@ -38,7 +39,7 @@ redeemRouter.get("/:shareId", async (req, res) => {
     }),
   ]);
 
-  const shareUrl = share.config?.shareUrl || null;
+  const shareUrl = updatedShare.config?.shareUrl || null;
 
   return res.json({
     data: {
@@ -46,8 +47,8 @@ redeemRouter.get("/:shareId", async (req, res) => {
         id: share.id,
         type: share.type,
         channel: share.channel,
-        clicks: share.clicks + 1,
-        redemptions: share.redemptions,
+        clicks: updatedShare.clicks,
+        redemptions: updatedShare.redemptions,
         shareUrl,
         createdAt: share.createdAt,
       },
@@ -68,4 +69,3 @@ redeemRouter.get("/:shareId", async (req, res) => {
     },
   });
 });
-
