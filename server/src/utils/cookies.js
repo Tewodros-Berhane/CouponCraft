@@ -47,14 +47,14 @@ export const setSessionCookies = (res, tokens) => {
   res.cookie(COOKIE_NAMES.refresh, tokens.refreshToken, {
     ...baseCookieOptions(),
     httpOnly: true,
-    path: "/api/auth/refresh",
+    path: "/api/auth",
     maxAge: refreshMaxAge,
   });
 };
 
 export const clearSessionCookies = (res) => {
   res.clearCookie(COOKIE_NAMES.access, { ...baseCookieOptions(), httpOnly: true, path: "/" });
-  res.clearCookie(COOKIE_NAMES.refresh, { ...baseCookieOptions(), httpOnly: true, path: "/api/auth/refresh" });
+  res.clearCookie(COOKIE_NAMES.refresh, { ...baseCookieOptions(), httpOnly: true, path: "/api/auth" });
   res.clearCookie(COOKIE_NAMES.csrf, { ...baseCookieOptions(), httpOnly: false, path: "/" });
 };
 
