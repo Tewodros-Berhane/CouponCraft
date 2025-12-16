@@ -65,10 +65,17 @@ const QRCodeGenerator = ({ couponData, shareId, onClose, isVisible }) => {
   };
 
   const handlePrint = () => {
-    const printWindow = window.open('', '_blank');
-    printWindow?.document?.write(`
+    if (!qrCodeUrl) return;
+    const printWindow = window.open('', '_blank', 'noopener,noreferrer');
+    if (!printWindow) return;
+
+    const doc = printWindow.document;
+    doc.open();
+    doc.write(`<!doctype html>
       <html>
         <head>
+          <meta charset="utf-8" />
+          <meta name="viewport" content="width=device-width, initial-scale=1" />
           <title>Print QR Code</title>
           <style>
             body { margin: 0; padding: 20px; text-align: center; }
@@ -76,18 +83,44 @@ const QRCodeGenerator = ({ couponData, shareId, onClose, isVisible }) => {
             .info { margin-top: 20px; font-family: Arial, sans-serif; }
           </style>
         </head>
-        <body>
-          <img src="${qrCodeUrl}" alt="Coupon QR Code" />
-          <div class="info">
-            <h3>${couponData?.title}</h3>
-            <p>Scan to redeem your coupon</p>
-            <p>Valid until: ${couponData?.expiryDate}</p>
-          </div>
-        </body>
-      </html>
-    `);
-    printWindow?.document?.close();
-    printWindow?.print();
+        <body></body>
+      </html>`);
+    doc.close();
+
+    const img = doc.createElement('img');
+    img.src = qrCodeUrl;
+    img.alt = 'Coupon QR Code';
+
+    const info = doc.createElement('div');
+    info.className = 'info';
+
+    const title = doc.createElement('h3');
+    title.textContent = couponData?.title || 'Coupon';
+
+    const hint = doc.createElement('p');
+    hint.textContent = 'Scan to redeem your coupon';
+
+    const expiry = doc.createElement('p');
+    expiry.textContent = `Valid until: ${couponData?.expiryDate || '—'}`;
+
+    info.appendChild(title);
+    info.appendChild(hint);
+    info.appendChild(expiry);
+
+    doc.body.appendChild(img);
+    doc.body.appendChild(info);
+
+    const doPrint = () => {
+      try {
+        printWindow.focus();
+        printWindow.print();
+      } catch {
+        // ignore
+      }
+    };
+
+    img.onload = doPrint;
+    img.onerror = doPrint;
   };
 
   if (!isVisible) return null;
