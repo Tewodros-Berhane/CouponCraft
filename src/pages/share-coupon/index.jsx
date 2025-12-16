@@ -499,10 +499,12 @@ const ShareCoupon = () => {
       {/* Modals */}
       <QRCodeGenerator
         couponData={displayCoupon}
+        shareId={qrShareId}
         isVisible={isQRModalVisible}
         onClose={() => {
           setIsQRModalVisible(false);
           setIsGeneratingQR(false);
+          setQrShareId(null);
         }}
       />
       <BulkShareModal
