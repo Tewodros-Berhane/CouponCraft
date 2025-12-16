@@ -12,8 +12,11 @@ const sanitizeOrigin = (origin) => origin?.replace(/\/+$/, "");
 
 const missing = required.filter((key) => !process.env[key]);
 if (missing.length) {
-  // Warn instead of crash to ease local onboarding, but log clearly.
-  // In production, prefer failing fast.
+  const isProd = (process.env.NODE_ENV || "development") === "production";
+  if (isProd) {
+    throw new Error(`[config] Missing env vars: ${missing.join(", ")}`);
+  }
+  // Warn instead of crash to ease local onboarding.
   console.warn(`[config] Missing env vars: ${missing.join(", ")}`);
 }
 

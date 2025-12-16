@@ -7,6 +7,7 @@ import { generateTokens } from "../utils/tokens.js";
 import { requireAuth } from "../middlewares/auth.js";
 import { prisma } from "../db/prisma.js";
 import { clearSessionCookies, ensureCsrfCookie, setSessionCookies, COOKIE_NAMES } from "../utils/cookies.js";
+import { config } from "../config.js";
 
 export const authRouter = Router();
 
@@ -106,7 +107,7 @@ authRouter.post("/refresh", async (req, res) => {
 
   try {
     const jwt = await import("jsonwebtoken");
-    const decoded = jwt.default.verify(refreshToken, process.env.JWT_SECRET || "dev-secret-change-me");
+    const decoded = jwt.default.verify(refreshToken, config.jwtSecret);
     const stored = await prisma.refreshToken.findUnique({ where: { token: refreshToken } });
     if (!stored || stored.revoked || stored.userId !== decoded.sub) {
       return res.status(401).json({ message: "Invalid or reused refresh token" });
