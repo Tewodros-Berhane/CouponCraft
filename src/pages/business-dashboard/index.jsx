@@ -3,7 +3,6 @@ import Header from '../../components/ui/Header';
 import MetricsCard from './components/MetricsCard';
 import CouponActivityTable from './components/CouponActivityTable';
 import TopPerformingCoupons from './components/TopPerformingCoupons';
-import OptimizationSuggestions from './components/OptimizationSuggestions';
 import RedemptionChart from './components/RedemptionChart';
 import QuickActions from './components/QuickActions';
 import api from '../../apiClient';
@@ -163,46 +162,8 @@ const BusinessDashboard = () => {
     name: c.name,
     performance: Math.min(100, (analyticsByCoupon?.[c.id]?.totals?.views || 0) * 5 || 0),
     redemptions: `${c.redemptions} uses`,
-    revenue: '$0',
+    revenue: '—',
   }));
-
-  // Mock data for AI optimization suggestions
-  const optimizationSuggestions = [
-    {
-      id: 1,
-      title: "Increase Summer Sale Discount",
-      description: `Your Summer Sale coupon is performing well but could reach more customers. Consider increasing the discount from 25% to 30% to boost redemption rates. Based on similar campaigns, this could increase conversions by 15-20%.`,
-      priority: "high",
-      impact: "+20% conversions",
-      timeToImplement: "5 minutes"
-    },
-    {
-      id: 2,
-      title: "Extend New Customer Welcome Period",
-      description: `Your welcome coupon expires soon but shows strong engagement. Extending the validity period by 30 days could capture more new customers who are still in their decision-making process.`,
-      priority: "medium",
-      impact: "+12% new customers",
-      timeToImplement: "2 minutes"
-    },
-    {
-      id: 3,
-      title: "Create Weekend-Specific Offers",
-      description: `Analytics show 40% higher engagement on weekends. Creating weekend-only flash sales could capitalize on this pattern and drive additional revenue during peak shopping times.`,
-      priority: "low",
-      impact: "+8% weekend sales",
-      timeToImplement: "15 minutes"
-    }
-  ];
-
-  const chartDataFallback = [
-    { date: "Mon", redemptions: 0, views: 0 },
-    { date: "Tue", redemptions: 0, views: 0 },
-    { date: "Wed", redemptions: 0, views: 0 },
-    { date: "Thu", redemptions: 0, views: 0 },
-    { date: "Fri", redemptions: 0, views: 0 },
-    { date: "Sat", redemptions: 0, views: 0 },
-    { date: "Sun", redemptions: 0, views: 0 },
-  ];
 
   if (isLoading) {
     return (
@@ -261,7 +222,7 @@ const BusinessDashboard = () => {
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
             {/* Left Column - Charts and Tables */}
             <div className="lg:col-span-2 space-y-8">
-              <RedemptionChart data={chartData?.length ? chartData : chartDataFallback} />
+              <RedemptionChart data={chartData} />
               <CouponActivityTable coupons={couponActivityData} />
             </div>
 
@@ -269,33 +230,6 @@ const BusinessDashboard = () => {
             <div className="space-y-8">
               <QuickActions />
               <TopPerformingCoupons coupons={topPerformingData} />
-            </div>
-          </div>
-
-          {/* AI Optimization Suggestions */}
-          <div className="mb-8">
-            <OptimizationSuggestions suggestions={optimizationSuggestions} />
-          </div>
-
-          {/* Footer Stats */}
-          <div className="bg-card rounded-lg shadow-level-1 p-6">
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
-              <div>
-                <p className="text-2xl font-bold text-foreground">98.5%</p>
-                <p className="text-sm text-muted-foreground">Uptime</p>
-              </div>
-              <div>
-                <p className="text-2xl font-bold text-foreground">2.3s</p>
-                <p className="text-sm text-muted-foreground">Avg Load Time</p>
-              </div>
-              <div>
-                <p className="text-2xl font-bold text-foreground">4.8/5</p>
-                <p className="text-sm text-muted-foreground">Customer Rating</p>
-              </div>
-              <div>
-                <p className="text-2xl font-bold text-foreground">24/7</p>
-                <p className="text-sm text-muted-foreground">Support</p>
-              </div>
             </div>
           </div>
         </div>

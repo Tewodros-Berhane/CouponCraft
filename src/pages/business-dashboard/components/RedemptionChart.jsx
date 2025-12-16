@@ -6,6 +6,11 @@ import Icon from '../../../components/AppIcon';
 const RedemptionChart = ({ data }) => {
   const [chartType, setChartType] = useState('line');
   const [timeRange, setTimeRange] = useState('7d');
+  const safeData = Array.isArray(data) ? data : [];
+  const totalViews = safeData.reduce((sum, item) => sum + (Number(item?.views) || 0), 0);
+  const totalRedemptions = safeData.reduce((sum, item) => sum + (Number(item?.redemptions) || 0), 0);
+  const conversionRate = totalViews ? (totalRedemptions / totalViews) * 100 : 0;
+  const avgDaily = safeData.length ? Math.round(totalRedemptions / safeData.length) : 0;
 
   const timeRangeOptions = [
     { value: '7d', label: '7 Days' },
@@ -85,9 +90,14 @@ const RedemptionChart = ({ data }) => {
         </div>
       </div>
       <div className="h-80 w-full" aria-label="Coupon Redemption Trends Chart">
-        <ResponsiveContainer width="100%" height="100%">
-          {chartType === 'line' ? (
-            <LineChart data={data} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
+        {safeData.length === 0 ? (
+          <div className="h-full flex items-center justify-center text-sm text-muted-foreground">
+            No analytics data yet
+          </div>
+        ) : (
+          <ResponsiveContainer width="100%" height="100%">
+            {chartType === 'line' ? (
+              <LineChart data={safeData} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" />
               <XAxis 
                 dataKey="date" 
@@ -117,9 +127,9 @@ const RedemptionChart = ({ data }) => {
                 activeDot={{ r: 6, stroke: 'var(--color-accent)', strokeWidth: 2 }}
                 name="Views"
               />
-            </LineChart>
-          ) : (
-            <AreaChart data={data} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
+              </LineChart>
+            ) : (
+              <AreaChart data={safeData} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" />
               <XAxis 
                 dataKey="date" 
@@ -149,34 +159,35 @@ const RedemptionChart = ({ data }) => {
                 fillOpacity={0.6}
                 name="Redemptions"
               />
-            </AreaChart>
-          )}
-        </ResponsiveContainer>
+              </AreaChart>
+            )}
+          </ResponsiveContainer>
+        )}
       </div>
       <div className="mt-6 pt-4 border-t border-border">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <div className="text-center">
             <p className="text-xs text-muted-foreground">Total Views</p>
             <p className="text-lg font-semibold text-foreground">
-              {data?.reduce((sum, item) => sum + item?.views, 0)?.toLocaleString()}
+              {totalViews.toLocaleString()}
             </p>
           </div>
           <div className="text-center">
             <p className="text-xs text-muted-foreground">Total Redemptions</p>
             <p className="text-lg font-semibold text-foreground">
-              {data?.reduce((sum, item) => sum + item?.redemptions, 0)?.toLocaleString()}
+              {totalRedemptions.toLocaleString()}
             </p>
           </div>
           <div className="text-center">
             <p className="text-xs text-muted-foreground">Conversion Rate</p>
             <p className="text-lg font-semibold text-success">
-              {((data?.reduce((sum, item) => sum + item?.redemptions, 0) / data?.reduce((sum, item) => sum + item?.views, 0)) * 100)?.toFixed(1)}%
+              {conversionRate.toFixed(1)}%
             </p>
           </div>
           <div className="text-center">
             <p className="text-xs text-muted-foreground">Avg. Daily</p>
             <p className="text-lg font-semibold text-foreground">
-              {Math.round(data?.reduce((sum, item) => sum + item?.redemptions, 0) / data?.length)}
+              {avgDaily.toLocaleString()}
             </p>
           </div>
         </div>
