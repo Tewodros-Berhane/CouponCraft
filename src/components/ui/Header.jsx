@@ -213,7 +213,12 @@ const Header = ({ isInWorkflow = false, workflowStep = null }) => {
       {/* Mobile Menu Overlay */}
       {isMobileMenuOpen && (
         <div className="fixed inset-0 z-40 md:hidden">
-          <div className="fixed inset-0 bg-black/20 backdrop-blur-sm" onClick={closeMobileMenu} />
+          <button
+            type="button"
+            aria-label="Close mobile menu"
+            className="fixed inset-0 bg-black/20 backdrop-blur-sm"
+            onClick={closeMobileMenu}
+          />
           <div className="fixed top-16 left-0 right-0 bg-white border-b border-border shadow-level-3">
             <nav className="px-6 py-4 space-y-2">
               {navigationItems?.map((item) => (
@@ -235,7 +240,11 @@ const Header = ({ isInWorkflow = false, workflowStep = null }) => {
               {/* Mobile User Actions */}
               <div className="pt-4 mt-4 border-t border-border space-y-2">
                 {user ? (
-                  <button onClick={handleLogout} className="flex items-center space-x-3 px-4 py-3 rounded-lg text-base font-medium text-muted-foreground hover:text-foreground hover:bg-muted w-full transition-all duration-150">
+                  <button
+                    type="button"
+                    onClick={handleLogout}
+                    className="flex items-center space-x-3 px-4 py-3 rounded-lg text-base font-medium text-muted-foreground hover:text-foreground hover:bg-muted w-full transition-all duration-150"
+                  >
                     <Icon name="LogOut" size={20} />
                     <span>Logout</span>
                   </button>
