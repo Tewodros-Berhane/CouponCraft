@@ -7,6 +7,16 @@ const CouponActivityTable = ({ coupons }) => {
   const [sortField, setSortField] = useState('name');
   const [sortDirection, setSortDirection] = useState('asc');
 
+  const getAriaSort = (field) => {
+    if (sortField !== field) return 'none';
+    return sortDirection === 'asc' ? 'ascending' : 'descending';
+  };
+
+  const getSortButtonLabel = (field, label) => {
+    if (sortField !== field) return `Sort by ${label}`;
+    return `Sort by ${label} (currently ${sortDirection === 'asc' ? 'ascending' : 'descending'})`;
+  };
+
   const getStatusBadge = (status) => {
     const statusConfig = {
       active: { color: 'bg-success/10 text-success', label: 'Active' },
@@ -58,36 +68,40 @@ const CouponActivityTable = ({ coupons }) => {
           </Button>
         </div>
       </div>
-      {/* Desktop Table */}
-      <div className="hidden md:block overflow-x-auto">
-        <table className="w-full">
-          <thead className="bg-muted/30">
-            <tr>
-              <th className="px-6 py-3 text-left">
+       {/* Desktop Table */}
+       <div className="hidden md:block overflow-x-auto">
+         <table className="w-full">
+           <thead className="bg-muted/30">
+             <tr>
+              <th className="px-6 py-3 text-left" scope="col" aria-sort={getAriaSort('name')}>
                 <button
+                  type="button"
                   onClick={() => handleSort('name')}
                   className="flex items-center space-x-1 text-sm font-medium text-muted-foreground hover:text-foreground"
+                  aria-label={getSortButtonLabel('name', 'coupon name')}
                 >
                   <span>Coupon Name</span>
                   <Icon name="ArrowUpDown" size={14} />
                 </button>
               </th>
-              <th className="px-6 py-3 text-left">
+              <th className="px-6 py-3 text-left" scope="col" aria-sort={getAriaSort('redemptions')}>
                 <button
+                  type="button"
                   onClick={() => handleSort('redemptions')}
                   className="flex items-center space-x-1 text-sm font-medium text-muted-foreground hover:text-foreground"
+                  aria-label={getSortButtonLabel('redemptions', 'redemptions')}
                 >
                   <span>Redemptions</span>
                   <Icon name="ArrowUpDown" size={14} />
                 </button>
               </th>
-              <th className="px-6 py-3 text-left">
+              <th className="px-6 py-3 text-left" scope="col">
                 <span className="text-sm font-medium text-muted-foreground">Expiration</span>
               </th>
-              <th className="px-6 py-3 text-left">
+              <th className="px-6 py-3 text-left" scope="col">
                 <span className="text-sm font-medium text-muted-foreground">Status</span>
               </th>
-              <th className="px-6 py-3 text-left">
+              <th className="px-6 py-3 text-left" scope="col">
                 <span className="text-sm font-medium text-muted-foreground">Actions</span>
               </th>
             </tr>
