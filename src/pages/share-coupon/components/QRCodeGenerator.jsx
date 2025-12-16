@@ -17,7 +17,6 @@ const QRCodeGenerator = ({ couponData, shareId, onClose, isVisible }) => {
 
   const formatOptions = [
     { value: 'png', label: 'PNG', description: 'High quality with transparency' },
-    { value: 'jpg', label: 'JPG', description: 'Smaller file size' },
     { value: 'svg', label: 'SVG', description: 'Vector format, scalable' }
   ];
 
@@ -32,7 +31,9 @@ const QRCodeGenerator = ({ couponData, shareId, onClose, isVisible }) => {
     try {
       if (shareId) {
         // Use backend QR endpoint
-        const qrUrl = `${import.meta.env.VITE_API_URL || 'http://localhost:4000/api'}/qr/${shareId}`;
+        const base = import.meta.env.VITE_API_URL || 'http://localhost:4000/api';
+        const size = parseInt(getSizePixels()?.split('x')?.[0], 10) || 400;
+        const qrUrl = `${base}/qr/${shareId}?format=${encodeURIComponent(qrFormat)}&size=${encodeURIComponent(size)}`;
         setQrCodeUrl(qrUrl);
       } else {
         // Fallback to client QR service
