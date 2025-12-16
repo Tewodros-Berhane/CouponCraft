@@ -3,6 +3,7 @@ import Icon from '../../../components/AppIcon';
 import Button from '../../../components/ui/Button';
 import Input from '../../../components/ui/Input';
 import { Checkbox } from '../../../components/ui/Checkbox';
+import { useToast } from '../../../components/ui/ToastProvider';
 
 const ShareLinkCustomizer = ({ baseUrl, onSave, isVisible, onClose }) => {
   const [customSlug, setCustomSlug] = useState('');
@@ -14,13 +15,10 @@ const ShareLinkCustomizer = ({ baseUrl, onSave, isVisible, onClose }) => {
   const [password, setPassword] = useState('');
   const [expirationEnabled, setExpirationEnabled] = useState(false);
   const [expirationDate, setExpirationDate] = useState('');
+  const toast = useToast();
 
   const generateCustomUrl = () => {
-    let url = baseUrl;
-    
-    if (customSlug) {
-      url = url?.replace('/coupon/', `/c/${customSlug}/`);
-    }
+    const url = baseUrl || '';
 
     const params = new URLSearchParams();
     if (trackingEnabled) {
@@ -53,8 +51,15 @@ const ShareLinkCustomizer = ({ baseUrl, onSave, isVisible, onClose }) => {
   };
 
   const copyToClipboard = () => {
-    navigator.clipboard?.writeText(generateCustomUrl());
-    // In a real app, you'd show a toast notification here
+    const url = generateCustomUrl();
+    if (!url) {
+      toast.error('No link available');
+      return;
+    }
+    navigator.clipboard
+      ?.writeText(url)
+      ?.then(() => toast.success('Link copied'))
+      ?.catch(() => toast.error('Failed to copy link'));
   };
 
   if (!isVisible) return null;
