@@ -28,6 +28,7 @@ export const config = {
   refreshExpiresIn: process.env.JWT_REFRESH_EXPIRES_IN || "7d",
   clientOrigin: process.env.CLIENT_ORIGIN || "http://localhost:5173",
   jsonLimit: process.env.JSON_BODY_LIMIT || "1mb",
+  uploadLimit: process.env.UPLOAD_BODY_LIMIT || "5mb",
   corsOrigins: (process.env.CLIENT_ORIGIN || "http://localhost:5173")
     .split(",")
     .map((o) => sanitizeOrigin(o.trim()))

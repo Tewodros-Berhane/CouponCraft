@@ -5,6 +5,9 @@ const SAFE_METHODS = new Set(["GET", "HEAD", "OPTIONS"]);
 export const csrfProtection = (req, res, next) => {
   if (SAFE_METHODS.has(req.method)) return next();
 
+  // Signed upload PUTs are authorized via signature, and the upload URL cannot be obtained without CSRF-protected auth.
+  if (req.method === "PUT" && req.path.startsWith("/api/uploads/put/") && req.query?.sig) return next();
+
   const authHeader = req.headers.authorization;
   const usingBearer = typeof authHeader === "string" && authHeader.startsWith("Bearer ");
   if (usingBearer) return next();
@@ -20,4 +23,3 @@ export const csrfProtection = (req, res, next) => {
   }
   return next();
 };
-
