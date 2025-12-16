@@ -26,11 +26,11 @@ const Select = React.forwardRef(({
     onOpenChange,
     ...props
 }, ref) => {
-    const [isOpen, setIsOpen] = useState(false);
-    const [searchTerm, setSearchTerm] = useState("");
+  const [isOpen, setIsOpen] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
 
-    // Generate unique ID if not provided
-    const selectId = id || `select-${Math.random()?.toString(36)?.substr(2, 9)}`;
+    const generatedId = React.useId();
+    const selectId = id || `select-${generatedId.replace(/:/g, "")}`;
 
     // Filter options based on search
     const filteredOptions = searchable && searchTerm
