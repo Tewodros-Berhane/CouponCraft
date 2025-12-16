@@ -5,6 +5,7 @@ import Input from '../../../components/ui/Input';
 import Icon from '../../../components/AppIcon';
 import { useAuth } from '../../../AuthContext';
 import { useToast } from '../../../components/ui/ToastProvider';
+import { getApiErrorMessage } from '../../../utils/apiError';
 
 const LoginForm = () => {
   const navigate = useNavigate();
@@ -17,12 +18,6 @@ const LoginForm = () => {
   const [isLoading, setIsLoading] = useState(false);
   const { login } = useAuth();
   const toast = useToast();
-
-  // Mock credentials for demonstration
-  // const mockCredentials = {
-  //   email: 'business@couponcraft.com',
-  //   password: 'CouponCraft2024!'
-  // };
 
   const handleInputChange = (e) => {
     const { name, value } = e?.target;
@@ -70,7 +65,7 @@ const handleSubmit = async (e) => {
   } catch (err) {
     setErrors((prev) => ({
       ...prev,
-      general: err?.response?.data?.message || 'Login failed. Please try again.'
+      general: getApiErrorMessage(err, 'Login failed. Please try again.')
     }));
   } finally {
     setIsLoading(false);
@@ -78,8 +73,7 @@ const handleSubmit = async (e) => {
 };
 
   const handleForgotPassword = () => {
-    // In a real app, this would navigate to forgot password page
-    toast.info('Password reset would be implemented here. Demo login: business@couponcraft.com / CouponCraft2024!');
+    toast.info('Password reset is coming soon');
   };
 
   return (
