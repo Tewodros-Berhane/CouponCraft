@@ -10,7 +10,19 @@ qrRouter.get("/:shareId", async (req, res) => {
   const link = share.config?.shareUrl || share.config?.link || share.config?.url;
   if (!link) return res.status(400).json({ message: "Share link not available" });
   try {
-    const png = await QRCode.toBuffer(link, { margin: 1, width: 320 });
+    const format = (req.query.format || "png").toString().toLowerCase();
+    const size = Math.min(Math.max(parseInt(req.query.size, 10) || 320, 200), 1000);
+    if (format === "svg") {
+      const svg = await QRCode.toString(link, { margin: 1, type: "svg", width: size });
+      res.setHeader("Content-Type", "image/svg+xml");
+      res.send(svg);
+      return;
+    }
+    if (format !== "png") {
+      res.status(400).json({ message: "Unsupported format" });
+      return;
+    }
+    const png = await QRCode.toBuffer(link, { margin: 1, width: size });
     res.setHeader("Content-Type", "image/png");
     res.send(png);
   } catch (err) {
