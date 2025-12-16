@@ -129,10 +129,12 @@ const TemplateLibrary = ({ selectedTemplate, onTemplateSelect }) => {
       {/* Template Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         {filteredTemplates?.map((template) => (
-          <div
+          <button
             key={template?.id}
             onClick={() => onTemplateSelect(template)}
-            className={`relative group cursor-pointer rounded-xl border-2 transition-all duration-200 hover-scale ${
+            type="button"
+            aria-pressed={selectedTemplate?.id === template?.id}
+            className={`relative group cursor-pointer rounded-xl border-2 transition-all duration-200 hover-scale text-left w-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ${
               selectedTemplate?.id === template?.id
                 ? 'border-primary shadow-level-2'
                 : 'border-border hover:border-primary/50 hover:shadow-level-1'
@@ -190,7 +192,7 @@ const TemplateLibrary = ({ selectedTemplate, onTemplateSelect }) => {
                 <span className="text-sm font-medium text-foreground">Select Template</span>
               </div>
             </div>
-          </div>
+          </button>
         ))}
       </div>
       {/* Empty State */}
