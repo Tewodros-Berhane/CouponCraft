@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import Icon from '../../../components/AppIcon';
 import Button from '../../../components/ui/Button';
 import Select from '../../../components/ui/Select';
+import { Dialog, DialogClose, DialogContent } from '../../../components/ui/Dialog';
+import IconButton from '../../../components/ui/IconButton';
 
 const QRCodeGenerator = ({ couponData, shareId, shareUrl, onClose, isVisible }) => {
   const [qrSize, setQrSize] = useState('medium');
@@ -123,17 +125,22 @@ const QRCodeGenerator = ({ couponData, shareId, shareUrl, onClose, isVisible }) 
     img.onerror = doPrint;
   };
 
-  if (!isVisible) return null;
-
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
-      <div className="bg-white rounded-xl shadow-level-4 w-full max-w-2xl mx-4 max-h-[90vh] overflow-y-auto">
+    <Dialog
+      open={!!isVisible}
+      onOpenChange={(open) => {
+        if (!open) onClose?.();
+      }}
+    >
+      <DialogContent className="max-w-2xl p-0 max-h-[90vh] overflow-y-auto">
         <div className="flex items-center justify-between p-6 border-b border-border">
           <div>
             <h2 className="text-xl font-semibold text-foreground">Generate QR Code</h2>
             <p className="text-sm text-muted-foreground">Create a scannable QR code for your coupon</p>
           </div>
-          <Button variant="ghost" size="sm" onClick={onClose} iconName="X" />
+          <DialogClose asChild>
+            <IconButton ariaLabel="Close dialog" iconName="X" onClick={onClose} />
+          </DialogClose>
         </div>
 
         <div className="p-6">
@@ -245,9 +252,11 @@ const QRCodeGenerator = ({ couponData, shareId, shareUrl, onClose, isVisible }) 
             QR code links to: <span className="font-mono text-xs">{shareUrl || couponData?.shareUrl || '—'}</span>
           </div>
           <div className="flex space-x-2">
-            <Button variant="ghost" onClick={onClose}>
-              Close
-            </Button>
+            <DialogClose asChild>
+              <Button variant="ghost" onClick={onClose}>
+                Close
+              </Button>
+            </DialogClose>
             <Button 
               variant="default" 
               onClick={handleDownload}
@@ -259,8 +268,8 @@ const QRCodeGenerator = ({ couponData, shareId, shareUrl, onClose, isVisible }) 
             </Button>
           </div>
         </div>
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
   );
 };
 
