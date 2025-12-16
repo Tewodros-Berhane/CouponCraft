@@ -1,18 +1,15 @@
 .DS_Store
-node_modules
-.idea
-package-lock.json
-/build
+.vite/
+node_modules/
+server/node_modules/
+build/
 .vscode/
 .idea/
-vite.config.*s.*
-.env
-*.env
-server/.env
-server/.env.example
-server/.env.*
-server/.env.local
-server/.env.development.local
-server/prisma/migrations
-server/node_modules
-.env
+
+# Environment files (keep examples)
+.env*
+!.env.example
+server/.env*
+!server/.env.example
+
+# Prisma migrations should be committed
