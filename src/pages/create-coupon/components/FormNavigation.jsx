@@ -10,7 +10,8 @@ const FormNavigation = ({
   onPreview,
   onPublish,
   isValid,
-  isSaving
+  isSavingDraft,
+  isPublishing
 }) => {
   const steps = [
     { id: 1, name: 'Template', icon: 'Palette', description: 'Choose design' },
@@ -149,7 +150,7 @@ const FormNavigation = ({
           <Button
             variant="ghost"
             onClick={onSaveDraft}
-            loading={isSaving}
+            loading={isSavingDraft}
             iconName="Save"
             iconPosition="left"
             className="flex-1"
@@ -160,21 +161,13 @@ const FormNavigation = ({
           {currentStep === totalSteps && (
             <>
               <Button
-                variant="outline"
-                onClick={onPreview}
-                iconName="ExternalLink"
-                iconPosition="left"
-                className="flex-1"
-              >
-                Preview
-              </Button>
-              <Button
                 variant="default"
                 onClick={onPublish}
                 iconName="Send"
                 iconPosition="left"
                 className="flex-1"
-                disabled={!isValid}
+                loading={isPublishing}
+                disabled={!isValid || isPublishing}
               >
                 Publish & Share
               </Button>

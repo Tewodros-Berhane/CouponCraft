@@ -15,7 +15,8 @@ import { useToast } from '../../components/ui/ToastProvider';
 const CreateCoupon = () => {
   const navigate = useNavigate();
   const [currentStep, setCurrentStep] = useState(1);
-  const [isSaving, setIsSaving] = useState(false);
+  const [isSavingDraft, setIsSavingDraft] = useState(false);
+  const [isPublishing, setIsPublishing] = useState(false);
   const [showExitModal, setShowExitModal] = useState(false);
   const [couponId, setCouponId] = useState(null);
   const toast = useToast();
@@ -112,7 +113,7 @@ const CreateCoupon = () => {
   // Auto-save draft periodically with debounce
   useEffect(() => {
     const timer = setTimeout(() => {
-      saveDraft(false);
+      saveDraft(false, 'draft', null);
     }, 5000);
     return () => clearTimeout(timer);
   }, [templateData, discountData, validityData, customizationData, currentStep]);
@@ -126,8 +127,9 @@ const CreateCoupon = () => {
     currentStep,
   });
 
-  const saveDraft = async (showNotification = true, status = 'draft') => {
-    if (showNotification) setIsSaving(true);
+  const saveDraft = async (showNotification = true, status = 'draft', mode = 'draft') => {
+    if (showNotification && mode === 'draft') setIsSavingDraft(true);
+    if (showNotification && mode === 'publish') setIsPublishing(true);
     const payload = buildPayload(status);
     try {
       let response;
@@ -152,7 +154,7 @@ const CreateCoupon = () => {
       );
 
       if (showNotification) {
-        toast.success('Draft saved successfully');
+        toast.success(status === 'active' ? 'Coupon published' : 'Draft saved successfully');
       }
       return saved?.id || couponId;
     } catch (error) {
@@ -160,8 +162,11 @@ const CreateCoupon = () => {
       toast.error(error?.response?.data?.message || 'Failed to save draft');
       throw error;
     } finally {
-      if (showNotification) {
-        setTimeout(() => setIsSaving(false), 1000);
+      if (showNotification && mode === 'draft') {
+        setTimeout(() => setIsSavingDraft(false), 800);
+      }
+      if (showNotification && mode === 'publish') {
+        setIsPublishing(false);
       }
     }
   };
@@ -217,7 +222,7 @@ const CreateCoupon = () => {
 
   const handlePreview = async () => {
     if (validateCurrentStep(true)) {
-      const id = await saveDraft(false);
+      const id = await saveDraft(false, 'draft', null);
       navigate('/coupon-preview', { 
         state: { 
           couponId: id || couponId,
@@ -238,8 +243,7 @@ const CreateCoupon = () => {
       return;
     }
     try {
-      const id = await saveDraft(true, 'active');
-      toast.success('Coupon published');
+      const id = await saveDraft(true, 'active', 'publish');
       navigate('/share-coupon', { state: { couponId: id || couponId } });
     } catch (err) {
       // toast handled in saveDraft
@@ -251,7 +255,7 @@ const CreateCoupon = () => {
   };
 
   const confirmExit = () => {
-    saveDraft(false);
+    saveDraft(false, 'draft', null);
     navigate('/business-dashboard');
   };
 
@@ -337,11 +341,12 @@ const CreateCoupon = () => {
                   currentStep={currentStep}
                   totalSteps={totalSteps}
                   onStepChange={handleStepChange}
-                  onSaveDraft={() => saveDraft(true)}
+                  onSaveDraft={() => saveDraft(true, 'draft', 'draft')}
                   onPreview={handlePreview}
                   onPublish={handlePublish}
                   isValid={validateCurrentStep()}
-                  isSaving={isSaving}
+                  isSavingDraft={isSavingDraft}
+                  isPublishing={isPublishing}
                 />
               </div>
             </div>
