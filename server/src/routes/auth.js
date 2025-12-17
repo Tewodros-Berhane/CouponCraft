@@ -93,7 +93,7 @@ authRouter.post("/login", validate(loginSchema), async (req, res) => {
 authRouter.post("/refresh", async (req, res) => {
   const refreshToken = (req.body || {})?.refreshToken || req.cookies?.[COOKIE_NAMES.refresh];
   if (!refreshToken) {
-    return res.status(400).json({ message: "Missing refreshToken" });
+    return res.status(401).json({ code: "REFRESH_TOKEN_MISSING", message: "Missing refresh token" });
   }
   try {
     const payload = JSON.parse(

@@ -62,7 +62,14 @@ api.interceptors.response.use(
   async (error) => {
     const originalRequest = error.config;
     const status = error?.response?.status;
+    const code = error?.response?.data?.code;
+    const message = error?.response?.data?.message;
     const url = originalRequest?.url || "";
+
+    // If the caller isn't authenticated yet (common on first load), avoid a pointless refresh attempt.
+    if (status === 401 && (url.includes("/auth/me") || code === "AUTH_TOKEN_MISSING" || message === "Missing auth token")) {
+      return Promise.reject(error);
+    }
     if (status === 401 && url.includes("/auth/refresh")) {
       return Promise.reject(error);
     }
@@ -72,7 +79,7 @@ api.interceptors.response.use(
         await refreshAccessToken();
         return api(originalRequest);
       } catch (refreshError) {
-        return Promise.reject(refreshError);
+        return Promise.reject(error);
       }
     }
     return Promise.reject(error);

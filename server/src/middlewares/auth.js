@@ -11,7 +11,7 @@ export const requireAuth = async (req, res, next) => {
   const token = bearerToken || cookieToken;
 
   if (!token) {
-    return res.status(401).json({ message: "Missing auth token" });
+    return res.status(401).json({ code: "AUTH_TOKEN_MISSING", message: "Missing auth token" });
   }
   try {
     const payload = jwt.verify(token, config.jwtSecret);
@@ -20,11 +20,11 @@ export const requireAuth = async (req, res, next) => {
       include: { business: true },
     });
     if (!user) {
-      return res.status(401).json({ message: "User not found" });
+      return res.status(401).json({ code: "AUTH_USER_NOT_FOUND", message: "User not found" });
     }
     req.user = user;
     return next();
   } catch (err) {
-    return res.status(401).json({ message: "Invalid or expired token" });
+    return res.status(401).json({ code: "AUTH_TOKEN_INVALID", message: "Invalid or expired token" });
   }
 };
