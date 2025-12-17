@@ -17,6 +17,7 @@ const ShareLinkCustomizer = ({ baseUrl, onSave, isVisible, onClose }) => {
   const [password, setPassword] = useState('');
   const [expirationEnabled, setExpirationEnabled] = useState(false);
   const [expirationDate, setExpirationDate] = useState('');
+  const [saving, setSaving] = useState(false);
   const toast = useToast();
 
   const generateCustomUrl = () => {
@@ -32,7 +33,7 @@ const ShareLinkCustomizer = ({ baseUrl, onSave, isVisible, onClose }) => {
     return params?.toString() ? `${url}?${params?.toString()}` : url;
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     const linkData = {
       customSlug,
       trackingEnabled,
@@ -48,8 +49,13 @@ const ShareLinkCustomizer = ({ baseUrl, onSave, isVisible, onClose }) => {
       finalUrl: generateCustomUrl()
     };
 
-    onSave(linkData);
-    onClose();
+    try {
+      setSaving(true);
+      await onSave?.(linkData);
+      onClose?.();
+    } finally {
+      setSaving(false);
+    }
   };
 
   const copyToClipboard = () => {
@@ -238,6 +244,8 @@ const ShareLinkCustomizer = ({ baseUrl, onSave, isVisible, onClose }) => {
             <Button 
               variant="default" 
               onClick={handleSave}
+              loading={saving}
+              disabled={saving}
               iconName="Save"
               iconPosition="left"
             >

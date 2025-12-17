@@ -127,6 +127,13 @@ export const createShareSchema = Joi.object({
   config: Joi.object().unknown(true).optional(),
 });
 
+export const updateShareSchema = Joi.object({
+  channel: Joi.string().allow("", null).optional(),
+  password: Joi.string().min(1).max(128).allow("", null).optional(),
+  expiresAt: Joi.date().iso().allow(null).optional(),
+  config: Joi.object().unknown(true).optional(),
+});
+
 export const analyticsEventSchema = Joi.object({
   couponId: Joi.string().required(),
   eventType: Joi.string().valid("view", "click", "redemption").required(),

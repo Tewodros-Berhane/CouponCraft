@@ -1,9 +1,10 @@
 import { Router } from "express";
 import { nanoid } from "nanoid";
+import bcrypt from "bcryptjs";
 import { prisma } from "../db/prisma.js";
 import { requireAuth } from "../middlewares/auth.js";
 import { validate } from "../middlewares/validate.js";
-import { createShareSchema } from "../validators.js";
+import { createShareSchema, updateShareSchema } from "../validators.js";
 import { config } from "../config.js";
 
 export const sharesRouter = Router();
@@ -71,4 +72,44 @@ sharesRouter.post("/", requireAuth, validate(createShareSchema), async (req, res
     },
   });
   return res.status(201).json({ data: share });
+});
+
+sharesRouter.patch("/:id", requireAuth, validate(updateShareSchema), async (req, res) => {
+  const share = await prisma.share.findUnique({ where: { id: req.params.id } });
+  if (!share) return res.status(404).json({ message: "Share not found" });
+
+  const coupon = await prisma.coupon.findUnique({ where: { id: share.couponId } });
+  if (!coupon) return res.status(404).json({ message: "Coupon not found" });
+
+  const business = await prisma.business.findUnique({ where: { ownerId: req.user.id } });
+  if (!business || coupon.businessId !== business.id) {
+    return res.status(403).json({ message: "Access denied" });
+  }
+
+  const nextConfig = { ...(share.config || {}), ...(req.body.config || {}) };
+
+  if (Object.prototype.hasOwnProperty.call(req.body, "expiresAt")) {
+    nextConfig.expiresAt = req.body.expiresAt ? new Date(req.body.expiresAt).toISOString() : null;
+  }
+
+  if (Object.prototype.hasOwnProperty.call(req.body, "password")) {
+    const password = req.body.password ? String(req.body.password) : "";
+    if (!password) {
+      nextConfig.passwordHash = null;
+      nextConfig.passwordProtected = false;
+    } else {
+      nextConfig.passwordHash = await bcrypt.hash(password, 10);
+      nextConfig.passwordProtected = true;
+    }
+  }
+
+  const updated = await prisma.share.update({
+    where: { id: share.id },
+    data: {
+      channel: Object.prototype.hasOwnProperty.call(req.body, "channel") ? (req.body.channel || null) : share.channel,
+      config: nextConfig,
+    },
+  });
+
+  return res.json({ data: updated });
 });

@@ -5,6 +5,7 @@ import Button from "../../components/ui/Button";
 import Icon from "../../components/AppIcon";
 import { useToast } from "../../components/ui/ToastProvider";
 import { formatDate } from "../../utils/format";
+import Input from "../../components/ui/Input";
 
 const RedeemCoupon = () => {
   const { shareId } = useParams();
@@ -13,24 +14,36 @@ const RedeemCoupon = () => {
   const [payload, setPayload] = useState(null);
   const [redeeming, setRedeeming] = useState(false);
   const [redeemed, setRedeemed] = useState(false);
+  const [passwordRequired, setPasswordRequired] = useState(false);
+  const [password, setPassword] = useState("");
+  const [passwordError, setPasswordError] = useState(null);
+
+  const loadRedeem = async (providedPassword) => {
+    setLoading(true);
+    try {
+      const headers = providedPassword ? { "X-Share-Password": providedPassword } : undefined;
+      const { data } = await api.get(`/redeem/${encodeURIComponent(shareId)}`, { headers });
+      setPayload(data?.data || null);
+      setPasswordRequired(false);
+      setPasswordError(null);
+    } catch (err) {
+      const code = err?.response?.data?.code;
+      if (code === "PASSWORD_REQUIRED" || code === "INVALID_PASSWORD") {
+        setPasswordRequired(true);
+        setPasswordError(code === "INVALID_PASSWORD" ? "Invalid password" : null);
+        setPayload(null);
+        return;
+      }
+      setPayload(null);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    let mounted = true;
-    const load = async () => {
-      setLoading(true);
-      try {
-        const { data } = await api.get(`/redeem/${encodeURIComponent(shareId)}`);
-        if (mounted) setPayload(data?.data || null);
-      } catch (err) {
-        if (mounted) setPayload(null);
-      } finally {
-        if (mounted) setLoading(false);
-      }
-    };
-    if (shareId) load();
-    return () => {
-      mounted = false;
-    };
+    if (!shareId) return;
+    loadRedeem(undefined);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [shareId]);
 
   const coupon = payload?.coupon;
@@ -93,6 +106,53 @@ const RedeemCoupon = () => {
   }
 
   if (!payload || !coupon) {
+    if (passwordRequired) {
+      return (
+        <div className="min-h-screen flex items-center justify-center bg-muted/30 p-6">
+          <div className="bg-white rounded-xl border border-border shadow-level-2 p-8 max-w-md w-full">
+            <div className="flex items-start space-x-3 mb-6">
+              <div className="w-10 h-10 rounded-lg bg-muted flex items-center justify-center flex-shrink-0">
+                <Icon name="Lock" size={18} className="text-muted-foreground" />
+              </div>
+              <div>
+                <h1 className="text-xl font-semibold text-foreground">Password required</h1>
+                <p className="text-sm text-muted-foreground mt-1">
+                  This coupon link is protected. Enter the password to continue.
+                </p>
+              </div>
+            </div>
+
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                if (!password?.trim()) {
+                  setPasswordError("Password is required");
+                  return;
+                }
+                setPasswordError(null);
+                loadRedeem(password);
+              }}
+              className="space-y-4"
+            >
+              <Input
+                label="Password"
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                error={passwordError}
+                required
+                disabled={loading}
+              />
+
+              <Button type="submit" variant="default" fullWidth loading={loading} disabled={loading}>
+                Continue
+              </Button>
+            </form>
+          </div>
+        </div>
+      );
+    }
+
     return (
       <div className="min-h-screen flex items-center justify-center bg-muted/30 p-6">
         <div className="bg-white rounded-xl border border-border shadow-level-2 p-8 max-w-md w-full text-center">

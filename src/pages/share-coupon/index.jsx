@@ -35,6 +35,7 @@ const ShareCoupon = () => {
 
   const [isLinkCustomizerVisible, setIsLinkCustomizerVisible] = useState(false);
   const [linkShareUrl, setLinkShareUrl] = useState(null);
+  const [linkShareId, setLinkShareId] = useState(null);
 
   const displayCoupon = useMemo(() => {
     if (!couponData) return null;
@@ -195,6 +196,7 @@ const ShareCoupon = () => {
   const openLinkCustomizer = async () => {
     try {
       const share = await ensureShare({ type: 'link' });
+      setLinkShareId(share?.id || null);
       setLinkShareUrl(share?.url || null);
       setIsLinkCustomizerVisible(true);
     } catch (err) {
@@ -265,6 +267,29 @@ const ShareCoupon = () => {
   const handleSaveCustomLink = async (linkData) => {
     const finalUrl = linkData?.finalUrl || linkShareUrl;
     if (!finalUrl) return;
+
+    if (linkShareId) {
+      const expiresAt =
+        linkData?.expirationEnabled && linkData?.expirationDate
+          ? new Date(linkData.expirationDate).toISOString()
+          : null;
+      const password =
+        linkData?.passwordProtected && linkData?.password ? linkData.password : null;
+
+      try {
+        await api.patch(`/shares/${linkShareId}`, {
+          password,
+          expiresAt,
+          config: {
+            utm: linkData?.trackingEnabled ? linkData?.utmParameters || null : null,
+          },
+        });
+        await reloadShares();
+      } catch (err) {
+        toast.error(getApiErrorMessage(err, 'Failed to save link settings'));
+      }
+    }
+
     try {
       await navigator.clipboard?.writeText(finalUrl);
       toast.success('Link copied');
