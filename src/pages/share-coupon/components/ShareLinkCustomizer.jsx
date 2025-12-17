@@ -216,11 +216,11 @@ const ShareLinkCustomizer = ({ baseUrl, onSave, isVisible, onClose }) => {
               <Icon name="Shield" size={16} color="#2563eb" className="mt-0.5" />
               <div className="text-sm">
                 <p className="font-medium text-blue-900">Link Features</p>
-                <ul className="text-blue-700 mt-1 space-y-1">
-                  <li>• Click tracking and analytics</li>
-                  <li>• Mobile-optimized landing page</li>
-                  <li>• Social media preview optimization</li>
-                  <li>• Automatic redemption validation</li>
+                <ul className="text-blue-700 mt-1 space-y-1 list-disc list-inside">
+                  <li>Click tracking and analytics</li>
+                  <li>Mobile-optimized landing page</li>
+                  <li>Social media preview optimization</li>
+                  <li>Automatic redemption validation</li>
                 </ul>
               </div>
             </div>

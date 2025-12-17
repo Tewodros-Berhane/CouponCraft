@@ -275,7 +275,9 @@ const BenefitsSection = () => {
             transition={{ duration: 0.6, delay: 1.2 }}
             className="mt-12 text-center text-muted-foreground"
           >
-            <p className="mb-4">🔒 All plans include a 14-day free trial • No credit card required</p>
+            <p className="mb-4">
+              🔒 All plans include a 14-day free trial <span aria-hidden="true">·</span> No credit card required
+            </p>
             <div className="flex items-center justify-center space-x-6 text-sm">
               <span>✓ 24/7 Customer Support</span>
               <span>✓ 99.9% Uptime SLA</span>

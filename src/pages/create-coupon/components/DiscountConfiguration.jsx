@@ -226,26 +226,26 @@ const DiscountConfiguration = ({ discountData, onDiscountChange }) => {
             </div>
             <div className="flex-1">
               <h4 className="font-medium text-foreground mb-1">Discount Summary</h4>
-              <div className="text-sm text-muted-foreground space-y-1">
+              <ul className="text-sm text-muted-foreground space-y-1 list-disc list-inside">
                 {discountData?.type === 'percentage' && discountData?.percentage && (
-                  <p>• {discountData?.percentage}% off {discountData?.maxDiscount ? `(max $${discountData?.maxDiscount})` : ''}</p>
+                  <li>{discountData?.percentage}% off {discountData?.maxDiscount ? `(max $${discountData?.maxDiscount})` : ''}</li>
                 )}
                 {discountData?.type === 'fixed' && discountData?.amount && (
-                  <p>• ${discountData?.amount} off</p>
+                  <li>${discountData?.amount} off</li>
                 )}
                 {discountData?.type === 'bogo' && discountData?.bogoType && (
-                  <p>• {bogoOptions?.find(opt => opt?.value === discountData?.bogoType)?.label}</p>
+                  <li>{bogoOptions?.find(opt => opt?.value === discountData?.bogoType)?.label}</li>
                 )}
                 {discountData?.type === 'free_shipping' && (
-                  <p>• Free shipping on all orders</p>
+                  <li>Free shipping on all orders</li>
                 )}
                 {discountData?.minimumType === 'amount' && discountData?.minimumAmount && (
-                  <p>• Minimum purchase: ${discountData?.minimumAmount}</p>
+                  <li>Minimum purchase: ${discountData?.minimumAmount}</li>
                 )}
                 {discountData?.minimumType === 'quantity' && discountData?.minimumQuantity && (
-                  <p>• Minimum quantity: {discountData?.minimumQuantity} items</p>
+                  <li>Minimum quantity: {discountData?.minimumQuantity} items</li>
                 )}
-              </div>
+              </ul>
             </div>
           </div>
         </div>

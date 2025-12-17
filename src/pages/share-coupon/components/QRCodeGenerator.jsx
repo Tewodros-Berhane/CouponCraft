@@ -225,12 +225,12 @@ const QRCodeGenerator = ({ couponData, shareId, shareUrl, onClose, isVisible }) 
 
               <div className="bg-muted rounded-lg p-4">
                 <h4 className="font-medium text-foreground mb-2">Usage Tips</h4>
-                <ul className="text-sm text-muted-foreground space-y-1">
-                  <li>• Small: Business cards, receipts</li>
-                  <li>• Medium: Flyers, table tents</li>
-                  <li>• Large: Posters, window displays</li>
-                  <li>• PNG: Best for web and print</li>
-                  <li>• SVG: Scalable for any size</li>
+                <ul className="text-sm text-muted-foreground space-y-1 list-disc list-inside">
+                  <li>Small: Business cards, receipts</li>
+                  <li>Medium: Flyers, table tents</li>
+                  <li>Large: Posters, window displays</li>
+                  <li>PNG: Best for web and print</li>
+                  <li>SVG: Scalable for any size</li>
                 </ul>
               </div>
 

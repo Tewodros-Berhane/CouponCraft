@@ -1,6 +1,7 @@
 import React from 'react';
 import Icon from '../../../components/AppIcon';
 import Button from '../../../components/ui/Button';
+import { formatDateTime } from '../../../utils/format';
 
 const ShareHistoryPanel = ({ shareHistory, onViewDetails, onCopyLink }) => {
   const getChannelIcon = (channel) => {
@@ -30,12 +31,7 @@ const ShareHistoryPanel = ({ shareHistory, onViewDetails, onCopyLink }) => {
   };
 
   const formatDate = (date) => {
-    return new Date(date)?.toLocaleDateString('en-US', {
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
+    return formatDateTime(date, '—');
   };
 
   const calculateConversionRate = (clicks, redemptions) => {

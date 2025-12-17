@@ -118,7 +118,7 @@ const TrustSignals = () => {
               <p className="text-sm text-foreground mb-2">"{testimonial?.text}"</p>
               <div className="text-xs text-muted-foreground">
                 <span className="font-medium">{testimonial?.name}</span>
-                <span className="mx-1">•</span>
+                <span className="mx-1" aria-hidden="true">·</span>
                 <span>{testimonial?.business}</span>
               </div>
             </div>

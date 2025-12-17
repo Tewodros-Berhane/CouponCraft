@@ -132,7 +132,7 @@ const DevicePreview = ({ couponData, selectedDevice, onDeviceChange, previewRef 
         </p>
         <div className="flex justify-center space-x-4 text-xs text-muted-foreground">
           <span>Dimensions: {devices?.find(d => d?.id === selectedDevice)?.width} × {devices?.find(d => d?.id === selectedDevice)?.height}</span>
-          <span>•</span>
+          <span aria-hidden="true">·</span>
           <span>Optimized for sharing</span>
         </div>
       </div>

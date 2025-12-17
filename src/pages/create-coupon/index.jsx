@@ -402,11 +402,11 @@ const CreateCoupon = () => {
                     </div>
                   </div>
                   
-                  <div className="mt-4 text-xs text-muted-foreground">
-                    <p>• Template: {templateData?.name || 'Not selected'}</p>
-                    <p>• Discount: {discountData?.type || 'Not configured'}</p>
-                    <p>• Validity: {validityData?.type || 'Not set'}</p>
-                  </div>
+                  <ul className="mt-4 text-xs text-muted-foreground space-y-1 list-disc list-inside">
+                    <li>Template: {templateData?.name || 'Not selected'}</li>
+                    <li>Discount: {discountData?.type || 'Not configured'}</li>
+                    <li>Validity: {validityData?.type || 'Not set'}</li>
+                  </ul>
                 </div>
               </div>
             </div>

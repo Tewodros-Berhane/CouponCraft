@@ -276,11 +276,11 @@ const LivePreview = ({
           </div>
           <div className="flex-1">
             <h4 className="font-medium text-foreground mb-1">AI Optimization Suggestions</h4>
-            <div className="text-sm text-muted-foreground space-y-1">
-              <p>• Consider using a warmer color scheme to increase engagement</p>
-              <p>• Adding urgency words like "Limited Time" can boost conversions</p>
-              <p>• Your discount value is competitive for your industry</p>
-            </div>
+            <ul className="text-sm text-muted-foreground space-y-1 list-disc list-inside">
+              <li>Consider using a warmer color scheme to increase engagement</li>
+              <li>Adding urgency words like "Limited Time" can boost conversions</li>
+              <li>Your discount value is competitive for your industry</li>
+            </ul>
           </div>
         </div>
       </div>

@@ -3,6 +3,7 @@ import Icon from '../../../components/AppIcon';
 import Input from '../../../components/ui/Input';
 import Select from '../../../components/ui/Select';
 import { Checkbox } from '../../../components/ui/Checkbox';
+import { formatDate } from '../../../utils/format';
 
 const ValiditySettings = ({ validityData, onValidityChange }) => {
   const [showTimeSettings, setShowTimeSettings] = useState(false);
@@ -304,29 +305,33 @@ const ValiditySettings = ({ validityData, onValidityChange }) => {
           </div>
           <div className="flex-1">
             <h4 className="font-medium text-foreground mb-1">Validity Summary</h4>
-            <div className="text-sm text-muted-foreground space-y-1">
+            <ul className="text-sm text-muted-foreground space-y-1 list-disc list-inside">
               {validityData?.type === 'date_range' && validityData?.startDate && validityData?.endDate && (
-                <p>• Valid from {new Date(validityData.startDate)?.toLocaleDateString()} to {new Date(validityData.endDate)?.toLocaleDateString()}</p>
+                <li>
+                  Valid from {formatDate(validityData.startDate, 'N/A')} to {formatDate(validityData.endDate, 'N/A')}
+                </li>
               )}
               {validityData?.type === 'duration' && validityData?.durationDays && (
-                <p>• Valid for {validityData?.durationDays} days from issue date</p>
+                <li>Valid for {validityData?.durationDays} days from issue date</li>
               )}
               {validityData?.type === 'no_expiry' && (
-                <p>• No expiration date</p>
+                <li>No expiration date</li>
               )}
               {validityData?.usageLimit === 'total_limit' && validityData?.totalLimit && (
-                <p>• Maximum {validityData?.totalLimit} total uses</p>
+                <li>Maximum {validityData?.totalLimit} total uses</li>
               )}
               {validityData?.usageLimit === 'per_customer' && validityData?.perCustomerLimit && (
-                <p>• {validityData?.perCustomerLimit} use(s) per customer</p>
+                <li>{validityData?.perCustomerLimit} use(s) per customer</li>
               )}
               {validityData?.usageLimit === 'both' && validityData?.totalLimit && validityData?.perCustomerLimit && (
-                <p>• Maximum {validityData?.totalLimit} total uses, {validityData?.perCustomerLimit} per customer</p>
+                <li>
+                  Maximum {validityData?.totalLimit} total uses, {validityData?.perCustomerLimit} per customer
+                </li>
               )}
               {validityData?.usageLimit === 'unlimited' && (
-                <p>• Unlimited usage</p>
+                <li>Unlimited usage</li>
               )}
-            </div>
+            </ul>
           </div>
         </div>
       </div>
