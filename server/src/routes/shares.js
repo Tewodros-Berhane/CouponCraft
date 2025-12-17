@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { nanoid } from "nanoid";
 import bcrypt from "bcryptjs";
+import rateLimit from "express-rate-limit";
 import { prisma } from "../db/prisma.js";
 import { requireAuth } from "../middlewares/auth.js";
 import { validate } from "../middlewares/validate.js";
@@ -9,8 +10,15 @@ import { config } from "../config.js";
 
 export const sharesRouter = Router();
 
+const trackLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  limit: 60,
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
 // Public tracking endpoint
-sharesRouter.post("/:id/track", async (req, res) => {
+sharesRouter.post("/:id/track", trackLimiter, async (req, res) => {
   const { id } = req.params;
   const { event } = req.body || {};
   if (!["click", "redemption"].includes(event)) {

@@ -1,4 +1,5 @@
 import { Router } from "express";
+import rateLimit from "express-rate-limit";
 import { prisma } from "../db/prisma.js";
 import { isCouponActive } from "../utils/couponStatus.js";
 import { generateRedeemToken, hashRedeemToken } from "../utils/redeemToken.js";
@@ -6,8 +7,15 @@ import bcrypt from "bcryptjs";
 
 export const redeemRouter = Router();
 
+const redeemLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  limit: 60,
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
 // Public endpoint: resolve shareId -> coupon + business, and record a real "click" on open.
-redeemRouter.get("/:shareId", async (req, res) => {
+redeemRouter.get("/:shareId", redeemLimiter, async (req, res) => {
   const { shareId } = req.params;
   res.setHeader("Cache-Control", "no-store");
 
@@ -31,7 +39,7 @@ redeemRouter.get("/:shareId", async (req, res) => {
 
   const passwordHash = share.config?.passwordHash;
   if (passwordHash) {
-    const provided = req.get("X-Share-Password") || req.query?.password || "";
+    const provided = req.get("X-Share-Password") || "";
     if (!provided) {
       return res.status(401).json({ message: "Password required", code: "PASSWORD_REQUIRED" });
     }

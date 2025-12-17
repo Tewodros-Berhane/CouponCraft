@@ -1,10 +1,18 @@
 import { Router } from "express";
 import QRCode from "qrcode";
+import rateLimit from "express-rate-limit";
 import { prisma } from "../db/prisma.js";
 
 export const qrRouter = Router();
 
-qrRouter.get("/:shareId", async (req, res) => {
+const qrLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  limit: 60,
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+qrRouter.get("/:shareId", qrLimiter, async (req, res) => {
   const share = await prisma.share.findUnique({ where: { id: req.params.shareId } });
   if (!share) return res.status(404).json({ message: "Share not found" });
   const link = share.config?.shareUrl || share.config?.link || share.config?.url;

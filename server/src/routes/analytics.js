@@ -1,5 +1,6 @@
 import { Router } from "express";
 import { nanoid } from "nanoid";
+import rateLimit from "express-rate-limit";
 import { prisma } from "../db/prisma.js";
 import { validate } from "../middlewares/validate.js";
 import { analyticsEventSchema } from "../validators.js";
@@ -7,11 +8,29 @@ import { requireAuth } from "../middlewares/auth.js";
 
 export const analyticsRouter = Router();
 
+const ingestLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  limit: 60,
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
 // Public ingestion endpoint
-analyticsRouter.post("/events", validate(analyticsEventSchema), async (req, res) => {
+analyticsRouter.post("/events", ingestLimiter, validate(analyticsEventSchema), async (req, res) => {
   const { couponId, eventType, meta } = req.body;
   const coupon = await prisma.coupon.findUnique({ where: { id: couponId } });
   if (!coupon) return res.status(404).json({ message: "Coupon not found" });
+
+  // For click/redemption, require a shareId and validate it belongs to the coupon to reduce spoofing.
+  if (eventType === "click" || eventType === "redemption") {
+    const shareId = meta?.shareId;
+    if (!shareId) return res.status(400).json({ message: "shareId required for this event" });
+    const share = await prisma.share.findUnique({ where: { id: shareId } });
+    if (!share || share.couponId !== couponId) {
+      return res.status(400).json({ message: "Invalid shareId for coupon" });
+    }
+  }
+
   const event = await prisma.analyticsEvent.create({
     data: {
       id: nanoid(),
