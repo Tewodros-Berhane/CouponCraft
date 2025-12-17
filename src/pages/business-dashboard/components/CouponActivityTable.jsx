@@ -3,11 +3,16 @@ import { useNavigate } from 'react-router-dom';
 import Icon from '../../../components/AppIcon';
 import Button from '../../../components/ui/Button';
 import IconButton from '../../../components/ui/IconButton';
+import Input from '../../../components/ui/Input';
+import Select from '../../../components/ui/Select';
+import EmptyState from '../../../components/ui/EmptyState';
 
 const CouponActivityTable = ({ coupons }) => {
   const navigate = useNavigate();
   const [sortField, setSortField] = useState('name');
   const [sortDirection, setSortDirection] = useState('asc');
+  const [query, setQuery] = useState('');
+  const [statusFilter, setStatusFilter] = useState('all');
 
   const getAriaSort = (field) => {
     if (sortField !== field) return 'none';
@@ -59,34 +64,87 @@ const CouponActivityTable = ({ coupons }) => {
     navigate('/share-coupon', { state: { couponId: coupon.id } });
   };
 
-  const sortedCoupons = [...coupons]?.sort((a, b) => {
+  const normalizedCoupons = Array.isArray(coupons) ? coupons : [];
+  const normalizedQuery = query?.trim()?.toLowerCase();
+
+  const filteredCoupons = normalizedCoupons?.filter((coupon) => {
+    const status = coupon?.status || 'draft';
+    if (statusFilter !== 'all' && status !== statusFilter) return false;
+
+    if (!normalizedQuery) return true;
+    const haystack = `${coupon?.name || ''} ${coupon?.discount || ''}`.toLowerCase();
+    return haystack.includes(normalizedQuery);
+  });
+
+  const sortedCoupons = [...filteredCoupons]?.sort((a, b) => {
     let aValue = a?.[sortField];
     let bValue = b?.[sortField];
     
     if (sortField === 'redemptions') {
-      aValue = parseInt(aValue);
-      bValue = parseInt(bValue);
+      aValue = parseInt(aValue, 10) || 0;
+      bValue = parseInt(bValue, 10) || 0;
+    } else {
+      aValue = String(aValue ?? '').toLowerCase();
+      bValue = String(bValue ?? '').toLowerCase();
     }
     
     if (sortDirection === 'asc') {
-      return aValue > bValue ? 1 : -1;
+      return aValue > bValue ? 1 : aValue < bValue ? -1 : 0;
     } else {
-      return aValue < bValue ? 1 : -1;
+      return aValue < bValue ? 1 : aValue > bValue ? -1 : 0;
     }
   });
 
   return (
     <div className="bg-card rounded-lg shadow-level-1 overflow-hidden">
       <div className="px-6 py-4 border-b border-border">
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <h3 className="text-lg font-semibold text-foreground">Recent Coupon Activity</h3>
-          <Button variant="outline" size="sm" iconName="Filter" iconPosition="left">
-            Filter
-          </Button>
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-3">
+            <div className="w-full sm:w-64">
+              <Input
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                placeholder="Search coupons"
+                aria-label="Search coupons"
+              />
+            </div>
+            <div className="w-full sm:w-40">
+              <Select
+                value={statusFilter}
+                onChange={(v) => setStatusFilter(v)}
+                options={[
+                  { label: 'All statuses', value: 'all' },
+                  { label: 'Active', value: 'active' },
+                  { label: 'Draft', value: 'draft' },
+                  { label: 'Paused', value: 'paused' },
+                  { label: 'Expired', value: 'expired' },
+                ]}
+              />
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                setQuery('');
+                setStatusFilter('all');
+              }}
+              disabled={!query && statusFilter === 'all'}
+            >
+              Clear
+            </Button>
+          </div>
         </div>
       </div>
        {/* Desktop Table */}
        <div className="hidden md:block overflow-x-auto">
+        {sortedCoupons?.length === 0 ? (
+          <EmptyState
+            iconName="Inbox"
+            title="No coupons found"
+            description="Try adjusting your search or filter."
+          />
+        ) : (
          <table className="w-full">
            <thead className="bg-muted/30">
              <tr>
@@ -160,9 +218,17 @@ const CouponActivityTable = ({ coupons }) => {
             ))}
           </tbody>
         </table>
+        )}
       </div>
       {/* Mobile Accordion */}
       <div className="md:hidden">
+        {sortedCoupons?.length === 0 ? (
+          <EmptyState
+            iconName="Inbox"
+            title="No coupons found"
+            description="Try adjusting your search or filter."
+          />
+        ) : null}
         {sortedCoupons?.map((coupon) => (
           <div key={coupon?.id} className="border-b border-border last:border-b-0">
             <div className="px-4 py-4">
