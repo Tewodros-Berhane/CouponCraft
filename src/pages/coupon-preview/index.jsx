@@ -7,6 +7,7 @@ import ValidationPanel from './components/ValidationPanel';
 import CustomerRedemptionFlow from './components/CustomerRedemptionFlow';
 import Icon from '../../components/AppIcon';
 import Button from '../../components/ui/Button';
+import Loader from '../../components/ui/Loader';
 import api from '../../apiClient';
 import { useToast } from '../../components/ui/ToastProvider';
 import { getApiErrorMessage } from '../../utils/apiError';
@@ -18,7 +19,8 @@ const CouponPreview = () => {
   const location = useLocation();
   const [selectedDevice, setSelectedDevice] = useState('desktop');
   const [activeTab, setActiveTab] = useState('preview');
-  const [isLoading, setIsLoading] = useState(false);
+  const [isFetching, setIsFetching] = useState(false);
+  const [isExporting, setIsExporting] = useState(false);
   const [couponData, setCouponData] = useState(location?.state?.couponData || null);
   const couponId = location?.state?.couponId || location?.state?.couponData?.id;
   const toast = useToast();
@@ -59,21 +61,21 @@ const CouponPreview = () => {
   }, []);
 
   useEffect(() => {
-    const loadCoupon = async () => {
-      if (couponData) return;
-      if (!couponId) return;
-      setIsLoading(true);
-      try {
-        const { data } = await api.get(`/coupons/${couponId}`);
-        setCouponData(data?.data);
-      } catch (error) {
-        toast.error(getApiErrorMessage(error, 'Failed to load coupon'));
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    loadCoupon();
-  }, [couponId, couponData]);
+      const loadCoupon = async () => {
+        if (couponData) return;
+        if (!couponId) return;
+        setIsFetching(true);
+        try {
+          const { data } = await api.get(`/coupons/${couponId}`);
+          setCouponData(data?.data);
+        } catch (error) {
+          toast.error(getApiErrorMessage(error, 'Failed to load coupon'));
+        } finally {
+          setIsFetching(false);
+        }
+      };
+      loadCoupon();
+    }, [couponId, couponData]);
 
   useEffect(() => {
     const sendViewEvent = async () => {
@@ -120,7 +122,7 @@ const CouponPreview = () => {
       toast.error('Preview not ready to export');
       return;
     }
-    setIsLoading(true);
+    setIsExporting(true);
     try {
       if (format === 'png') {
         const dataUrl = await toPng(node);
@@ -155,7 +157,7 @@ const CouponPreview = () => {
     } catch (err) {
       toast.error(getApiErrorMessage(err, 'Failed to export coupon'));
     } finally {
-      setIsLoading(false);
+      setIsExporting(false);
     }
   };
 
@@ -207,7 +209,7 @@ const CouponPreview = () => {
                   onClick={handleEdit}
                   iconName="Edit3"
                   iconPosition="left"
-                  disabled={isLoading}
+                  disabled={isFetching || isExporting}
                 >
                   Edit
                 </Button>
@@ -216,7 +218,7 @@ const CouponPreview = () => {
                   onClick={() => handleShare()}
                   iconName="Share2"
                   iconPosition="left"
-                  disabled={isLoading}
+                  disabled={isFetching || isExporting}
                 >
                   Continue to Share
                 </Button>
@@ -265,7 +267,7 @@ const CouponPreview = () => {
                 onShare={handleShare}
                 onSave={handleSave}
                 onExport={handleExport}
-                isLoading={isLoading}
+                isLoading={isFetching || isExporting}
               />
             </div>
           </div>
@@ -281,7 +283,7 @@ const CouponPreview = () => {
                 onClick={handleEdit}
                 iconName="Edit3"
                 iconPosition="left"
-                disabled={isLoading}
+                disabled={isFetching || isExporting}
               >
                 Edit
               </Button>
@@ -292,8 +294,7 @@ const CouponPreview = () => {
                 onClick={handleSave}
                 iconName="Save"
                 iconPosition="left"
-                disabled={isLoading}
-                loading={isLoading}
+                disabled={isFetching || isExporting}
               >
                 Save
               </Button>
@@ -304,7 +305,7 @@ const CouponPreview = () => {
                 onClick={() => handleShare()}
                 iconName="Share2"
                 iconPosition="left"
-                disabled={isLoading}
+                disabled={isFetching || isExporting}
               >
                 Share
               </Button>
@@ -313,11 +314,13 @@ const CouponPreview = () => {
         </div>
 
         {/* Loading Overlay */}
-        {isLoading && (
+        {(isFetching || isExporting) && (
           <div className="fixed inset-0 bg-black/20 backdrop-blur-sm z-50 flex items-center justify-center">
             <div className="bg-white rounded-lg shadow-level-4 p-6 flex items-center space-x-3">
-              <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary" />
-              <span className="text-foreground font-medium">Processing...</span>
+              <Loader
+                label={isExporting ? "Exporting coupon" : "Loading coupon"}
+                showLabel
+              />
             </div>
           </div>
         )}
