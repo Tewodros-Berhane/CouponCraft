@@ -35,6 +35,7 @@ const RedeemCoupon = () => {
 
   const coupon = payload?.coupon;
   const business = payload?.business;
+  const redeemToken = payload?.redeemToken;
 
   const discountText = useMemo(() => {
     const discount = coupon?.discount || {};
@@ -53,6 +54,10 @@ const RedeemCoupon = () => {
 
   const handleRedeem = async () => {
     if (!coupon?.id || !shareId) return;
+    if (!redeemToken) {
+      toast.error("Missing redemption token. Please reopen the link and try again.");
+      return;
+    }
     setRedeeming(true);
     try {
       const validation = await api.post("/redemption/validate", { couponId: coupon.id });
@@ -64,6 +69,7 @@ const RedeemCoupon = () => {
       await api.post("/redemption/confirm", {
         couponId: coupon.id,
         shareId,
+        redeemToken,
         context: { source: "redeem" },
       });
       setRedeemed(true);

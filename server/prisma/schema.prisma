@@ -46,6 +46,7 @@ model Coupon {
   shares        Share[]
   analytics     AnalyticsEvent[]
   redemptions   Redemption[]
+  redeemTokens  RedeemToken[]
 }
 
 model RefreshToken {
@@ -68,6 +69,9 @@ model Share {
   clicks       Int       @default(0)
   redemptions  Int       @default(0)
   createdAt    DateTime  @default(now())
+  redeemTokens RedeemToken[]
+
+  @@index([couponId])
 }
 
 model AnalyticsEvent {
@@ -77,6 +81,8 @@ model AnalyticsEvent {
   eventType String
   meta      Json?
   createdAt DateTime  @default(now())
+
+  @@index([couponId])
 }
 
 model Redemption {
@@ -88,4 +94,21 @@ model Redemption {
   context     Json?
   redeemedAt  DateTime?
   createdAt   DateTime  @default(now())
+
+  @@index([couponId])
+}
+
+model RedeemToken {
+  id        String   @id @default(uuid())
+  tokenHash String   @unique
+  shareId   String
+  couponId  String
+  share     Share    @relation(fields: [shareId], references: [id], onDelete: Cascade)
+  coupon    Coupon   @relation(fields: [couponId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime @default(now())
+
+  @@index([shareId])
+  @@index([couponId])
 }

@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { prisma } from "../db/prisma.js";
 import { isCouponActive } from "../utils/couponStatus.js";
+import { generateRedeemToken, hashRedeemToken } from "../utils/redeemToken.js";
 
 export const redeemRouter = Router();
 
@@ -25,6 +26,10 @@ redeemRouter.get("/:shareId", async (req, res) => {
     return res.status(404).json({ message: "Coupon not available" });
   }
 
+  const redeemToken = generateRedeemToken();
+  const redeemTokenHash = hashRedeemToken(redeemToken);
+  const redeemTokenExpiresAt = new Date(Date.now() + 10 * 60 * 1000);
+
   const [updatedShare] = await prisma.$transaction([
     prisma.share.update({
       where: { id: shareId },
@@ -35,6 +40,14 @@ redeemRouter.get("/:shareId", async (req, res) => {
         couponId: share.couponId,
         eventType: "click",
         meta: { shareId },
+      },
+    }),
+    prisma.redeemToken.create({
+      data: {
+        tokenHash: redeemTokenHash,
+        shareId,
+        couponId: share.couponId,
+        expiresAt: redeemTokenExpiresAt,
       },
     }),
   ]);
@@ -66,6 +79,8 @@ redeemRouter.get("/:shareId", async (req, res) => {
         type: share.coupon.business.type,
         phone: share.coupon.business.phone,
       },
+      redeemToken,
+      redeemTokenExpiresAt,
     },
   });
 });
