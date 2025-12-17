@@ -27,10 +27,10 @@ const Navigation = ({ isScrolled, onLogin, onGetStarted }) => {
               aria-label="Go to home"
               className="flex items-center space-x-2 rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
             >
-              <div className="w-10 h-10 bg-primary rounded-lg flex items-center justify-center">
-                <Icon name="Scissors" size={22} color="white" />
+              <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
+                <Icon name="Scissors" size={20} color="white" />
               </div>
-              <span className="text-2xl font-bold text-foreground">CouponCraft</span>
+              <span className="text-xl font-semibold text-foreground">CouponCraft</span>
             </Link>
           </motion.div>
 
