@@ -77,21 +77,7 @@ const CouponPreview = () => {
       loadCoupon();
     }, [couponId, couponData]);
 
-  useEffect(() => {
-    const sendViewEvent = async () => {
-      if (!displayCoupon?.id) return;
-      try {
-        await api.post('/analytics/events', {
-          couponId: displayCoupon.id,
-          eventType: 'view',
-          meta: { source: 'preview' },
-        });
-      } catch (err) {
-        // Ignore analytics failures for preview.
-      }
-    };
-    sendViewEvent();
-  }, [displayCoupon?.id]);
+  // Preview is a business-only view; avoid recording customer analytics from this page.
 
   const handleEdit = () => {
     navigate('/create-coupon', { 

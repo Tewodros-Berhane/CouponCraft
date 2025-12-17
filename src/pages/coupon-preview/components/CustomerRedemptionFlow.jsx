@@ -51,11 +51,8 @@ const CustomerRedemptionFlow = ({ couponData }) => {
       setValidationResult(data?.data);
       setCurrentStep(3);
       if (data?.data?.valid) {
-        const confirm = await api.post('/redemption/confirm', { couponId: couponData?.id, context: { source: 'preview' } });
-        if (confirm?.data?.data) {
-          setRedeemMessage('Redemption confirmed');
-          setCurrentStep(4);
-        }
+        setRedeemMessage('Redemption simulated (no data saved)');
+        setCurrentStep(4);
       }
     } catch (err) {
       setRedeemMessage(err?.response?.data?.message || 'Validation failed');
