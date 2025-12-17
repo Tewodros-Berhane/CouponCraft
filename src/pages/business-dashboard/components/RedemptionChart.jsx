@@ -3,9 +3,11 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 import Icon from '../../../components/AppIcon';
 
 
-const RedemptionChart = ({ data }) => {
+const RedemptionChart = ({ data, timeRange, onTimeRangeChange, loading = false }) => {
   const [chartType, setChartType] = useState('line');
-  const [timeRange, setTimeRange] = useState('7d');
+  const [localTimeRange, setLocalTimeRange] = useState('7d');
+  const selectedRange = timeRange || localTimeRange;
+  const setRange = onTimeRangeChange || setLocalTimeRange;
   const safeData = Array.isArray(data) ? data : [];
   const totalClicks = safeData.reduce((sum, item) => sum + (Number(item?.clicks) || 0), 0);
   const totalRedemptions = safeData.reduce((sum, item) => sum + (Number(item?.redemptions) || 0), 0);
@@ -56,9 +58,9 @@ const RedemptionChart = ({ data }) => {
             {timeRangeOptions?.map((option) => (
               <button
                 key={option?.value}
-                onClick={() => setTimeRange(option?.value)}
+                onClick={() => setRange(option?.value)}
                 className={`px-3 py-1 text-xs font-medium rounded-md transition-all duration-150 ${
-                  timeRange === option?.value
+                  selectedRange === option?.value
                     ? 'bg-primary text-primary-foreground shadow-sm'
                     : 'text-muted-foreground hover:text-foreground'
                 }`}
@@ -90,7 +92,11 @@ const RedemptionChart = ({ data }) => {
         </div>
       </div>
       <div className="h-80 w-full" aria-label="Coupon Redemption Trends Chart">
-        {safeData.length === 0 ? (
+        {loading ? (
+          <div className="h-full flex items-center justify-center text-sm text-muted-foreground">
+            Loading analytics...
+          </div>
+        ) : safeData.length === 0 ? (
           <div className="h-full flex items-center justify-center text-sm text-muted-foreground">
             No analytics data yet
           </div>

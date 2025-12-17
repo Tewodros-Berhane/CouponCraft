@@ -12,10 +12,12 @@ import { getApiErrorMessage } from '../../utils/apiError';
 
 const BusinessDashboard = () => {
   const [isLoading, setIsLoading] = useState(true);
+  const [isAnalyticsLoading, setIsAnalyticsLoading] = useState(false);
   const [coupons, setCoupons] = useState([]);
   const [metricsData, setMetricsData] = useState([]);
   const [chartData, setChartData] = useState([]);
   const [analyticsByCoupon, setAnalyticsByCoupon] = useState({});
+  const [analyticsRange, setAnalyticsRange] = useState('30d');
   const { user } = useAuth();
   const toast = useToast();
 
@@ -44,28 +46,7 @@ const BusinessDashboard = () => {
         const activeCount = list.filter((c) => c.status === 'active').length;
         const draftCount = list.filter((c) => c.status === 'draft').length;
 
-        try {
-          const dashboard = await api.get('/analytics/dashboard?days=30');
-          const totalsByCoupon = dashboard?.data?.data?.totalsByCoupon || {};
-          const totals = dashboard?.data?.data?.totals || { views: 0, clicks: 0, redemptions: 0, total: 0 };
-          const series = dashboard?.data?.data?.series || [];
-
-          const analyticsMap = {};
-          list.forEach((c) => {
-            const t = totalsByCoupon?.[c.id] || { views: 0, clicks: 0, redemptions: 0, total: 0 };
-            analyticsMap[c.id] = { totals: t };
-          });
-          setAnalyticsByCoupon(analyticsMap);
-
-          setChartData(
-            series.map((s) => ({
-              date: s.label || s.date,
-              clicks: s.clicks || 0,
-              redemptions: s.redemptions || 0,
-            }))
-          );
-
-          setMetricsData([
+        setMetricsData([
           {
             title: "Active Coupons",
             value: activeCount.toString(),
@@ -92,52 +73,13 @@ const BusinessDashboard = () => {
           },
           {
             title: "Redemptions",
-            value: (totals.redemptions || 0).toString(),
-            change: `${totals.redemptions || 0} total`,
-            changeType: (totals.redemptions || 0) > 0 ? "positive" : "neutral",
+            value: "0",
+            change: "Last 30 days",
+            changeType: "neutral",
             icon: "TrendingUp",
-            trend: totals.redemptions || 0,
+            trend: 0,
           },
         ]);
-        } catch (err) {
-          toast.error(getApiErrorMessage(err, "Some analytics could not be loaded"));
-          setAnalyticsByCoupon({});
-          setChartData([]);
-          setMetricsData([
-            {
-              title: "Active Coupons",
-              value: activeCount.toString(),
-              change: `${activeCount} total`,
-              changeType: "positive",
-              icon: "Ticket",
-              trend: activeCount * 10,
-            },
-            {
-              title: "Drafts",
-              value: draftCount.toString(),
-              change: `${draftCount} awaiting publish`,
-              changeType: "neutral",
-              icon: "ClipboardList",
-              trend: draftCount * 10,
-            },
-            {
-              title: "Total Coupons",
-              value: list.length.toString(),
-              change: "All time",
-              changeType: "neutral",
-              icon: "Layers",
-              trend: list.length * 10,
-            },
-            {
-              title: "Redemptions",
-              value: "0",
-              change: "0 total",
-              changeType: "neutral",
-              icon: "TrendingUp",
-              trend: 0,
-            },
-          ]);
-        }
       } catch (err) {
         toast.error(getApiErrorMessage(err, "Failed to load dashboard data"));
       } finally {
@@ -147,6 +89,84 @@ const BusinessDashboard = () => {
 
     loadCoupons();
   }, []);
+
+  useEffect(() => {
+    const daysMap = { '7d': 7, '30d': 30, '90d': 90, '1y': 365 };
+    const days = daysMap?.[analyticsRange] || 30;
+
+    const loadAnalytics = async () => {
+      setIsAnalyticsLoading(true);
+      try {
+        const dashboard = await api.get(`/analytics/dashboard?days=${days}`);
+        const totalsByCoupon = dashboard?.data?.data?.totalsByCoupon || {};
+        const totals = dashboard?.data?.data?.totals || { clicks: 0, redemptions: 0, total: 0 };
+        const series = dashboard?.data?.data?.series || [];
+
+        const analyticsMap = {};
+        coupons.forEach((c) => {
+          const t = totalsByCoupon?.[c.id] || { views: 0, clicks: 0, redemptions: 0, total: 0 };
+          analyticsMap[c.id] = { totals: t };
+        });
+        setAnalyticsByCoupon(analyticsMap);
+
+        setChartData(
+          series.map((s) => ({
+            date: s.label || s.date,
+            clicks: s.clicks || 0,
+            redemptions: s.redemptions || 0,
+          }))
+        );
+
+        const activeCount = coupons.filter((c) => c.status === 'active').length;
+        const draftCount = coupons.filter((c) => c.status === 'draft').length;
+
+        setMetricsData([
+          {
+            title: "Active Coupons",
+            value: activeCount.toString(),
+            change: `${activeCount} total`,
+            changeType: "positive",
+            icon: "Ticket",
+            trend: activeCount * 10,
+          },
+          {
+            title: "Drafts",
+            value: draftCount.toString(),
+            change: `${draftCount} awaiting publish`,
+            changeType: "neutral",
+            icon: "ClipboardList",
+            trend: draftCount * 10,
+          },
+          {
+            title: "Total Coupons",
+            value: coupons.length.toString(),
+            change: "All time",
+            changeType: "neutral",
+            icon: "Layers",
+            trend: coupons.length * 10,
+          },
+          {
+            title: "Redemptions",
+            value: (totals.redemptions || 0).toString(),
+            change: `Last ${days} days`,
+            changeType: (totals.redemptions || 0) > 0 ? "positive" : "neutral",
+            icon: "TrendingUp",
+            trend: totals.redemptions || 0,
+          },
+        ]);
+      } catch (err) {
+        toast.error(getApiErrorMessage(err, "Some analytics could not be loaded"));
+        setAnalyticsByCoupon({});
+        setChartData([]);
+      } finally {
+        setIsAnalyticsLoading(false);
+      }
+    };
+
+    // Wait until coupons are loaded to build per-coupon totals mapping.
+    if (isLoading) return;
+    loadAnalytics();
+  }, [analyticsRange, coupons, isLoading]);
 
   const couponActivityData = coupons.map((c) => ({
     id: c.id,
@@ -221,9 +241,14 @@ const BusinessDashboard = () => {
 
           {/* Main Content Grid */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
-            {/* Left Column - Charts and Tables */}
-            <div className="lg:col-span-2 space-y-8">
-              <RedemptionChart data={chartData} />
+             {/* Left Column - Charts and Tables */}
+             <div className="lg:col-span-2 space-y-8">
+              <RedemptionChart
+                data={chartData}
+                timeRange={analyticsRange}
+                onTimeRangeChange={setAnalyticsRange}
+                loading={isAnalyticsLoading}
+              />
               <CouponActivityTable coupons={couponActivityData} />
             </div>
 

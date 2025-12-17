@@ -76,7 +76,7 @@ analyticsRouter.get("/dashboard", requireAuth, async (req, res) => {
   const [totalsGrouped, eventsForSeries] = await Promise.all([
     prisma.analyticsEvent.groupBy({
       by: ["couponId", "eventType"],
-      where: { couponId: { in: couponIds } },
+      where: { couponId: { in: couponIds }, createdAt: { gte: since } },
       _count: { _all: true },
     }),
     prisma.analyticsEvent.findMany({
