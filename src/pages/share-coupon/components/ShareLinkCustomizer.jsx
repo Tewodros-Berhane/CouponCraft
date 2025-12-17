@@ -6,6 +6,7 @@ import { Checkbox } from '../../../components/ui/Checkbox';
 import { useToast } from '../../../components/ui/ToastProvider';
 import { Dialog, DialogClose, DialogContent } from '../../../components/ui/Dialog';
 import IconButton from '../../../components/ui/IconButton';
+import { copyTextToClipboard } from '../../../utils/clipboard';
 
 const ShareLinkCustomizer = ({ baseUrl, onSave, isVisible, onClose }) => {
   const [customSlug, setCustomSlug] = useState('');
@@ -58,16 +59,18 @@ const ShareLinkCustomizer = ({ baseUrl, onSave, isVisible, onClose }) => {
     }
   };
 
-  const copyToClipboard = () => {
+  const copyToClipboard = async () => {
     const url = generateCustomUrl();
     if (!url) {
       toast.error('No link available');
       return;
     }
-    navigator.clipboard
-      ?.writeText(url)
-      ?.then(() => toast.success('Link copied'))
-      ?.catch(() => toast.error('Failed to copy link'));
+    try {
+      await copyTextToClipboard(url);
+      toast.success('Link copied');
+    } catch {
+      toast.error('Failed to copy link');
+    }
   };
 
   return (

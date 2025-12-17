@@ -11,6 +11,7 @@ import api from '../../apiClient';
 import { useToast } from '../../components/ui/ToastProvider';
 import { getApiErrorMessage } from '../../utils/apiError';
 import { formatDate } from '../../utils/format';
+import { copyTextToClipboard } from '../../utils/clipboard';
 
 const ShareCoupon = () => {
   const navigate = useNavigate();
@@ -244,8 +245,12 @@ const ShareCoupon = () => {
           window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(resolvedShareUrl)}`, '_blank');
           break;
         case 'instagram':
-          await navigator.clipboard?.writeText(resolvedShareUrl);
-          toast.info('Link copied. Share it in the Instagram app.');
+          try {
+            await copyTextToClipboard(resolvedShareUrl);
+            toast.info('Link copied. Share it in the Instagram app.');
+          } catch {
+            toast.error('Failed to copy link');
+          }
           break;
         case 'twitter':
           window.open(
@@ -293,7 +298,7 @@ const ShareCoupon = () => {
     }
 
     try {
-      await navigator.clipboard?.writeText(linkShareUrl || finalUrl);
+      await copyTextToClipboard(linkShareUrl || finalUrl);
       toast.success('Link copied');
     } catch {
       toast.success('Link generated');
@@ -408,7 +413,7 @@ const ShareCoupon = () => {
                 onViewDetails={handleViewDetails}
                 onCopyLink={async (url) => {
                   try {
-                    await navigator.clipboard?.writeText(url);
+                    await copyTextToClipboard(url);
                     toast.success('Share link copied');
                   } catch {
                     toast.error('Failed to copy link');
