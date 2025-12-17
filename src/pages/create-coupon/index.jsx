@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import Header from '../../components/ui/Header';
 import TemplateLibrary from './components/TemplateLibrary';
 import DiscountConfiguration from './components/DiscountConfiguration';
@@ -16,13 +16,17 @@ import { getApiErrorMessage } from '../../utils/apiError';
 
 const CreateCoupon = () => {
   const navigate = useNavigate();
+  const location = useLocation();
+  const isExplicitEdit = Boolean(location?.state?.editMode);
   const [currentStep, setCurrentStep] = useState(1);
   const [isSavingDraft, setIsSavingDraft] = useState(false);
   const [isPublishing, setIsPublishing] = useState(false);
   const [showExitModal, setShowExitModal] = useState(false);
   const [couponId, setCouponId] = useState(null);
+  const [couponStatus, setCouponStatus] = useState('draft');
   const toast = useToast();
   const lastAutosaveErrorAtRef = useRef(0);
+  const didInitializeRef = useRef(false);
 
   // Form Data States
   const [templateData, setTemplateData] = useState(null);
@@ -78,12 +82,16 @@ const CreateCoupon = () => {
 
   // Load saved draft on component mount
   useEffect(() => {
+    if (didInitializeRef.current) return;
+    didInitializeRef.current = true;
+
     const loadDraft = async () => {
       try {
         const { data } = await api.get('/coupons');
         const draft = data?.data?.find((c) => c?.status === 'draft');
         if (draft) {
           setCouponId(draft?.id);
+          setCouponStatus(draft?.status || 'draft');
           setTemplateData(draft?.template || null);
           setDiscountData(prev => ({ ...prev, ...draft?.discount }));
           setValidityData(prev => ({ ...prev, ...draft?.validity }));
@@ -99,6 +107,7 @@ const CreateCoupon = () => {
       if (savedDraft) {
         try {
           const draft = JSON.parse(savedDraft);
+          setCouponStatus('draft');
           setTemplateData(draft?.templateData || null);
           setDiscountData(prev => ({ ...prev, ...draft?.discountData }));
           setValidityData(prev => ({ ...prev, ...draft?.validityData }));
@@ -110,13 +119,55 @@ const CreateCoupon = () => {
       }
     };
 
-    loadDraft();
+    const loadRequestedCoupon = async () => {
+      const requestedCouponId = location?.state?.couponId || null;
+      const requestedCouponData = location?.state?.couponData || null;
+
+      if (!requestedCouponId && !requestedCouponData) return false;
+
+      if (requestedCouponData) {
+        setCouponId(requestedCouponId || null);
+        setCouponStatus(location?.state?.couponStatus || 'draft');
+        setTemplateData(requestedCouponData?.template || null);
+        setDiscountData((prev) => ({ ...prev, ...requestedCouponData?.discount }));
+        setValidityData((prev) => ({ ...prev, ...requestedCouponData?.validity }));
+        setCustomizationData((prev) => ({ ...prev, ...requestedCouponData?.customization }));
+        setCurrentStep(location?.state?.currentStep || 1);
+        return true;
+      }
+
+      try {
+        const { data } = await api.get(`/coupons/${requestedCouponId}`);
+        const coupon = data?.data;
+        if (!coupon) {
+          toast.error('Coupon not found');
+          return true;
+        }
+
+        setCouponId(coupon?.id || requestedCouponId);
+        setCouponStatus(coupon?.status || 'draft');
+        setTemplateData(coupon?.template || null);
+        setDiscountData((prev) => ({ ...prev, ...coupon?.discount }));
+        setValidityData((prev) => ({ ...prev, ...coupon?.validity }));
+        setCustomizationData((prev) => ({ ...prev, ...coupon?.customization }));
+        setCurrentStep(coupon?.currentStep || 1);
+        return true;
+      } catch (error) {
+        toast.error(getApiErrorMessage(error, 'Failed to load coupon'));
+        return true;
+      }
+    };
+
+    (async () => {
+      const handled = await loadRequestedCoupon();
+      if (!handled) await loadDraft();
+    })();
   }, []);
 
   // Auto-save draft periodically with debounce
   useEffect(() => {
     const timer = setTimeout(() => {
-      saveDraft(false, 'draft', 'autosave').catch((err) => {
+      saveDraft(false, couponStatus, 'autosave').catch((err) => {
         const now = Date.now();
         if (now - lastAutosaveErrorAtRef.current > 30_000) {
           toast.error(getApiErrorMessage(err, 'Autosave failed'));
@@ -125,7 +176,7 @@ const CreateCoupon = () => {
       });
     }, 5000);
     return () => clearTimeout(timer);
-  }, [templateData, discountData, validityData, customizationData, currentStep]);
+  }, [templateData, discountData, validityData, customizationData, currentStep, couponStatus]);
 
   const buildPayload = (status = 'draft') => ({
     template: templateData,
@@ -149,6 +200,7 @@ const CreateCoupon = () => {
       }
       const saved = response?.data?.data || payload;
       if (saved?.id && !couponId) setCouponId(saved.id);
+      setCouponStatus(status);
 
       localStorage.setItem(
         'coupon-draft',
@@ -232,7 +284,7 @@ const CreateCoupon = () => {
 
   const handlePreview = async () => {
     if (validateCurrentStep(true)) {
-      const id = await saveDraft(false, 'draft', null);
+      const id = await saveDraft(false, couponStatus, null);
       navigate('/coupon-preview', { 
         state: { 
           couponId: id || couponId,
@@ -265,7 +317,7 @@ const CreateCoupon = () => {
   };
 
   const confirmExit = () => {
-    saveDraft(false, 'draft', null);
+    saveDraft(false, couponStatus, null);
     navigate('/business-dashboard');
   };
 
@@ -326,9 +378,11 @@ const CreateCoupon = () => {
           {/* Page Header */}
           <div className="flex items-center justify-between mb-8">
             <div>
-              <h1 className="text-3xl font-bold text-foreground">Create New Coupon</h1>
+              <h1 className="text-3xl font-bold text-foreground">{isExplicitEdit ? 'Edit Coupon' : 'Create New Coupon'}</h1>
               <p className="text-muted-foreground mt-2">
-                Build professional digital coupons in minutes with our step-by-step wizard
+                {isExplicitEdit
+                  ? 'Update your coupon details and save changes'
+                  : 'Build professional digital coupons in minutes with our step-by-step wizard'}
               </p>
             </div>
             
