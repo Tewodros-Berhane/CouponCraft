@@ -1,6 +1,34 @@
 import axios from "axios";
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || "/api";
+const resolveApiBaseUrl = () => {
+  const configured = import.meta.env.VITE_API_URL;
+  if (!configured) return "/api";
+
+  const isAbsolute = /^https?:\/\//i.test(configured);
+  if (!isAbsolute) return configured;
+
+  try {
+    const url = new URL(configured);
+    const currentOrigin = window?.location?.origin;
+
+    // If the app is being accessed via a LAN host (e.g., 192.168.x.x) but the API is configured
+    // as localhost, cookie-based auth breaks due to cross-site SameSite restrictions.
+    // Prefer the Vite proxy (/api) in that case so cookies are first-party for the app origin.
+    if (
+      currentOrigin &&
+      url.origin !== currentOrigin &&
+      (url.hostname === "localhost" || url.hostname === "127.0.0.1")
+    ) {
+      return "/api";
+    }
+
+    return configured;
+  } catch {
+    return configured;
+  }
+};
+
+const API_BASE_URL = resolveApiBaseUrl();
 
 let refreshPromise = null;
 
