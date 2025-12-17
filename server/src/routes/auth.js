@@ -55,9 +55,10 @@ authRouter.post("/register", validate(registerSchema), async (req, res) => {
   ensureCsrfCookie(req, res);
 
   return res.status(201).json({
-    user: { id: user.id, email: user.email, role: user.role, ownerName: user.ownerName },
-    business,
-    tokens,
+    data: {
+      user: { id: user.id, email: user.email, role: user.role, ownerName: user.ownerName },
+      business,
+    },
   });
 });
 
@@ -82,9 +83,10 @@ authRouter.post("/login", validate(loginSchema), async (req, res) => {
   setSessionCookies(res, tokens);
   ensureCsrfCookie(req, res);
   return res.json({
-    user: { id: user.id, email: user.email, role: user.role, ownerName: user.ownerName },
-    business,
-    tokens,
+    data: {
+      user: { id: user.id, email: user.email, role: user.role, ownerName: user.ownerName },
+      business,
+    },
   });
 });
 
@@ -125,9 +127,10 @@ authRouter.post("/refresh", async (req, res) => {
     setSessionCookies(res, tokens);
     ensureCsrfCookie(req, res);
     return res.json({
-      user: { id: user.id, email: user.email, role: user.role, ownerName: user.ownerName },
-      business,
-      tokens,
+      data: {
+        user: { id: user.id, email: user.email, role: user.role, ownerName: user.ownerName },
+        business,
+      },
     });
   } catch (err) {
     return res.status(401).json({ message: "Invalid or expired refresh token" });
@@ -150,7 +153,9 @@ authRouter.get("/me", requireAuth, async (req, res) => {
   const business = await prisma.business.findUnique({ where: { ownerId: req.user.id } });
   ensureCsrfCookie(req, res);
   return res.json({
-    user: { id: req.user.id, email: req.user.email, role: req.user.role, ownerName: req.user.ownerName },
-    business,
+    data: {
+      user: { id: req.user.id, email: req.user.email, role: req.user.role, ownerName: req.user.ownerName },
+      business,
+    },
   });
 });

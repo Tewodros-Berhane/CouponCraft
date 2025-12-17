@@ -12,8 +12,9 @@ export const AuthProvider = ({ children }) => {
     const bootstrap = async () => {
       try {
         const { data } = await api.get("/auth/me");
-        setUser(data.user);
-        setBusiness(data.business);
+        const payload = data?.data || data;
+        setUser(payload?.user);
+        setBusiness(payload?.business);
       } catch {
         setUser(null);
         setBusiness(null);
@@ -26,16 +27,18 @@ export const AuthProvider = ({ children }) => {
 
   const login = async (email, password) => {
     const { data } = await api.post("/auth/login", { email, password });
-    setUser(data.user);
-    setBusiness(data.business);
-    return data;
+    const payload = data?.data || data;
+    setUser(payload?.user);
+    setBusiness(payload?.business);
+    return payload;
   };
 
   const register = async (payload) => {
     const { data } = await api.post("/auth/register", payload);
-    setUser(data.user);
-    setBusiness(data.business);
-    return data;
+    const result = data?.data || data;
+    setUser(result?.user);
+    setBusiness(result?.business);
+    return result;
   };
 
   const logout = async () => {
