@@ -1,7 +1,9 @@
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
+import { toPng } from 'html-to-image';
 import Icon from '../../../components/AppIcon';
 import Button from '../../../components/ui/Button';
 import { formatCurrency, formatDate } from '../../../utils/format';
+import { useToast } from '../../../components/ui/ToastProvider';
 
 const LivePreview = ({ 
   templateData, 
@@ -10,6 +12,9 @@ const LivePreview = ({
   customizationData 
 }) => {
   const [previewMode, setPreviewMode] = useState('desktop');
+  const [isDownloading, setIsDownloading] = useState(false);
+  const previewRef = useRef(null);
+  const toast = useToast();
 
   const generateCouponCode = () => {
     if (customizationData?.customCode) {
@@ -75,6 +80,63 @@ const LivePreview = ({
   };
 
   const styles = getPreviewStyles();
+
+  const downloadDataUrl = (dataUrl, filename) => {
+    const a = document.createElement('a');
+    a.href = dataUrl;
+    a.download = filename;
+    a.rel = 'noopener';
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+  };
+
+  const renderPng = async () => {
+    if (!previewRef.current) throw new Error('Preview not ready');
+    return toPng(previewRef.current, {
+      cacheBust: true,
+      pixelRatio: 2,
+      backgroundColor: '#ffffff',
+    });
+  };
+
+  const handleDownload = async () => {
+    try {
+      setIsDownloading(true);
+      const dataUrl = await renderPng();
+      downloadDataUrl(dataUrl, 'coupon-preview.png');
+      toast.success('Preview downloaded');
+    } catch (error) {
+      toast.error('Failed to generate preview image');
+    } finally {
+      setIsDownloading(false);
+    }
+  };
+
+  const handleShare = async () => {
+    try {
+      if (!navigator?.share) {
+        toast.info('Sharing is not supported in this browser. Download the preview instead.');
+        return;
+      }
+
+      setIsDownloading(true);
+      const dataUrl = await renderPng();
+      const res = await fetch(dataUrl);
+      const blob = await res.blob();
+      const file = new File([blob], 'coupon-preview.png', { type: 'image/png' });
+
+      await navigator.share({
+        title: 'Coupon Preview',
+        files: [file],
+      });
+      toast.success('Preview shared');
+    } catch (error) {
+      toast.error('Failed to share preview');
+    } finally {
+      setIsDownloading(false);
+    }
+  };
 
   const CouponPreview = ({ isMobile = false }) => (
     <div 
@@ -247,7 +309,9 @@ const LivePreview = ({
         <div className={`transition-all duration-300 ${
           previewMode === 'mobile' ? 'max-w-sm mx-auto' : 'max-w-md mx-auto'
         }`}>
-          <CouponPreview isMobile={previewMode === 'mobile'} />
+          <div ref={previewRef}>
+            <CouponPreview isMobile={previewMode === 'mobile'} />
+          </div>
         </div>
       </div>
 
@@ -258,6 +322,9 @@ const LivePreview = ({
           size="sm"
           iconName="Download"
           iconPosition="left"
+          onClick={handleDownload}
+          loading={isDownloading}
+          disabled={isDownloading}
         >
           Download Preview
         </Button>
@@ -266,6 +333,9 @@ const LivePreview = ({
           size="sm"
           iconName="Share"
           iconPosition="left"
+          onClick={handleShare}
+          loading={isDownloading}
+          disabled={isDownloading}
         >
           Share Preview
         </Button>
