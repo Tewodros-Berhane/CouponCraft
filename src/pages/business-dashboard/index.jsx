@@ -60,7 +60,7 @@ const BusinessDashboard = () => {
           setChartData(
             series.map((s) => ({
               date: s.label || s.date,
-              views: s.views || 0,
+              clicks: s.clicks || 0,
               redemptions: s.redemptions || 0,
             }))
           );
@@ -161,7 +161,7 @@ const BusinessDashboard = () => {
   const topPerformingData = couponActivityData.slice(0, 4).map((c) => ({
     id: c.id,
     name: c.name,
-    performance: Math.min(100, (analyticsByCoupon?.[c.id]?.totals?.views || 0) * 5 || 0),
+    performance: Math.min(100, (analyticsByCoupon?.[c.id]?.totals?.clicks || 0) * 5 || 0),
     redemptions: `${c.redemptions} uses`,
     revenue: '—',
   }));
