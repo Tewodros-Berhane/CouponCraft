@@ -5,6 +5,7 @@ import { prisma } from "../db/prisma.js";
 import { validate } from "../middlewares/validate.js";
 import { analyticsEventSchema } from "../validators.js";
 import { requireAuth } from "../middlewares/auth.js";
+import { asyncHandler } from "../utils/asyncHandler.js";
 
 export const analyticsRouter = Router();
 
@@ -22,7 +23,7 @@ const clampInt = (value, { min, max, fallback }) => {
 };
 
 // Public ingestion endpoint
-analyticsRouter.post("/events", ingestLimiter, validate(analyticsEventSchema), async (req, res) => {
+analyticsRouter.post("/events", ingestLimiter, validate(analyticsEventSchema), asyncHandler(async (req, res) => {
   const { couponId, eventType, meta } = req.body;
   const coupon = await prisma.coupon.findUnique({ where: { id: couponId } });
   if (!coupon) return res.status(404).json({ message: "Coupon not found" });
@@ -46,10 +47,10 @@ analyticsRouter.post("/events", ingestLimiter, validate(analyticsEventSchema), a
     },
   });
   return res.status(201).json({ data: event });
-});
+}));
 
 // Authenticated: dashboard aggregates for the authenticated business (avoids N+1 calls from UI).
-analyticsRouter.get("/dashboard", requireAuth, async (req, res) => {
+analyticsRouter.get("/dashboard", requireAuth, asyncHandler(async (req, res) => {
   const business = await prisma.business.findUnique({ where: { ownerId: req.user.id } });
   if (!business) return res.status(404).json({ message: "Business not found" });
 
@@ -129,10 +130,10 @@ analyticsRouter.get("/dashboard", requireAuth, async (req, res) => {
   }));
 
   return res.json({ data: { totalsByCoupon, totals, series, window: { days, since } } });
-});
+}));
 
 // Authenticated aggregate endpoint
-analyticsRouter.get("/coupons/:couponId", requireAuth, async (req, res) => {
+analyticsRouter.get("/coupons/:couponId", requireAuth, asyncHandler(async (req, res) => {
   const coupon = await prisma.coupon.findUnique({ where: { id: req.params.couponId } });
   if (!coupon) return res.status(404).json({ message: "Coupon not found" });
   const business = await prisma.business.findUnique({ where: { ownerId: req.user.id } });
@@ -151,4 +152,4 @@ analyticsRouter.get("/coupons/:couponId", requireAuth, async (req, res) => {
     { total: 0 }
   );
   return res.json({ data: { events, summary } });
-});
+}));

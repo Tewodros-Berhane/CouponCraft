@@ -8,10 +8,11 @@ import { requireAuth } from "../middlewares/auth.js";
 import { prisma } from "../db/prisma.js";
 import { clearSessionCookies, ensureCsrfCookie, setSessionCookies, COOKIE_NAMES } from "../utils/cookies.js";
 import { config } from "../config.js";
+import { asyncHandler } from "../utils/asyncHandler.js";
 
 export const authRouter = Router();
 
-authRouter.post("/register", validate(registerSchema), async (req, res) => {
+authRouter.post("/register", validate(registerSchema), asyncHandler(async (req, res) => {
   const { email, password, businessName, ownerName, phone, businessType } = req.body;
   const existing = await prisma.user.findUnique({ where: { email } });
   if (existing) {
@@ -60,9 +61,9 @@ authRouter.post("/register", validate(registerSchema), async (req, res) => {
       business,
     },
   });
-});
+}));
 
-authRouter.post("/login", validate(loginSchema), async (req, res) => {
+authRouter.post("/login", validate(loginSchema), asyncHandler(async (req, res) => {
   const { email, password } = req.body;
   const user = await prisma.user.findUnique({ where: { email } });
   if (!user) {
@@ -88,9 +89,9 @@ authRouter.post("/login", validate(loginSchema), async (req, res) => {
       business,
     },
   });
-});
+}));
 
-authRouter.post("/refresh", async (req, res) => {
+authRouter.post("/refresh", asyncHandler(async (req, res) => {
   const refreshToken = (req.body || {})?.refreshToken || req.cookies?.[COOKIE_NAMES.refresh];
   if (!refreshToken) {
     return res.status(401).json({ code: "REFRESH_TOKEN_MISSING", message: "Missing refresh token" });
@@ -135,9 +136,9 @@ authRouter.post("/refresh", async (req, res) => {
   } catch (err) {
     return res.status(401).json({ message: "Invalid or expired refresh token" });
   }
-});
+}));
 
-authRouter.post("/logout", async (req, res) => {
+authRouter.post("/logout", asyncHandler(async (req, res) => {
   const refreshToken = req.cookies?.[COOKIE_NAMES.refresh] || (req.body || {})?.refreshToken;
   if (refreshToken) {
     await prisma.refreshToken.updateMany({
@@ -147,9 +148,9 @@ authRouter.post("/logout", async (req, res) => {
   }
   clearSessionCookies(res);
   return res.status(204).send();
-});
+}));
 
-authRouter.get("/me", requireAuth, async (req, res) => {
+authRouter.get("/me", requireAuth, asyncHandler(async (req, res) => {
   const business = await prisma.business.findUnique({ where: { ownerId: req.user.id } });
   ensureCsrfCookie(req, res);
   return res.json({
@@ -158,4 +159,4 @@ authRouter.get("/me", requireAuth, async (req, res) => {
       business,
     },
   });
-});
+}));

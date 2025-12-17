@@ -8,6 +8,7 @@ import { requireAuth } from "../middlewares/auth.js";
 import { validate } from "../middlewares/validate.js";
 import { signUploadSchema } from "../validators.js";
 import { config } from "../config.js";
+import { asyncHandler } from "../utils/asyncHandler.js";
 
 export const uploadsRouter = Router();
 
@@ -35,7 +36,7 @@ const safeEqual = (a, b) => {
 };
 
 // Public: resolve an uploaded asset
-uploadsRouter.get("/assets/:key", async (req, res) => {
+uploadsRouter.get("/assets/:key", asyncHandler(async (req, res) => {
   const { key } = req.params;
   if (!isSafeKey(key)) return res.status(404).json({ message: "Not found" });
   const filePath = path.join(uploadsDir, key);
@@ -46,13 +47,13 @@ uploadsRouter.get("/assets/:key", async (req, res) => {
   } catch {
     return res.status(404).json({ message: "Not found" });
   }
-});
+}));
 
 // Public: signed upload PUT (raw body)
 uploadsRouter.put(
   "/put/:key",
   express.raw({ type: "*/*", limit: config.uploadLimit }),
-  async (req, res) => {
+  asyncHandler(async (req, res) => {
     const { key } = req.params;
     const { exp, sig, contentType } = req.query || {};
 
@@ -94,7 +95,7 @@ uploadsRouter.put(
     }
 
     return res.status(200).send();
-  }
+  })
 );
 
 // Authenticated: request a signed upload URL

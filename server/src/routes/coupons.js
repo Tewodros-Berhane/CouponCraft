@@ -4,6 +4,7 @@ import { requireAuth } from "../middlewares/auth.js";
 import { validate } from "../middlewares/validate.js";
 import { couponSchema } from "../validators.js";
 import { prisma } from "../db/prisma.js";
+import { asyncHandler } from "../utils/asyncHandler.js";
 
 export const couponsRouter = Router();
 
@@ -15,7 +16,7 @@ const parsePagination = (req) => {
   return { page, limit, skip: (page - 1) * limit };
 };
 
-couponsRouter.get("/", async (req, res) => {
+couponsRouter.get("/", asyncHandler(async (req, res) => {
   const { page, limit, skip } = parsePagination(req);
   const business = await prisma.business.findUnique({ where: { ownerId: req.user.id } });
   if (!business) {
@@ -34,9 +35,9 @@ couponsRouter.get("/", async (req, res) => {
     data: coupons,
     meta: { page, limit, total, totalPages: Math.ceil(total / limit) || 1 },
   });
-});
+}));
 
-couponsRouter.post("/", validate(couponSchema), async (req, res) => {
+couponsRouter.post("/", validate(couponSchema), asyncHandler(async (req, res) => {
   const business = await prisma.business.findUnique({ where: { ownerId: req.user.id } });
   if (!business) {
     return res.status(404).json({ message: "Business not found" });
@@ -54,9 +55,9 @@ couponsRouter.post("/", validate(couponSchema), async (req, res) => {
     },
   });
   return res.status(201).json({ data: coupon });
-});
+}));
 
-couponsRouter.get("/:id", async (req, res) => {
+couponsRouter.get("/:id", asyncHandler(async (req, res) => {
   const coupon = await prisma.coupon.findUnique({ where: { id: req.params.id } });
   if (!coupon) {
     return res.status(404).json({ message: "Coupon not found" });
@@ -66,9 +67,9 @@ couponsRouter.get("/:id", async (req, res) => {
     return res.status(403).json({ message: "Access denied" });
   }
   return res.json({ data: coupon });
-});
+}));
 
-couponsRouter.patch("/:id", validate(couponSchema), async (req, res) => {
+couponsRouter.patch("/:id", validate(couponSchema), asyncHandler(async (req, res) => {
   const coupon = await prisma.coupon.findUnique({ where: { id: req.params.id } });
   if (!coupon) {
     return res.status(404).json({ message: "Coupon not found" });
@@ -89,4 +90,4 @@ couponsRouter.patch("/:id", validate(couponSchema), async (req, res) => {
     },
   });
   return res.json({ data: updated });
-});
+}));

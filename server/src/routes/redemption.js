@@ -6,6 +6,7 @@ import { redemptionValidateSchema, redemptionConfirmSchema } from "../validators
 import { isCouponActive } from "../utils/couponStatus.js";
 import { hashRedeemToken } from "../utils/redeemToken.js";
 import { requireAuth } from "../middlewares/auth.js";
+import { asyncHandler } from "../utils/asyncHandler.js";
 
 export const redemptionRouter = Router();
 
@@ -15,7 +16,7 @@ const httpError = (status, message) => {
   return err;
 };
 
-redemptionRouter.post("/validate", validate(redemptionValidateSchema), async (req, res) => {
+redemptionRouter.post("/validate", validate(redemptionValidateSchema), asyncHandler(async (req, res) => {
   const { couponId } = req.body;
   const coupon = await prisma.coupon.findUnique({ where: { id: couponId } });
   if (!coupon) return res.status(404).json({ message: "Coupon not found" });
@@ -26,9 +27,9 @@ redemptionRouter.post("/validate", validate(redemptionValidateSchema), async (re
       reason: valid ? null : "Coupon is not active or expired",
     },
   });
-});
+}));
 
-redemptionRouter.post("/confirm", validate(redemptionConfirmSchema), async (req, res) => {
+redemptionRouter.post("/confirm", validate(redemptionConfirmSchema), asyncHandler(async (req, res) => {
   const { couponId, customerRef, context, shareId, redeemToken } = req.body;
   const coupon = await prisma.coupon.findUnique({ where: { id: couponId } });
   if (!coupon) return res.status(404).json({ message: "Coupon not found" });
@@ -97,7 +98,9 @@ redemptionRouter.post("/confirm", validate(redemptionConfirmSchema), async (req,
     }
   }
 
-  return requireAuth(req, res, async () => {
+  await new Promise((resolve) => requireAuth(req, res, resolve));
+  if (res.headersSent) return;
+
     const business = await prisma.business.findUnique({ where: { ownerId: req.user.id } });
     if (!business || coupon.businessId !== business.id) {
       return res.status(403).json({ message: "Access denied" });
@@ -126,5 +129,4 @@ redemptionRouter.post("/confirm", validate(redemptionConfirmSchema), async (req,
     ]);
 
     return res.status(201).json({ data: redemption });
-  });
-});
+}));

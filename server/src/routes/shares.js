@@ -6,12 +6,25 @@ import { prisma } from "../db/prisma.js";
 import { requireAuth } from "../middlewares/auth.js";
 import { validate } from "../middlewares/validate.js";
 import { createShareSchema, updateShareSchema } from "../validators.js";
-import { config } from "../config.js";
+import { config, sanitizeOrigin } from "../config.js";
+import { asyncHandler } from "../utils/asyncHandler.js";
 
 export const sharesRouter = Router();
 
-const buildShareUrl = (shareId, utm) => {
-  const base = (config.clientOrigin || "http://localhost:5173").replace(/\/+$/, "");
+const pickShareBaseOrigin = (req) => {
+  const requestOrigin = req?.get?.("origin");
+  if (requestOrigin) {
+    const normalized = sanitizeOrigin(requestOrigin);
+    if (config.corsOrigins.includes(normalized)) return normalized;
+  }
+
+  const fallback = config.corsOrigins?.[0] || config.clientOrigin || "http://localhost:5173";
+  const first = String(fallback).split(",")[0].trim();
+  return sanitizeOrigin(first) || "http://localhost:5173";
+};
+
+const buildShareUrl = (req, shareId, utm) => {
+  const base = pickShareBaseOrigin(req).replace(/\/+$/, "");
   const url = new URL(`${base}/redeem/${shareId}`);
 
   const source = utm?.source ? String(utm.source) : "";
@@ -33,7 +46,7 @@ const trackLimiter = rateLimit({
 });
 
 // Public tracking endpoint
-sharesRouter.post("/:id/track", trackLimiter, async (req, res) => {
+sharesRouter.post("/:id/track", trackLimiter, asyncHandler(async (req, res) => {
   const { id } = req.params;
   const { event } = req.body || {};
   if (!["click", "redemption"].includes(event)) {
@@ -57,9 +70,9 @@ sharesRouter.post("/:id/track", trackLimiter, async (req, res) => {
     },
   });
   return res.json({ data: updated });
-});
+}));
 
-sharesRouter.get("/:couponId", requireAuth, async (req, res) => {
+sharesRouter.get("/:couponId", requireAuth, asyncHandler(async (req, res) => {
   const coupon = await prisma.coupon.findUnique({ where: { id: req.params.couponId } });
   if (!coupon) return res.status(404).json({ message: "Coupon not found" });
   const business = await prisma.business.findUnique({ where: { ownerId: req.user.id } });
@@ -71,9 +84,9 @@ sharesRouter.get("/:couponId", requireAuth, async (req, res) => {
     orderBy: { createdAt: "desc" },
   });
   return res.json({ data: shares });
-});
+}));
 
-sharesRouter.post("/", requireAuth, validate(createShareSchema), async (req, res) => {
+sharesRouter.post("/", requireAuth, validate(createShareSchema), asyncHandler(async (req, res) => {
   const { couponId, type, channel, config: cfg } = req.body;
   const coupon = await prisma.coupon.findUnique({ where: { id: couponId } });
   if (!coupon) return res.status(404).json({ message: "Coupon not found" });
@@ -86,7 +99,7 @@ sharesRouter.post("/", requireAuth, validate(createShareSchema), async (req, res
   const incomingConfig = { ...(cfg || {}) };
   delete incomingConfig.shareUrl;
 
-  const shareUrl = buildShareUrl(shareId, incomingConfig.utm);
+  const shareUrl = buildShareUrl(req, shareId, incomingConfig.utm);
 
   const share = await prisma.share.create({
     data: {
@@ -98,9 +111,9 @@ sharesRouter.post("/", requireAuth, validate(createShareSchema), async (req, res
     },
   });
   return res.status(201).json({ data: share });
-});
+}));
 
-sharesRouter.patch("/:id", requireAuth, validate(updateShareSchema), async (req, res) => {
+sharesRouter.patch("/:id", requireAuth, validate(updateShareSchema), asyncHandler(async (req, res) => {
   const share = await prisma.share.findUnique({ where: { id: req.params.id } });
   if (!share) return res.status(404).json({ message: "Share not found" });
 
@@ -132,7 +145,7 @@ sharesRouter.patch("/:id", requireAuth, validate(updateShareSchema), async (req,
     }
   }
 
-  nextConfig.shareUrl = buildShareUrl(share.id, nextConfig.utm);
+  nextConfig.shareUrl = buildShareUrl(req, share.id, nextConfig.utm);
 
   const updated = await prisma.share.update({
     where: { id: share.id },
@@ -143,4 +156,4 @@ sharesRouter.patch("/:id", requireAuth, validate(updateShareSchema), async (req,
   });
 
   return res.json({ data: updated });
-});
+}));

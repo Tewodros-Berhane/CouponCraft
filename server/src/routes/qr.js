@@ -2,6 +2,7 @@ import { Router } from "express";
 import QRCode from "qrcode";
 import rateLimit from "express-rate-limit";
 import { prisma } from "../db/prisma.js";
+import { asyncHandler } from "../utils/asyncHandler.js";
 
 export const qrRouter = Router();
 
@@ -12,7 +13,7 @@ const qrLimiter = rateLimit({
   legacyHeaders: false,
 });
 
-qrRouter.get("/:shareId", qrLimiter, async (req, res) => {
+qrRouter.get("/:shareId", qrLimiter, asyncHandler(async (req, res) => {
   const share = await prisma.share.findUnique({ where: { id: req.params.shareId } });
   if (!share) return res.status(404).json({ message: "Share not found" });
   const link = share.config?.shareUrl || share.config?.link || share.config?.url;
@@ -36,4 +37,4 @@ qrRouter.get("/:shareId", qrLimiter, async (req, res) => {
   } catch (err) {
     res.status(500).json({ message: "Failed to generate QR" });
   }
-});
+}));

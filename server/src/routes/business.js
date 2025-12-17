@@ -3,20 +3,21 @@ import { prisma } from "../db/prisma.js";
 import { requireAuth } from "../middlewares/auth.js";
 import { validate } from "../middlewares/validate.js";
 import { businessUpdateSchema } from "../validators.js";
+import { asyncHandler } from "../utils/asyncHandler.js";
 
 export const businessRouter = Router();
 
 businessRouter.use(requireAuth);
 
-businessRouter.get("/", async (req, res) => {
+businessRouter.get("/", asyncHandler(async (req, res) => {
   const business = await prisma.business.findUnique({ where: { ownerId: req.user.id } });
   if (!business) {
     return res.status(404).json({ message: "Business not found" });
   }
   return res.json({ data: business });
-});
+}));
 
-businessRouter.patch("/", validate(businessUpdateSchema), async (req, res) => {
+businessRouter.patch("/", validate(businessUpdateSchema), asyncHandler(async (req, res) => {
   const business = await prisma.business.findUnique({ where: { ownerId: req.user.id } });
   if (!business) {
     return res.status(404).json({ message: "Business not found" });
@@ -30,4 +31,4 @@ businessRouter.patch("/", validate(businessUpdateSchema), async (req, res) => {
     },
   });
   return res.json({ data: updated });
-});
+}));

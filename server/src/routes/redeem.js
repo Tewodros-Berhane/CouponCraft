@@ -4,6 +4,7 @@ import { prisma } from "../db/prisma.js";
 import { isCouponActive } from "../utils/couponStatus.js";
 import { generateRedeemToken, hashRedeemToken } from "../utils/redeemToken.js";
 import bcrypt from "bcryptjs";
+import { asyncHandler } from "../utils/asyncHandler.js";
 
 export const redeemRouter = Router();
 
@@ -15,7 +16,7 @@ const redeemLimiter = rateLimit({
 });
 
 // Public endpoint: resolve shareId -> coupon + business, and record a real "click" on open.
-redeemRouter.get("/:shareId", redeemLimiter, async (req, res) => {
+redeemRouter.get("/:shareId", redeemLimiter, asyncHandler(async (req, res) => {
   const { shareId } = req.params;
   res.setHeader("Cache-Control", "no-store");
 
@@ -110,4 +111,4 @@ redeemRouter.get("/:shareId", redeemLimiter, async (req, res) => {
       redeemTokenExpiresAt,
     },
   });
-});
+}));
