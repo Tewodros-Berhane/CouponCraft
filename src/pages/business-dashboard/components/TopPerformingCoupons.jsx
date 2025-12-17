@@ -1,20 +1,34 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import Icon from '../../../components/AppIcon';
 import Button from '../../../components/ui/Button';
 import IconButton from '../../../components/ui/IconButton';
+import { useToast } from '../../../components/ui/ToastProvider';
 
 const TopPerformingCoupons = ({ coupons }) => {
+  const navigate = useNavigate();
+  const toast = useToast();
+
   const getPerformanceColor = (performance) => {
     if (performance >= 80) return 'text-success';
     if (performance >= 60) return 'text-warning';
     return 'text-error';
   };
 
+  const handleView = (coupon) => {
+    if (!coupon?.id) return;
+    navigate('/coupon-preview', { state: { couponId: coupon.id } });
+  };
+
   return (
     <div className="bg-card rounded-lg shadow-level-1 p-6">
       <div className="flex items-center justify-between mb-6">
         <h3 className="text-lg font-semibold text-foreground">Top Performing Coupons</h3>
-        <IconButton ariaLabel="More actions" iconName="MoreHorizontal" />
+        <IconButton
+          ariaLabel="More actions"
+          iconName="MoreHorizontal"
+          onClick={() => toast.info('More actions is coming soon')}
+        />
       </div>
       <div className="space-y-4">
         {coupons?.map((coupon, index) => (
@@ -54,12 +68,18 @@ const TopPerformingCoupons = ({ coupons }) => {
               </div>
             </div>
             
-            <IconButton ariaLabel="Open coupon details" iconName="ExternalLink" />
+            <IconButton ariaLabel="Open coupon details" iconName="ExternalLink" onClick={() => handleView(coupon)} />
           </div>
         ))}
       </div>
       <div className="mt-6 pt-4 border-t border-border">
-        <Button variant="outline" fullWidth iconName="BarChart3" iconPosition="left">
+        <Button
+          variant="outline"
+          fullWidth
+          iconName="BarChart3"
+          iconPosition="left"
+          onClick={() => toast.info('Detailed analytics is coming soon')}
+        >
           View Detailed Analytics
         </Button>
       </div>
