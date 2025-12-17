@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import Icon from '../../../components/AppIcon';
 import Button from '../../../components/ui/Button';
 import IconButton from '../../../components/ui/IconButton';
 
 const CouponActivityTable = ({ coupons }) => {
+  const navigate = useNavigate();
   const [sortField, setSortField] = useState('name');
   const [sortDirection, setSortDirection] = useState('asc');
 
@@ -40,6 +42,21 @@ const CouponActivityTable = ({ coupons }) => {
       setSortField(field);
       setSortDirection('asc');
     }
+  };
+
+  const handleView = (coupon) => {
+    if (!coupon?.id) return;
+    navigate('/coupon-preview', { state: { couponId: coupon.id } });
+  };
+
+  const handleEdit = (coupon) => {
+    if (!coupon?.id) return;
+    navigate('/create-coupon', { state: { editMode: true, couponId: coupon.id } });
+  };
+
+  const handleShare = (coupon) => {
+    if (!coupon?.id) return;
+    navigate('/share-coupon', { state: { couponId: coupon.id } });
   };
 
   const sortedCoupons = [...coupons]?.sort((a, b) => {
@@ -134,9 +151,9 @@ const CouponActivityTable = ({ coupons }) => {
                 </td>
                 <td className="px-6 py-4">
                   <div className="flex items-center space-x-2">
-                    <IconButton ariaLabel="View coupon" iconName="Eye" />
-                    <IconButton ariaLabel="Edit coupon" iconName="Edit" />
-                    <IconButton ariaLabel="Share coupon" iconName="Share" />
+                    <IconButton ariaLabel="View coupon" iconName="Eye" onClick={() => handleView(coupon)} />
+                    <IconButton ariaLabel="Edit coupon" iconName="Edit" onClick={() => handleEdit(coupon)} />
+                    <IconButton ariaLabel="Share coupon" iconName="Share" onClick={() => handleShare(coupon)} />
                   </div>
                 </td>
               </tr>
@@ -174,9 +191,9 @@ const CouponActivityTable = ({ coupons }) => {
               </div>
                
                <div className="flex items-center space-x-2">
-                 <IconButton ariaLabel="View coupon" iconName="Eye" />
-                 <IconButton ariaLabel="Edit coupon" iconName="Edit" />
-                 <IconButton ariaLabel="Share coupon" iconName="Share" />
+                 <IconButton ariaLabel="View coupon" iconName="Eye" onClick={() => handleView(coupon)} />
+                 <IconButton ariaLabel="Edit coupon" iconName="Edit" onClick={() => handleEdit(coupon)} />
+                 <IconButton ariaLabel="Share coupon" iconName="Share" onClick={() => handleShare(coupon)} />
                </div>
              </div>
            </div>
