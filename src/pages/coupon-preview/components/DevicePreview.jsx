@@ -1,5 +1,7 @@
 import React from 'react';
 import Icon from '../../../components/AppIcon';
+import { formatDate } from '../../../utils/format';
+import { formatCurrency } from '../../../utils/format';
 
 const DevicePreview = ({ couponData, selectedDevice, onDeviceChange, previewRef }) => {
   const devices = [
@@ -67,7 +69,7 @@ const DevicePreview = ({ couponData, selectedDevice, onDeviceChange, previewRef 
               {couponData?.discountType === 'percentage' 
                 ? `${couponData?.discountValue}% OFF`
                 : couponData?.discountType === 'fixed'
-                ? `$${couponData?.discountValue} OFF`
+                ? `${formatCurrency(couponData?.discountValue, '$0')} OFF`
                 : 'SPECIAL OFFER'
               }
             </div>
@@ -79,10 +81,10 @@ const DevicePreview = ({ couponData, selectedDevice, onDeviceChange, previewRef 
           {/* Terms */}
           <div className="border-t border-border pt-3 mt-3">
             <p className={`text-muted-foreground ${device?.id === 'mobile' ? 'text-xs' : 'text-sm'}`}>
-              Valid until: {couponData?.expiryDate ? new Date(couponData.expiryDate).toLocaleDateString() : 'N/A'}
+              Valid until: {formatDate(couponData?.expiryDate, 'N/A')}
             </p>
             <p className={`text-muted-foreground ${device?.id === 'mobile' ? 'text-xs' : 'text-sm'}`}>
-              Min. order: {couponData?.minimumOrder ? `$${couponData.minimumOrder}` : 'None'}
+              Min. order: {couponData?.minimumOrder || 'None'}
             </p>
           </div>
         </div>

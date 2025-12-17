@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import Icon from '../../../components/AppIcon';
 import Button from '../../../components/ui/Button';
+import { formatDate } from '../../../utils/format';
 
 import api from '../../../apiClient';
 
@@ -148,7 +149,7 @@ const CustomerRedemptionFlow = ({ couponData }) => {
               <div className="flex justify-between items-center text-sm">
                 <span className="text-muted-foreground">Expires:</span>
                 <span className="text-foreground">
-                  {couponData?.expiryDate ? new Date(couponData.expiryDate).toLocaleDateString() : 'N/A'}
+                  {formatDate(couponData?.expiryDate, 'N/A')}
                 </span>
               </div>
               <div className="flex justify-between items-center text-sm">

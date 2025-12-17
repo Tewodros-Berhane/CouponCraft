@@ -10,6 +10,7 @@ import ShareLinkCustomizer from './components/ShareLinkCustomizer';
 import api from '../../apiClient';
 import { useToast } from '../../components/ui/ToastProvider';
 import { getApiErrorMessage } from '../../utils/apiError';
+import { formatDate } from '../../utils/format';
 
 const ShareCoupon = () => {
   const navigate = useNavigate();
@@ -362,11 +363,8 @@ const ShareCoupon = () => {
                     <h4 className="font-medium text-foreground">{displayCoupon?.title}</h4>
                     <p className="text-sm text-muted-foreground">{displayCoupon?.businessName}</p>
                     <div className="flex items-center space-x-4 mt-2 text-xs text-muted-foreground">
-                      <span>
-                        Expires:{' '}
-                        {displayCoupon?.expiryDate ? new Date(displayCoupon.expiryDate).toLocaleDateString() : 'N/A'}
-                      </span>
-                      <span>·</span>
+                      <span>Expires: {formatDate(displayCoupon?.expiryDate, 'N/A')}</span>
+                      <span aria-hidden="true">·</span>
                       <span>Limit: {displayCoupon?.usageLimit || 'Unlimited'}</span>
                     </div>
                   </div>
@@ -428,4 +426,3 @@ const ShareCoupon = () => {
 };
 
 export default ShareCoupon;
-

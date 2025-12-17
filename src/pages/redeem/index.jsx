@@ -4,6 +4,7 @@ import api from "../../apiClient";
 import Button from "../../components/ui/Button";
 import Icon from "../../components/AppIcon";
 import { useToast } from "../../components/ui/ToastProvider";
+import { formatDate } from "../../utils/format";
 
 const RedeemCoupon = () => {
   const { shareId } = useParams();
@@ -47,9 +48,7 @@ const RedeemCoupon = () => {
   const expiryText = useMemo(() => {
     const endDate = coupon?.validity?.endDate;
     if (!endDate) return "No expiry";
-    const dt = new Date(endDate);
-    if (Number.isNaN(dt.getTime())) return "No expiry";
-    return dt.toLocaleDateString();
+    return formatDate(endDate, "No expiry");
   }, [coupon?.validity?.endDate]);
 
   const handleRedeem = async () => {
@@ -159,4 +158,3 @@ const RedeemCoupon = () => {
 };
 
 export default RedeemCoupon;
-

@@ -1,6 +1,7 @@
 import React from 'react';
 import Button from '../../../components/ui/Button';
 import Icon from '../../../components/AppIcon';
+import { formatCurrency, formatDate } from '../../../utils/format';
 
 const PreviewControls = ({ 
   couponData, 
@@ -114,7 +115,9 @@ const PreviewControls = ({
             <span className="text-sm text-muted-foreground">Discount Value</span>
             <span className="text-sm font-medium text-foreground">
               {couponData?.discountValue ? (
-                couponData?.discountType === 'percentage' ? `${couponData.discountValue}%` : `$${couponData.discountValue}`
+                couponData?.discountType === 'percentage'
+                  ? `${couponData.discountValue}%`
+                  : formatCurrency(couponData.discountValue, 'N/A')
               ) : (
                 'N/A'
               )}
@@ -123,7 +126,7 @@ const PreviewControls = ({
           <div className="flex justify-between items-center">
             <span className="text-sm text-muted-foreground">Expiry Date</span>
             <span className="text-sm font-medium text-foreground">
-              {couponData?.expiryDate ? new Date(couponData.expiryDate).toLocaleDateString() : 'N/A'}
+              {formatDate(couponData?.expiryDate, 'N/A')}
             </span>
           </div>
           <div className="flex justify-between items-center">
@@ -135,7 +138,7 @@ const PreviewControls = ({
           <div className="flex justify-between items-center">
             <span className="text-sm text-muted-foreground">Min. Order</span>
             <span className="text-sm font-medium text-foreground">
-              {couponData?.minimumOrder ? `$${couponData.minimumOrder}` : 'None'}
+              {couponData?.minimumOrder || 'None'}
             </span>
           </div>
         </div>

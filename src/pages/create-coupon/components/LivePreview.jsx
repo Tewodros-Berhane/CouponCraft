@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import Icon from '../../../components/AppIcon';
 import Button from '../../../components/ui/Button';
+import { formatCurrency, formatDate } from '../../../utils/format';
 
 const LivePreview = ({ 
   templateData, 
@@ -24,7 +25,9 @@ const LivePreview = ({
       case 'percentage':
         return `${discountData?.percentage || 'X'}% OFF`;
       case 'fixed':
-        return `$${discountData?.amount || 'X'} OFF`;
+        return discountData?.amount
+          ? `${formatCurrency(discountData?.amount, '$X')} OFF`
+          : '$X OFF';
       case 'bogo':
         const bogoLabels = {
           'buy_1_get_1_free': 'BUY 1 GET 1 FREE',
@@ -46,7 +49,7 @@ const LivePreview = ({
     switch (validityData?.type) {
       case 'date_range':
         if (validityData?.endDate) {
-          return `Valid until ${new Date(validityData.endDate)?.toLocaleDateString()}`;
+          return `Valid until ${formatDate(validityData.endDate, 'N/A')}`;
         }
         return 'Limited Time Offer';
       case 'duration':

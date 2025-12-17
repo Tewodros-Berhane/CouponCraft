@@ -3,6 +3,7 @@ import Icon from '../../../components/AppIcon';
 import Input from '../../../components/ui/Input';
 import Select from '../../../components/ui/Select';
 import { Checkbox } from '../../../components/ui/Checkbox';
+import { formatCurrency } from '../../../utils/format';
 
 const DiscountConfiguration = ({ discountData, onDiscountChange }) => {
   const [showAdvanced, setShowAdvanced] = useState(false);
@@ -228,10 +229,13 @@ const DiscountConfiguration = ({ discountData, onDiscountChange }) => {
               <h4 className="font-medium text-foreground mb-1">Discount Summary</h4>
               <ul className="text-sm text-muted-foreground space-y-1 list-disc list-inside">
                 {discountData?.type === 'percentage' && discountData?.percentage && (
-                  <li>{discountData?.percentage}% off {discountData?.maxDiscount ? `(max $${discountData?.maxDiscount})` : ''}</li>
+                  <li>
+                    {discountData?.percentage}% off{' '}
+                    {discountData?.maxDiscount ? `(max ${formatCurrency(discountData?.maxDiscount, '—')})` : ''}
+                  </li>
                 )}
                 {discountData?.type === 'fixed' && discountData?.amount && (
-                  <li>${discountData?.amount} off</li>
+                  <li>{formatCurrency(discountData?.amount, '—')} off</li>
                 )}
                 {discountData?.type === 'bogo' && discountData?.bogoType && (
                   <li>{bogoOptions?.find(opt => opt?.value === discountData?.bogoType)?.label}</li>
@@ -240,7 +244,7 @@ const DiscountConfiguration = ({ discountData, onDiscountChange }) => {
                   <li>Free shipping on all orders</li>
                 )}
                 {discountData?.minimumType === 'amount' && discountData?.minimumAmount && (
-                  <li>Minimum purchase: ${discountData?.minimumAmount}</li>
+                  <li>Minimum purchase: {formatCurrency(discountData?.minimumAmount, '—')}</li>
                 )}
                 {discountData?.minimumType === 'quantity' && discountData?.minimumQuantity && (
                   <li>Minimum quantity: {discountData?.minimumQuantity} items</li>
