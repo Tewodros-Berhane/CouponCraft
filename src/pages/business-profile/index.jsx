@@ -3,6 +3,7 @@ import Header from '../../components/ui/Header';
 import Input from '../../components/ui/Input';
 import Select from '../../components/ui/Select';
 import Button from '../../components/ui/Button';
+import InlineAlert from '../../components/ui/InlineAlert';
 import api from '../../apiClient';
 
 const businessTypes = [
@@ -76,16 +77,8 @@ const BusinessProfile = () => {
           <p className="text-muted-foreground mb-6">Update your business information and contact details.</p>
 
           <div className="bg-card border border-border rounded-xl shadow-level-1 p-6">
-            {error && (
-              <div className="mb-4 text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg p-3">
-                {error}
-              </div>
-            )}
-            {success && (
-              <div className="mb-4 text-sm text-green-700 bg-green-50 border border-green-200 rounded-lg p-3">
-                {success}
-              </div>
-            )}
+            {error ? <InlineAlert variant="error" className="mb-4">{error}</InlineAlert> : null}
+            {success ? <InlineAlert variant="success" className="mb-4">{success}</InlineAlert> : null}
 
             <form onSubmit={handleSubmit} className="space-y-4">
               <Input
