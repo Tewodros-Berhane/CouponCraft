@@ -2,8 +2,10 @@ import React from 'react';
 import Icon from '../../../components/AppIcon';
 import Button from '../../../components/ui/Button';
 import { formatDateTime } from '../../../utils/format';
+import { useToast } from '../../../components/ui/ToastProvider';
 
 const ShareHistoryPanel = ({ shareHistory, onViewDetails, onCopyLink }) => {
+  const toast = useToast();
   const getChannelIcon = (channel) => {
     const icons = {
       qr: 'QrCode',
@@ -39,6 +41,58 @@ const ShareHistoryPanel = ({ shareHistory, onViewDetails, onCopyLink }) => {
     return ((redemptions / clicks) * 100)?.toFixed(1);
   };
 
+  const exportCsv = () => {
+    const rows = Array.isArray(shareHistory) ? shareHistory : [];
+    if (rows.length === 0) {
+      toast.info('No share history to export');
+      return;
+    }
+
+    const escapeCsv = (value) => {
+      if (value === null || value === undefined) return '';
+      const str = String(value);
+      const needsQuotes = /[",\n\r]/.test(str);
+      const escaped = str.replace(/"/g, '""');
+      return needsQuotes ? `"${escaped}"` : escaped;
+    };
+
+    const header = ['id', 'channel', 'sharedAt', 'clicks', 'redemptions', 'conversionRate', 'shareUrl'];
+    const lines = [
+      header.join(','),
+      ...rows.map((item) => {
+        const clicks = Number(item?.clicks) || 0;
+        const redemptions = Number(item?.redemptions) || 0;
+        const conversionRate = clicks ? ((redemptions / clicks) * 100).toFixed(1) : '0.0';
+
+        return [
+          escapeCsv(item?.id),
+          escapeCsv(item?.channel),
+          escapeCsv(item?.sharedAt),
+          escapeCsv(clicks),
+          escapeCsv(redemptions),
+          escapeCsv(conversionRate),
+          escapeCsv(item?.shareUrl),
+        ].join(',');
+      }),
+    ];
+
+    try {
+      const blob = new Blob([lines.join('\n')], { type: 'text/csv;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `share-history-${new Date().toISOString().slice(0, 10)}.csv`;
+      a.rel = 'noopener';
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+      toast.success('Export started');
+    } catch (error) {
+      toast.error('Failed to export share history');
+    }
+  };
+
   return (
     <div className="bg-white rounded-xl border border-border shadow-level-1">
       <div className="p-6 border-b border-border">
@@ -47,7 +101,14 @@ const ShareHistoryPanel = ({ shareHistory, onViewDetails, onCopyLink }) => {
             <h2 className="text-lg font-semibold text-foreground">Share History</h2>
             <p className="text-sm text-muted-foreground">Track performance across all channels</p>
           </div>
-          <Button variant="outline" size="sm" iconName="Download" iconPosition="left">
+          <Button
+            variant="outline"
+            size="sm"
+            iconName="Download"
+            iconPosition="left"
+            onClick={exportCsv}
+            disabled={!shareHistory?.length}
+          >
             Export
           </Button>
         </div>
@@ -57,13 +118,13 @@ const ShareHistoryPanel = ({ shareHistory, onViewDetails, onCopyLink }) => {
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
           <div className="bg-muted rounded-lg p-4 text-center">
             <div className="text-2xl font-bold text-foreground">
-              {shareHistory?.reduce((sum, item) => sum + item?.clicks, 0)}
+              {shareHistory?.reduce((sum, item) => sum + (Number(item?.clicks) || 0), 0)}
             </div>
             <div className="text-sm text-muted-foreground">Total Clicks</div>
           </div>
           <div className="bg-muted rounded-lg p-4 text-center">
             <div className="text-2xl font-bold text-foreground">
-              {shareHistory?.reduce((sum, item) => sum + item?.redemptions, 0)}
+              {shareHistory?.reduce((sum, item) => sum + (Number(item?.redemptions) || 0), 0)}
             </div>
             <div className="text-sm text-muted-foreground">Redemptions</div>
           </div>
@@ -76,8 +137,8 @@ const ShareHistoryPanel = ({ shareHistory, onViewDetails, onCopyLink }) => {
           <div className="bg-muted rounded-lg p-4 text-center">
             <div className="text-2xl font-bold text-foreground">
               {calculateConversionRate(
-                shareHistory?.reduce((sum, item) => sum + item?.clicks, 0),
-                shareHistory?.reduce((sum, item) => sum + item?.redemptions, 0)
+                shareHistory?.reduce((sum, item) => sum + (Number(item?.clicks) || 0), 0),
+                shareHistory?.reduce((sum, item) => sum + (Number(item?.redemptions) || 0), 0)
               )}%
             </div>
             <div className="text-sm text-muted-foreground">Conversion</div>
