@@ -28,7 +28,7 @@ const resolveApiBaseUrl = () => {
   }
 };
 
-const API_BASE_URL = resolveApiBaseUrl();
+export const API_BASE_URL = resolveApiBaseUrl();
 
 let refreshPromise = null;
 

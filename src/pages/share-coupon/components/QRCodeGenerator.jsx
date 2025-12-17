@@ -5,6 +5,7 @@ import Select from '../../../components/ui/Select';
 import { Dialog, DialogClose, DialogContent } from '../../../components/ui/Dialog';
 import IconButton from '../../../components/ui/IconButton';
 import { useToast } from '../../../components/ui/ToastProvider';
+import { API_BASE_URL } from '../../../apiClient';
 
 const QRCodeGenerator = ({ couponData, shareId, shareUrl, onClose, isVisible }) => {
   const [qrSize, setQrSize] = useState('medium');
@@ -35,9 +36,8 @@ const QRCodeGenerator = ({ couponData, shareId, shareUrl, onClose, isVisible }) 
     try {
       if (shareId) {
         // Use backend QR endpoint
-        const base = import.meta.env.VITE_API_URL || '/api';
         const size = parseInt(getSizePixels()?.split('x')?.[0], 10) || 400;
-        const qrUrl = `${base}/qr/${shareId}?format=${encodeURIComponent(qrFormat)}&size=${encodeURIComponent(size)}`;
+        const qrUrl = `${API_BASE_URL}/qr/${shareId}?format=${encodeURIComponent(qrFormat)}&size=${encodeURIComponent(size)}`;
         setQrCodeUrl(qrUrl);
       } else {
         // Fallback to client QR service
@@ -103,7 +103,8 @@ const QRCodeGenerator = ({ couponData, shareId, shareUrl, onClose, isVisible }) 
     hint.textContent = 'Scan to redeem your coupon';
 
     const expiry = doc.createElement('p');
-    expiry.textContent = `Valid until: ${couponData?.expiryDate || '—'}`;
+    const expiryDate = couponData?.expiryDate ? new Date(couponData.expiryDate) : null;
+    expiry.textContent = `Valid until: ${expiryDate ? expiryDate.toLocaleDateString() : 'No expiry'}`;
 
     info.appendChild(title);
     info.appendChild(hint);
@@ -251,7 +252,7 @@ const QRCodeGenerator = ({ couponData, shareId, shareUrl, onClose, isVisible }) 
 
         <div className="flex items-center justify-between p-6 border-t border-border bg-muted/30">
           <div className="text-sm text-muted-foreground">
-            QR code links to: <span className="font-mono text-xs">{shareUrl || couponData?.shareUrl || '—'}</span>
+            QR code links to: <span className="font-mono text-xs">{shareUrl || couponData?.shareUrl || 'Not available'}</span>
           </div>
           <div className="flex space-x-2">
             <DialogClose asChild>
