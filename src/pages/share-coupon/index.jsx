@@ -277,13 +277,15 @@ const ShareCoupon = () => {
         linkData?.passwordProtected && linkData?.password ? linkData.password : null;
 
       try {
-        await api.patch(`/shares/${linkShareId}`, {
+        const updated = await api.patch(`/shares/${linkShareId}`, {
           password,
           expiresAt,
           config: {
             utm: linkData?.trackingEnabled ? linkData?.utmParameters || null : null,
           },
         });
+        const updatedUrl = updated?.data?.data?.config?.shareUrl;
+        if (updatedUrl) setLinkShareUrl(updatedUrl);
         await reloadShares();
       } catch (err) {
         toast.error(getApiErrorMessage(err, 'Failed to save link settings'));
@@ -291,7 +293,7 @@ const ShareCoupon = () => {
     }
 
     try {
-      await navigator.clipboard?.writeText(finalUrl);
+      await navigator.clipboard?.writeText(linkShareUrl || finalUrl);
       toast.success('Link copied');
     } catch {
       toast.success('Link generated');
@@ -389,7 +391,7 @@ const ShareCoupon = () => {
                     <p className="text-sm text-muted-foreground">{displayCoupon?.businessName}</p>
                     <div className="flex items-center space-x-4 mt-2 text-xs text-muted-foreground">
                       <span>Expires: {formatDate(displayCoupon?.expiryDate, 'N/A')}</span>
-                      <span aria-hidden="true">·</span>
+                      <span aria-hidden="true">•</span>
                       <span>Limit: {displayCoupon?.usageLimit || 'Unlimited'}</span>
                     </div>
                   </div>

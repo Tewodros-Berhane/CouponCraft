@@ -10,6 +10,21 @@ import { config } from "../config.js";
 
 export const sharesRouter = Router();
 
+const buildShareUrl = (shareId, utm) => {
+  const base = (config.clientOrigin || "http://localhost:5173").replace(/\/+$/, "");
+  const url = new URL(`${base}/redeem/${shareId}`);
+
+  const source = utm?.source ? String(utm.source) : "";
+  const medium = utm?.medium ? String(utm.medium) : "";
+  const campaign = utm?.campaign ? String(utm.campaign) : "";
+
+  if (source) url.searchParams.set("utm_source", source);
+  if (medium) url.searchParams.set("utm_medium", medium);
+  if (campaign) url.searchParams.set("utm_campaign", campaign);
+
+  return url.toString();
+};
+
 const trackLimiter = rateLimit({
   windowMs: 60 * 1000,
   limit: 60,
@@ -67,8 +82,11 @@ sharesRouter.post("/", requireAuth, validate(createShareSchema), async (req, res
     return res.status(403).json({ message: "Access denied" });
   }
   const shareId = nanoid();
-  const shareUrlBase = (config.clientOrigin || "http://localhost:5173").replace(/\/+$/, "");
-  const shareUrl = `${shareUrlBase}/redeem/${shareId}`;
+
+  const incomingConfig = { ...(cfg || {}) };
+  delete incomingConfig.shareUrl;
+
+  const shareUrl = buildShareUrl(shareId, incomingConfig.utm);
 
   const share = await prisma.share.create({
     data: {
@@ -76,7 +94,7 @@ sharesRouter.post("/", requireAuth, validate(createShareSchema), async (req, res
       couponId,
       type,
       channel: channel || null,
-      config: { ...(cfg || {}), shareUrl },
+      config: { ...incomingConfig, shareUrl },
     },
   });
   return res.status(201).json({ data: share });
@@ -94,7 +112,10 @@ sharesRouter.patch("/:id", requireAuth, validate(updateShareSchema), async (req,
     return res.status(403).json({ message: "Access denied" });
   }
 
-  const nextConfig = { ...(share.config || {}), ...(req.body.config || {}) };
+  const incomingConfig = { ...(req.body.config || {}) };
+  delete incomingConfig.shareUrl;
+
+  const nextConfig = { ...(share.config || {}), ...incomingConfig };
 
   if (Object.prototype.hasOwnProperty.call(req.body, "expiresAt")) {
     nextConfig.expiresAt = req.body.expiresAt ? new Date(req.body.expiresAt).toISOString() : null;
@@ -110,6 +131,8 @@ sharesRouter.patch("/:id", requireAuth, validate(updateShareSchema), async (req,
       nextConfig.passwordProtected = true;
     }
   }
+
+  nextConfig.shareUrl = buildShareUrl(share.id, nextConfig.utm);
 
   const updated = await prisma.share.update({
     where: { id: share.id },
