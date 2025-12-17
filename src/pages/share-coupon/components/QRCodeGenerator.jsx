@@ -4,12 +4,14 @@ import Button from '../../../components/ui/Button';
 import Select from '../../../components/ui/Select';
 import { Dialog, DialogClose, DialogContent } from '../../../components/ui/Dialog';
 import IconButton from '../../../components/ui/IconButton';
+import { useToast } from '../../../components/ui/ToastProvider';
 
 const QRCodeGenerator = ({ couponData, shareId, shareUrl, onClose, isVisible }) => {
   const [qrSize, setQrSize] = useState('medium');
   const [qrFormat, setQrFormat] = useState('png');
   const [isGenerating, setIsGenerating] = useState(false);
   const [qrCodeUrl, setQrCodeUrl] = useState('');
+  const toast = useToast();
 
   const sizeOptions = [
     { value: 'small', label: 'Small (200x200px)', description: 'Perfect for business cards' },
@@ -69,25 +71,23 @@ const QRCodeGenerator = ({ couponData, shareId, shareUrl, onClose, isVisible }) 
   const handlePrint = () => {
     if (!qrCodeUrl) return;
     const printWindow = window.open('', '_blank', 'noopener,noreferrer');
-    if (!printWindow) return;
+    if (!printWindow) {
+      toast.error('Pop-up blocked. Please allow pop-ups to print.');
+      return;
+    }
 
     const doc = printWindow.document;
-    doc.open();
-    doc.write(`<!doctype html>
-      <html>
-        <head>
-          <meta charset="utf-8" />
-          <meta name="viewport" content="width=device-width, initial-scale=1" />
-          <title>Print QR Code</title>
-          <style>
-            body { margin: 0; padding: 20px; text-align: center; }
-            img { max-width: 100%; height: auto; }
-            .info { margin-top: 20px; font-family: Arial, sans-serif; }
-          </style>
-        </head>
-        <body></body>
-      </html>`);
-    doc.close();
+    doc.title = 'Print QR Code';
+
+    while (doc.body.firstChild) doc.body.removeChild(doc.body.firstChild);
+
+    const style = doc.createElement('style');
+    style.textContent = `
+      body { margin: 0; padding: 20px; text-align: center; }
+      img { max-width: 100%; height: auto; }
+      .info { margin-top: 20px; font-family: Arial, sans-serif; }
+    `;
+    doc.head.appendChild(style);
 
     const img = doc.createElement('img');
     img.src = qrCodeUrl;
@@ -115,9 +115,11 @@ const QRCodeGenerator = ({ couponData, shareId, shareUrl, onClose, isVisible }) 
     const doPrint = () => {
       try {
         printWindow.focus();
+        printWindow.onafterprint = () => printWindow.close();
         printWindow.print();
+        setTimeout(() => printWindow.close(), 1000);
       } catch {
-        // ignore
+        toast.error('Failed to print');
       }
     };
 
