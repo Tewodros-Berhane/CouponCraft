@@ -6,6 +6,7 @@ import { useToast } from '../../../components/ui/ToastProvider';
 
 const ShareHistoryPanel = ({ shareHistory, onViewDetails, onCopyLink }) => {
   const toast = useToast();
+
   const getChannelIcon = (channel) => {
     const icons = {
       qr: 'QrCode',
@@ -14,7 +15,7 @@ const ShareHistoryPanel = ({ shareHistory, onViewDetails, onCopyLink }) => {
       instagram: 'Instagram',
       twitter: 'Twitter',
       link: 'Link',
-      whatsapp: 'MessageCircle'
+      whatsapp: 'MessageCircle',
     };
     return icons?.[channel] || 'Share';
   };
@@ -27,18 +28,18 @@ const ShareHistoryPanel = ({ shareHistory, onViewDetails, onCopyLink }) => {
       instagram: '#e4405f',
       twitter: '#1da1f2',
       link: '#059669',
-      whatsapp: '#25d366'
+      whatsapp: '#25d366',
     };
     return colors?.[channel] || '#6b7280';
   };
 
-  const formatDate = (date) => {
-    return formatDateTime(date, '—');
-  };
+  const formatDate = (date) => formatDateTime(date, '—');
 
   const calculateConversionRate = (clicks, redemptions) => {
-    if (clicks === 0) return 0;
-    return ((redemptions / clicks) * 100)?.toFixed(1);
+    const safeClicks = Number(clicks) || 0;
+    const safeRedemptions = Number(redemptions) || 0;
+    if (safeClicks === 0) return 0;
+    return ((safeRedemptions / safeClicks) * 100)?.toFixed(1);
   };
 
   const exportCsv = () => {
@@ -88,13 +89,13 @@ const ShareHistoryPanel = ({ shareHistory, onViewDetails, onCopyLink }) => {
       a.remove();
       URL.revokeObjectURL(url);
       toast.success('Export started');
-    } catch (error) {
+    } catch {
       toast.error('Failed to export share history');
     }
   };
 
   return (
-    <div className="bg-white rounded-xl border border-border shadow-level-1">
+    <div className="bg-white rounded-xl border border-border shadow-level-1 overflow-hidden">
       <div className="p-6 border-b border-border">
         <div className="flex items-center justify-between">
           <div>
@@ -113,8 +114,8 @@ const ShareHistoryPanel = ({ shareHistory, onViewDetails, onCopyLink }) => {
           </Button>
         </div>
       </div>
+
       <div className="p-6">
-        {/* Summary Stats */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
           <div className="bg-muted rounded-lg p-4 text-center">
             <div className="text-2xl font-bold text-foreground">
@@ -129,9 +130,7 @@ const ShareHistoryPanel = ({ shareHistory, onViewDetails, onCopyLink }) => {
             <div className="text-sm text-muted-foreground">Redemptions</div>
           </div>
           <div className="bg-muted rounded-lg p-4 text-center">
-            <div className="text-2xl font-bold text-foreground">
-              {shareHistory?.length}
-            </div>
+            <div className="text-2xl font-bold text-foreground">{shareHistory?.length}</div>
             <div className="text-sm text-muted-foreground">Channels</div>
           </div>
           <div className="bg-muted rounded-lg p-4 text-center">
@@ -139,65 +138,69 @@ const ShareHistoryPanel = ({ shareHistory, onViewDetails, onCopyLink }) => {
               {calculateConversionRate(
                 shareHistory?.reduce((sum, item) => sum + (Number(item?.clicks) || 0), 0),
                 shareHistory?.reduce((sum, item) => sum + (Number(item?.redemptions) || 0), 0)
-              )}%
+              )}
+              %
             </div>
             <div className="text-sm text-muted-foreground">Conversion</div>
           </div>
         </div>
 
-        {/* Share History List */}
         <div className="space-y-3">
           {shareHistory?.map((item) => (
-            <div key={item?.id} className="flex items-center justify-between p-4 bg-muted rounded-lg hover:bg-muted/80 transition-colors duration-150">
-              <div className="flex items-center space-x-4">
-                <div className="w-10 h-10 rounded-lg bg-white flex items-center justify-center">
-                  <Icon 
-                    name={getChannelIcon(item?.channel)} 
-                    size={20} 
-                    color={getChannelColor(item?.channel)}
-                  />
+            <div
+              key={item?.id}
+              className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 p-4 bg-muted rounded-lg hover:bg-muted/80 transition-colors duration-150"
+            >
+              <div className="flex items-center gap-4 min-w-0">
+                <div className="w-10 h-10 rounded-lg bg-white flex items-center justify-center flex-shrink-0">
+                  <Icon name={getChannelIcon(item?.channel)} size={20} color={getChannelColor(item?.channel)} />
                 </div>
-                <div>
-                  <div className="font-medium text-foreground capitalize">{item?.channel}</div>
-                  <div className="text-sm text-muted-foreground">{formatDate(item?.sharedAt)}</div>
+                <div className="min-w-0">
+                  <div className="font-medium text-foreground capitalize truncate">{item?.channel}</div>
+                  <div className="text-sm text-muted-foreground truncate">{formatDate(item?.sharedAt)}</div>
                 </div>
               </div>
 
-              <div className="flex items-center space-x-6">
-                <div className="text-center">
-                  <div className="text-sm font-medium text-foreground">{item?.clicks}</div>
-                  <div className="text-xs text-muted-foreground">clicks</div>
-                </div>
-                <div className="text-center">
-                  <div className="text-sm font-medium text-foreground">{item?.redemptions}</div>
-                  <div className="text-xs text-muted-foreground">redeemed</div>
-                </div>
-                <div className="text-center">
-                  <div className="text-sm font-medium text-foreground">
-                    {calculateConversionRate(item?.clicks, item?.redemptions)}%
+              <div className="flex flex-wrap items-center gap-3 sm:gap-6">
+                <div className="flex flex-wrap items-center gap-4 sm:gap-6">
+                  <div className="text-center min-w-[4.5rem]">
+                    <div className="text-sm font-medium text-foreground">{Number(item?.clicks) || 0}</div>
+                    <div className="text-xs text-muted-foreground">clicks</div>
                   </div>
-                  <div className="text-xs text-muted-foreground">conversion</div>
+                  <div className="text-center min-w-[4.5rem]">
+                    <div className="text-sm font-medium text-foreground">{Number(item?.redemptions) || 0}</div>
+                    <div className="text-xs text-muted-foreground">redeemed</div>
+                  </div>
+                  <div className="text-center min-w-[4.5rem]">
+                    <div className="text-sm font-medium text-foreground">
+                      {calculateConversionRate(item?.clicks, item?.redemptions)}%
+                    </div>
+                    <div className="text-xs text-muted-foreground">conversion</div>
+                  </div>
                 </div>
-                {item?.shareUrl && (
+
+                <div className="flex flex-wrap items-center gap-2 sm:ml-auto">
+                  {item?.shareUrl && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => onCopyLink?.(item.shareUrl)}
+                      iconName="Copy"
+                      iconPosition="left"
+                    >
+                      Copy link
+                    </Button>
+                  )}
                   <Button
                     variant="ghost"
                     size="sm"
-                    onClick={() => onCopyLink?.(item.shareUrl)}
-                    iconName="Copy"
+                    onClick={() => onViewDetails?.(item)}
+                    iconName="BarChart3"
                     iconPosition="left"
                   >
-                    Copy link
+                    Details
                   </Button>
-                )}
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => onViewDetails(item)}
-                  iconName="BarChart3"
-                  iconPosition="left"
-                >
-                  Details
-                </Button>
+                </div>
               </div>
             </div>
           ))}
@@ -216,3 +219,4 @@ const ShareHistoryPanel = ({ shareHistory, onViewDetails, onCopyLink }) => {
 };
 
 export default ShareHistoryPanel;
+
