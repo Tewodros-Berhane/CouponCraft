@@ -20,7 +20,7 @@ const TemplateLibrary = ({ selectedTemplate, onTemplateSelect }) => {
       id: 'template-1',
       name: 'Classic Discount',
       category: 'all',
-      thumbnail: 'https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=300&h=200&fit=crop',
+      thumbnail: '/assets/images/templates/classic.svg',
       description: 'Clean and professional design perfect for any business',
       colors: ['#1e40af', '#ffffff', '#f8fafc'],
       isPopular: true
@@ -29,7 +29,7 @@ const TemplateLibrary = ({ selectedTemplate, onTemplateSelect }) => {
       id: 'template-2',
       name: 'Food Special',
       category: 'restaurant',
-      thumbnail: 'https://images.pexels.com/photos/1640777/pexels-photo-1640777.jpeg?w=300&h=200&fit=crop',
+      thumbnail: '/assets/images/templates/food.svg',
       description: 'Appetizing design for restaurants and food services',
       colors: ['#dc2626', '#ffffff', '#fef2f2'],
       isPopular: false
@@ -38,7 +38,7 @@ const TemplateLibrary = ({ selectedTemplate, onTemplateSelect }) => {
       id: 'template-3',
       name: 'Shopping Spree',
       category: 'retail',
-      thumbnail: 'https://images.pixabay.com/photo/2017/12/26/09/15/woman-3040029_1280.jpg?w=300&h=200&fit=crop',
+      thumbnail: '/assets/images/templates/retail.svg',
       description: 'Vibrant retail-focused design for stores and boutiques',
       colors: ['#7c3aed', '#ffffff', '#f3f4f6'],
       isPopular: true
@@ -47,7 +47,7 @@ const TemplateLibrary = ({ selectedTemplate, onTemplateSelect }) => {
       id: 'template-4',
       name: 'Spa Relaxation',
       category: 'beauty',
-      thumbnail: 'https://images.unsplash.com/photo-1544161515-4ab6ce6db874?w=300&h=200&fit=crop',
+      thumbnail: '/assets/images/templates/spa.svg',
       description: 'Calming design for beauty salons and spas',
       colors: ['#059669', '#ffffff', '#ecfdf5'],
       isPopular: false
@@ -56,7 +56,7 @@ const TemplateLibrary = ({ selectedTemplate, onTemplateSelect }) => {
       id: 'template-5',
       name: 'Fitness Power',
       category: 'fitness',
-      thumbnail: 'https://images.pexels.com/photos/1552252/pexels-photo-1552252.jpeg?w=300&h=200&fit=crop',
+      thumbnail: '/assets/images/templates/fitness.svg',
       description: 'Energetic design for gyms and fitness centers',
       colors: ['#ea580c', '#ffffff', '#fff7ed'],
       isPopular: false
@@ -65,7 +65,7 @@ const TemplateLibrary = ({ selectedTemplate, onTemplateSelect }) => {
       id: 'template-6',
       name: 'Auto Service',
       category: 'automotive',
-      thumbnail: 'https://images.pixabay.com/photo/2016/11/19/12/35/automotive-1839764_1280.jpg?w=300&h=200&fit=crop',
+      thumbnail: '/assets/images/templates/auto.svg',
       description: 'Professional design for automotive services',
       colors: ['#1f2937', '#ffffff', '#f9fafb'],
       isPopular: false
@@ -74,7 +74,7 @@ const TemplateLibrary = ({ selectedTemplate, onTemplateSelect }) => {
       id: 'template-7',
       name: 'Service Pro',
       category: 'services',
-      thumbnail: 'https://images.unsplash.com/photo-1581578731548-c64695cc6952?w=300&h=200&fit=crop',
+      thumbnail: '/assets/images/templates/services.svg',
       description: 'Trustworthy design for professional services',
       colors: ['#0f766e', '#ffffff', '#f0fdfa'],
       isPopular: true
@@ -83,7 +83,7 @@ const TemplateLibrary = ({ selectedTemplate, onTemplateSelect }) => {
       id: 'template-8',
       name: 'Modern Minimal',
       category: 'all',
-      thumbnail: 'https://images.pexels.com/photos/3184291/pexels-photo-3184291.jpeg?w=300&h=200&fit=crop',
+      thumbnail: '/assets/images/templates/minimal.svg',
       description: 'Sleek minimal design for contemporary businesses',
       colors: ['#374151', '#ffffff', '#f3f4f6'],
       isPopular: false

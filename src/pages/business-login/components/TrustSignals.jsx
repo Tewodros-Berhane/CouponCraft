@@ -26,7 +26,7 @@ const TrustSignals = () => {
       id: 1,
       name: 'Sarah Chen',
       business: 'Chen\'s Bakery',
-      avatar: 'https://images.unsplash.com/photo-1494790108755-2616b612b786?w=64&h=64&fit=crop&crop=face',
+      avatar: '/assets/images/avatars/avatar-1.svg',
       rating: 5,
       text: 'CouponCraft helped us increase customer retention by 40%. The interface is so intuitive that I created my first coupon in minutes!'
     },
@@ -34,7 +34,7 @@ const TrustSignals = () => {
       id: 2,
       name: 'Marcus Johnson',
       business: 'Urban Fitness Studio',
-      avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=64&h=64&fit=crop&crop=face',
+      avatar: '/assets/images/avatars/avatar-2.svg',
       rating: 5,
       text: 'The analytics dashboard gives me insights I never had before. I can see exactly which promotions work best for my gym.'
     },
@@ -42,7 +42,7 @@ const TrustSignals = () => {
       id: 3,
       name: 'Elena Rodriguez',
       business: 'Bloom Flower Shop',
-      avatar: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=64&h=64&fit=crop&crop=face',
+      avatar: '/assets/images/avatars/avatar-3.svg',
       rating: 5,
       text: 'Creating seasonal promotions is now effortless. My customers love the professional-looking digital coupons!'
     }

@@ -10,14 +10,14 @@ const TemplatePreview = ({ selectedBusinessType }) => {
       {
         id: 1,
         name: 'Food Delight',
-        image: 'https://images.pexels.com/photos/1640777/pexels-photo-1640777.jpeg?auto=compress&cs=tinysrgb&w=400',
+        image: '/assets/images/templates/food.svg',
         discount: '20% OFF',
         description: 'Perfect for restaurants and cafes'
       },
       {
         id: 2,
         name: 'Pizza Special',
-        image: 'https://images.pexels.com/photos/315755/pexels-photo-315755.jpeg?auto=compress&cs=tinysrgb&w=400',
+        image: '/assets/images/templates/food.svg',
         discount: 'Buy 1 Get 1',
         description: 'Great for pizza and fast food'
       }
@@ -26,14 +26,14 @@ const TemplatePreview = ({ selectedBusinessType }) => {
       {
         id: 3,
         name: 'Fashion Sale',
-        image: 'https://images.pexels.com/photos/1488463/pexels-photo-1488463.jpeg?auto=compress&cs=tinysrgb&w=400',
+        image: '/assets/images/templates/retail.svg',
         discount: '30% OFF',
         description: 'Ideal for clothing and accessories'
       },
       {
         id: 4,
         name: 'Store Discount',
-        image: 'https://images.pexels.com/photos/1005638/pexels-photo-1005638.jpeg?auto=compress&cs=tinysrgb&w=400',
+        image: '/assets/images/templates/retail.svg',
         discount: '$10 OFF',
         description: 'Perfect for retail stores'
       }
@@ -42,14 +42,14 @@ const TemplatePreview = ({ selectedBusinessType }) => {
       {
         id: 5,
         name: 'Spa Treatment',
-        image: 'https://images.pexels.com/photos/3757942/pexels-photo-3757942.jpeg?auto=compress&cs=tinysrgb&w=400',
+        image: '/assets/images/templates/spa.svg',
         discount: '25% OFF',
         description: 'Great for beauty and wellness'
       },
       {
         id: 6,
         name: 'Hair Salon',
-        image: 'https://images.pexels.com/photos/3993449/pexels-photo-3993449.jpeg?auto=compress&cs=tinysrgb&w=400',
+        image: '/assets/images/templates/spa.svg',
         discount: 'Free Service',
         description: 'Perfect for salons and spas'
       }
@@ -58,7 +58,7 @@ const TemplatePreview = ({ selectedBusinessType }) => {
       {
         id: 7,
         name: 'Car Service',
-        image: 'https://images.pexels.com/photos/3807277/pexels-photo-3807277.jpeg?auto=compress&cs=tinysrgb&w=400',
+        image: '/assets/images/templates/auto.svg',
         discount: '15% OFF',
         description: 'Ideal for auto services'
       }
@@ -67,7 +67,7 @@ const TemplatePreview = ({ selectedBusinessType }) => {
       {
         id: 8,
         name: 'Gym Membership',
-        image: 'https://images.pexels.com/photos/1552242/pexels-photo-1552242.jpeg?auto=compress&cs=tinysrgb&w=400',
+        image: '/assets/images/templates/fitness.svg',
         discount: '1 Month Free',
         description: 'Perfect for fitness centers'
       }
@@ -76,7 +76,7 @@ const TemplatePreview = ({ selectedBusinessType }) => {
       {
         id: 9,
         name: 'Consultation',
-        image: 'https://images.pexels.com/photos/3184360/pexels-photo-3184360.jpeg?auto=compress&cs=tinysrgb&w=400',
+        image: '/assets/images/templates/services.svg',
         discount: '50% OFF',
         description: 'Great for professional services'
       }
@@ -85,7 +85,7 @@ const TemplatePreview = ({ selectedBusinessType }) => {
       {
         id: 10,
         name: 'Event Ticket',
-        image: 'https://images.pexels.com/photos/1190298/pexels-photo-1190298.jpeg?auto=compress&cs=tinysrgb&w=400',
+        image: '/assets/images/templates/minimal.svg',
         discount: '2 for 1',
         description: 'Perfect for events and entertainment'
       }
@@ -94,7 +94,7 @@ const TemplatePreview = ({ selectedBusinessType }) => {
       {
         id: 11,
         name: 'General Offer',
-        image: 'https://images.pexels.com/photos/3760067/pexels-photo-3760067.jpeg?auto=compress&cs=tinysrgb&w=400',
+        image: '/assets/images/templates/classic.svg',
         discount: '20% OFF',
         description: 'Versatile template for any business'
       }
