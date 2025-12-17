@@ -33,11 +33,7 @@ const Select = React.forwardRef(
     const errorId = `${selectId}-error`;
     const describedBy = error ? errorId : description ? helpId : undefined;
 
-    if (searchable && import.meta?.env?.DEV) {
-      // Not implemented in this Radix-backed select; reserved for a future Combobox.
-      // eslint-disable-next-line no-console
-      console.warn("Select searchable=true is not supported yet.");
-    }
+    // searchable is reserved for a future Combobox; this Select ignores it for now.
 
     if (multiple) {
       const selected = Array.isArray(value) ? value : [];
@@ -215,4 +211,3 @@ const Select = React.forwardRef(
 Select.displayName = "Select";
 
 export default Select;
-
