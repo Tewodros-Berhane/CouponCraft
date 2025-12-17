@@ -7,6 +7,9 @@ build/
 .vscode/
 .idea/
 
+# Vite temporary timestamp files
+vite.config.*.timestamp-*
+
 # Environment files (keep examples)
 .env*
 !.env.example
