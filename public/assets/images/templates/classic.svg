@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="600" height="400" viewBox="0 0 600 400" role="img" aria-label="Coupon template preview">
+  <defs>
+    <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#1e40af"/>
+      <stop offset="1" stop-color="#059669"/>
+    </linearGradient>
+    <pattern id="p" width="16" height="16" patternUnits="userSpaceOnUse">
+      <circle cx="2" cy="2" r="1.5" fill="rgba(255,255,255,0.18)"/>
+    </pattern>
+  </defs>
+  <rect x="0" y="0" width="600" height="400" fill="#f8fafc"/>
+  <rect x="40" y="40" width="520" height="320" rx="22" fill="white" stroke="#e2e8f0" stroke-width="2"/>
+  <rect x="40" y="40" width="520" height="120" rx="22" fill="url(#g)"/>
+  <rect x="40" y="40" width="520" height="120" rx="22" fill="url(#p)"/>
+  <circle cx="104" cy="100" r="28" fill="rgba(255,255,255,0.18)"/>
+  <rect x="160" y="78" width="260" height="14" rx="7" fill="rgba(255,255,255,0.85)"/>
+  <rect x="160" y="104" width="210" height="10" rx="5" fill="rgba(255,255,255,0.65)"/>
+  <rect x="80" y="190" width="240" height="34" rx="10" fill="#0f172a"/>
+  <rect x="80" y="242" width="360" height="12" rx="6" fill="#cbd5e1"/>
+  <rect x="80" y="266" width="320" height="12" rx="6" fill="#e2e8f0"/>
+  <rect x="80" y="298" width="190" height="28" rx="10" fill="#1e40af" opacity="0.15"/>
+  <rect x="430" y="205" width="90" height="90" rx="14" fill="#f1f5f9" stroke="#e2e8f0"/>
+  <path d="M450 235h50v50h-50z" fill="#94a3b8"/>
+</svg>
+
