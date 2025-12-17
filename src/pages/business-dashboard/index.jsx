@@ -43,67 +43,29 @@ const BusinessDashboard = () => {
         setCoupons(list);
         const activeCount = list.filter((c) => c.status === 'active').length;
         const draftCount = list.filter((c) => c.status === 'draft').length;
-        let totalRedemptions = 0;
-        let totalViews = 0;
-        let hadAnalyticsError = false;
 
-        const analyticsResults = await Promise.all(
-          list.map(async (c) => {
-            try {
-              const analytics = await api.get(`/analytics/coupons/${c.id}`);
-              const events = analytics?.data?.data?.events || [];
-              const byDate = events.reduce((acc, ev) => {
-                const dateKey = new Date(ev.createdAt).toISOString().slice(0, 10);
-                const label = new Date(ev.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-                if (!acc[dateKey]) acc[dateKey] = { date: label, views: 0, redemptions: 0 };
-                if (ev.eventType === 'view') acc[dateKey].views += 1;
-                if (ev.eventType === 'redemption') acc[dateKey].redemptions += 1;
-                return acc;
-              }, {});
-              const totals = Object.values(byDate).reduce(
-                (tot, cur) => {
-                  tot.views += cur.views;
-                  tot.redemptions += cur.redemptions;
-                  return tot;
-                },
-                { views: 0, redemptions: 0 }
-              );
-              totalRedemptions += totals.redemptions;
-              totalViews += totals.views;
-              return { id: c.id, byDate, totals };
-            } catch (err) {
-              hadAnalyticsError = true;
-              return { id: c.id, byDate: {}, totals: { views: 0, redemptions: 0 } };
-            }
-          })
-        );
+        try {
+          const dashboard = await api.get('/analytics/dashboard?days=30');
+          const totalsByCoupon = dashboard?.data?.data?.totalsByCoupon || {};
+          const totals = dashboard?.data?.data?.totals || { views: 0, clicks: 0, redemptions: 0, total: 0 };
+          const series = dashboard?.data?.data?.series || [];
 
-        if (hadAnalyticsError) {
-          toast.error("Some analytics could not be loaded");
-        }
-
-        const analyticsMap = analyticsResults.reduce((acc, item) => {
-          acc[item.id] = item;
-          return acc;
-        }, {});
-        setAnalyticsByCoupon(analyticsMap);
-
-        const dateAccumulator = {};
-        analyticsResults.forEach((item) => {
-          Object.entries(item.byDate).forEach(([key, value]) => {
-            if (!dateAccumulator[key]) {
-              dateAccumulator[key] = { date: value.date, views: 0, redemptions: 0 };
-            }
-            dateAccumulator[key].views += value.views;
-            dateAccumulator[key].redemptions += value.redemptions;
+          const analyticsMap = {};
+          list.forEach((c) => {
+            const t = totalsByCoupon?.[c.id] || { views: 0, clicks: 0, redemptions: 0, total: 0 };
+            analyticsMap[c.id] = { totals: t };
           });
-        });
-        const aggregatedDates = Object.entries(dateAccumulator)
-          .sort(([a], [b]) => (a > b ? 1 : -1))
-          .map(([, val]) => val);
-        setChartData(aggregatedDates);
+          setAnalyticsByCoupon(analyticsMap);
 
-        setMetricsData([
+          setChartData(
+            series.map((s) => ({
+              date: s.label || s.date,
+              views: s.views || 0,
+              redemptions: s.redemptions || 0,
+            }))
+          );
+
+          setMetricsData([
           {
             title: "Active Coupons",
             value: activeCount.toString(),
@@ -130,13 +92,52 @@ const BusinessDashboard = () => {
           },
           {
             title: "Redemptions",
-            value: totalRedemptions.toString(),
-            change: `${totalRedemptions} total`,
-            changeType: totalRedemptions > 0 ? "positive" : "neutral",
+            value: (totals.redemptions || 0).toString(),
+            change: `${totals.redemptions || 0} total`,
+            changeType: (totals.redemptions || 0) > 0 ? "positive" : "neutral",
             icon: "TrendingUp",
-            trend: totalRedemptions,
+            trend: totals.redemptions || 0,
           },
         ]);
+        } catch (err) {
+          toast.error(getApiErrorMessage(err, "Some analytics could not be loaded"));
+          setAnalyticsByCoupon({});
+          setChartData([]);
+          setMetricsData([
+            {
+              title: "Active Coupons",
+              value: activeCount.toString(),
+              change: `${activeCount} total`,
+              changeType: "positive",
+              icon: "Ticket",
+              trend: activeCount * 10,
+            },
+            {
+              title: "Drafts",
+              value: draftCount.toString(),
+              change: `${draftCount} awaiting publish`,
+              changeType: "neutral",
+              icon: "ClipboardList",
+              trend: draftCount * 10,
+            },
+            {
+              title: "Total Coupons",
+              value: list.length.toString(),
+              change: "All time",
+              changeType: "neutral",
+              icon: "Layers",
+              trend: list.length * 10,
+            },
+            {
+              title: "Redemptions",
+              value: "0",
+              change: "0 total",
+              changeType: "neutral",
+              icon: "TrendingUp",
+              trend: 0,
+            },
+          ]);
+        }
       } catch (err) {
         toast.error(getApiErrorMessage(err, "Failed to load dashboard data"));
       } finally {
