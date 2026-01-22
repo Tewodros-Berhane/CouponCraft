@@ -16,12 +16,33 @@ export const loginSchema = Joi.object({
 
 const discountShape = {
   type: Joi.string().valid("percentage", "fixed", "bogo", "free_shipping").required(),
-  percentage: Joi.number().min(0).max(100).optional(),
-  amount: Joi.number().min(0).optional(),
-  bogoType: Joi.string().optional(),
-  minimumType: Joi.string().optional(),
-  minimumAmount: Joi.number().min(0).allow("").optional(),
-  minimumQuantity: Joi.number().min(0).allow("").optional(),
+  percentage: Joi.alternatives().conditional("type", {
+    is: "percentage",
+    then: Joi.number().min(0.01).max(100).required(),
+    otherwise: Joi.number().min(0).max(100).empty("").optional(),
+  }),
+  amount: Joi.alternatives().conditional("type", {
+    is: "fixed",
+    then: Joi.number().min(0.01).required(),
+    otherwise: Joi.number().min(0).empty("").optional(),
+  }),
+  maxDiscount: Joi.number().min(0).empty("").optional(),
+  bogoType: Joi.alternatives().conditional("type", {
+    is: "bogo",
+    then: Joi.string().min(1).required(),
+    otherwise: Joi.string().allow("").optional(),
+  }),
+  minimumType: Joi.string().valid("none", "amount", "quantity").optional(),
+  minimumAmount: Joi.alternatives().conditional("minimumType", {
+    is: "amount",
+    then: Joi.number().min(0.01).required(),
+    otherwise: Joi.number().min(0).empty("").optional(),
+  }),
+  minimumQuantity: Joi.alternatives().conditional("minimumType", {
+    is: "quantity",
+    then: Joi.number().min(1).required(),
+    otherwise: Joi.number().min(0).empty("").optional(),
+  }),
   specificProducts: Joi.boolean().optional(),
   stackable: Joi.boolean().optional(),
   firstTimeOnly: Joi.boolean().optional(),
@@ -29,7 +50,7 @@ const discountShape = {
 };
 
 const validityShape = {
-  type: Joi.string().valid("date_range", "duration").required(),
+  type: Joi.string().valid("date_range", "duration", "no_expiry").required(),
   startDate: Joi.string().allow("").optional(),
   endDate: Joi.string().allow("").optional(),
   startTime: Joi.string().allow("").optional(),
