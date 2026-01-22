@@ -109,6 +109,10 @@ const CreateCoupon = () => {
       if (savedDraft) {
         try {
           const draft = JSON.parse(savedDraft);
+          if (draft?.status !== 'draft') {
+            localStorage.removeItem('coupon-draft');
+            return;
+          }
           setCouponStatus('draft');
           setTemplateData(draft?.templateData || null);
           setDiscountData(prev => ({ ...prev, ...draft?.discountData }));
@@ -234,17 +238,22 @@ const CreateCoupon = () => {
       if (saved?.id && !couponId) setCouponId(saved.id);
       setCouponStatus(status);
 
-      localStorage.setItem(
-        'coupon-draft',
-        JSON.stringify({
-          templateData,
-          discountData,
-          validityData,
-          customizationData,
-          currentStep,
-          lastSaved: new Date()?.toISOString(),
-        })
-      );
+      if (status === 'draft') {
+        localStorage.setItem(
+          'coupon-draft',
+          JSON.stringify({
+            templateData,
+            discountData,
+            validityData,
+            customizationData,
+            currentStep,
+            status,
+            lastSaved: new Date()?.toISOString(),
+          })
+        );
+      } else {
+        localStorage.removeItem('coupon-draft');
+      }
 
       if (showNotification) {
         toast.success(status === 'active' ? 'Coupon published' : 'Draft saved successfully');
