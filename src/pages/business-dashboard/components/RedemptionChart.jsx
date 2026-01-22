@@ -3,15 +3,24 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 import Icon from '../../../components/AppIcon';
 
 
-const RedemptionChart = ({ data, timeRange, onTimeRangeChange, loading = false }) => {
+const RedemptionChart = ({ data, timeRange, onTimeRangeChange, loading = false, summary }) => {
   const [chartType, setChartType] = useState('line');
   const [localTimeRange, setLocalTimeRange] = useState('7d');
   const selectedRange = timeRange || localTimeRange;
   const setRange = onTimeRangeChange || setLocalTimeRange;
   const safeData = Array.isArray(data) ? data : [];
-  const totalClicks = safeData.reduce((sum, item) => sum + (Number(item?.clicks) || 0), 0);
-  const totalRedemptions = safeData.reduce((sum, item) => sum + (Number(item?.redemptions) || 0), 0);
-  const conversionRate = totalClicks ? (totalRedemptions / totalClicks) * 100 : 0;
+  const summaryClicks = Number(summary?.clicks);
+  const summaryRedemptions = Number(summary?.redemptions);
+  const summaryConversion = Number(summary?.conversionRate);
+  const totalClicks = Number.isFinite(summaryClicks)
+    ? summaryClicks
+    : safeData.reduce((sum, item) => sum + (Number(item?.clicks) || 0), 0);
+  const totalRedemptions = Number.isFinite(summaryRedemptions)
+    ? summaryRedemptions
+    : safeData.reduce((sum, item) => sum + (Number(item?.redemptions) || 0), 0);
+  const conversionRate = Number.isFinite(summaryConversion)
+    ? summaryConversion * 100
+    : totalClicks ? (totalRedemptions / totalClicks) * 100 : 0;
   const avgDaily = safeData.length ? Math.round(totalRedemptions / safeData.length) : 0;
 
   const timeRangeOptions = [

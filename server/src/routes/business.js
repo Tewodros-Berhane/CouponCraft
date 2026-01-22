@@ -22,13 +22,17 @@ businessRouter.patch("/", validate(businessUpdateSchema), asyncHandler(async (re
   if (!business) {
     return res.status(404).json({ message: "Business not found" });
   }
+  const payload = {
+    name: req.body.name,
+    phone: req.body.phone || null,
+    type: req.body.type || null,
+  };
+  if (Object.prototype.hasOwnProperty.call(req.body, "logoUrl")) {
+    payload.logoUrl = req.body.logoUrl || null;
+  }
   const updated = await prisma.business.update({
     where: { id: business.id },
-    data: {
-      name: req.body.name,
-      phone: req.body.phone || null,
-      type: req.body.type || null,
-    },
+    data: payload,
   });
   return res.json({ data: updated });
 }));

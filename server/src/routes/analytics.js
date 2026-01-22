@@ -6,6 +6,8 @@ import { validate } from "../middlewares/validate.js";
 import { analyticsEventSchema } from "../validators.js";
 import { requireAuth } from "../middlewares/auth.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
+import { calculateConversion, getShareAnalytics } from "../services/analyticsService.js";
+import { isCouponActive } from "../utils/couponStatus.js";
 
 export const analyticsRouter = Router();
 
@@ -59,17 +61,34 @@ analyticsRouter.get("/dashboard", requireAuth, asyncHandler(async (req, res) => 
 
   const coupons = await prisma.coupon.findMany({
     where: { businessId: business.id },
-    select: { id: true },
+    select: { id: true, status: true, validity: true, createdAt: true },
   });
   const couponIds = coupons.map((c) => c.id);
+
+  const now = new Date();
+  const counts = { active: 0, expired: 0, draft: 0, total: coupons.length };
+  coupons.forEach((coupon) => {
+    if (coupon.status === "draft") {
+      counts.draft += 1;
+      return;
+    }
+    if (coupon.status === "active") {
+      if (isCouponActive(coupon, now)) {
+        counts.active += 1;
+      } else {
+        counts.expired += 1;
+      }
+    }
+  });
 
   if (couponIds.length === 0) {
     return res.json({
       data: {
         totalsByCoupon: {},
-        totals: { views: 0, clicks: 0, redemptions: 0, total: 0 },
+        totals: { views: 0, clicks: 0, redemptions: 0, total: 0, conversionRate: 0 },
         series: [],
         window: { days, since },
+        counts,
       },
     });
   }
@@ -88,7 +107,7 @@ analyticsRouter.get("/dashboard", requireAuth, asyncHandler(async (req, res) => 
   ]);
 
   const totalsByCoupon = {};
-  const totals = { views: 0, clicks: 0, redemptions: 0, total: 0 };
+  const totals = { views: 0, clicks: 0, redemptions: 0, total: 0, conversionRate: 0 };
 
   totalsGrouped.forEach((row) => {
     const couponId = row.couponId;
@@ -96,7 +115,7 @@ analyticsRouter.get("/dashboard", requireAuth, asyncHandler(async (req, res) => 
     const count = row._count?._all || 0;
 
     if (!totalsByCoupon[couponId]) {
-      totalsByCoupon[couponId] = { views: 0, clicks: 0, redemptions: 0, total: 0 };
+      totalsByCoupon[couponId] = { views: 0, clicks: 0, redemptions: 0, total: 0, conversionRate: 0 };
     }
 
     totalsByCoupon[couponId].total += count;
@@ -129,7 +148,29 @@ analyticsRouter.get("/dashboard", requireAuth, asyncHandler(async (req, res) => 
     label: new Date(item.date).toLocaleDateString("en-US", { month: "short", day: "numeric" }),
   }));
 
-  return res.json({ data: { totalsByCoupon, totals, series, window: { days, since } } });
+  Object.values(totalsByCoupon).forEach((entry) => {
+    entry.conversionRate = calculateConversion(entry.clicks, entry.redemptions);
+  });
+  totals.conversionRate = calculateConversion(totals.clicks, totals.redemptions);
+
+  return res.json({ data: { totalsByCoupon, totals, series, window: { days, since }, counts } });
+}));
+
+// Authenticated: per-share analytics for a single share.
+analyticsRouter.get("/shares/:shareId", requireAuth, asyncHandler(async (req, res) => {
+  const share = await prisma.share.findUnique({
+    where: { id: req.params.shareId },
+    include: { coupon: { select: { businessId: true } } },
+  });
+  if (!share) return res.status(404).json({ message: "Share not found" });
+
+  const business = await prisma.business.findUnique({ where: { ownerId: req.user.id } });
+  if (!business || share.coupon.businessId !== business.id) {
+    return res.status(403).json({ message: "Access denied" });
+  }
+
+  const analytics = await getShareAnalytics(share.id);
+  return res.json({ data: analytics });
 }));
 
 // Authenticated aggregate endpoint

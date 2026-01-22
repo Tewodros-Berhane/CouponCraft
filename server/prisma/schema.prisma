@@ -24,6 +24,7 @@ model Business {
   ownerId   String    @unique
   owner     User      @relation(fields: [ownerId], references: [id])
   name      String
+  logoUrl   String?
   phone     String?
   type      String?
   createdAt DateTime  @default(now())

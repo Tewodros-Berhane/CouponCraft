@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Helmet } from 'react-helmet';
 import LoginForm from './components/LoginForm';
 import TrustSignals from './components/TrustSignals';
@@ -67,15 +67,15 @@ const BusinessLogin = () => {
               </div>
               
               <div className="flex items-center space-x-6 text-sm text-muted-foreground">
-                <button className="hover:text-foreground transition-colors duration-150">
+                <Link to="/privacy" className="hover:text-foreground transition-colors duration-150">
                   Privacy Policy
-                </button>
-                <button className="hover:text-foreground transition-colors duration-150">
+                </Link>
+                <Link to="/terms" className="hover:text-foreground transition-colors duration-150">
                   Terms of Service
-                </button>
-                <button className="hover:text-foreground transition-colors duration-150">
-                  Contact Support
-                </button>
+                </Link>
+                <Link to="/help" className="hover:text-foreground transition-colors duration-150">
+                  Help Center
+                </Link>
               </div>
             </div>
           </div>

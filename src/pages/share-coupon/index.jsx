@@ -162,8 +162,14 @@ const ShareCoupon = () => {
     }
   };
 
-  const handleViewDetails = () => {
-    toast.info('Detailed share analytics is coming soon');
+  const handleViewDetails = (share) => {
+    if (!share?.id) {
+      toast.error('Share details are unavailable');
+      return;
+    }
+    navigate(`/share-analytics/${share.id}`, {
+      state: { share, coupon: displayCoupon },
+    });
   };
 
   if (!couponId && !displayCoupon) {

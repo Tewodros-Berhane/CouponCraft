@@ -74,6 +74,7 @@ export const businessUpdateSchema = Joi.object({
   name: Joi.string().min(2).max(120).required(),
   phone: Joi.string().min(7).max(32).allow(null, "").optional(),
   type: Joi.string().min(2).max(60).allow(null, "").optional(),
+  logoUrl: Joi.string().max(2048).allow(null, "").optional(),
 });
 
 export const couponSchema = Joi.object({

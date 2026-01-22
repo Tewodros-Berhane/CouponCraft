@@ -24,9 +24,11 @@ const CreateCoupon = () => {
   const [showExitModal, setShowExitModal] = useState(false);
   const [couponId, setCouponId] = useState(null);
   const [couponStatus, setCouponStatus] = useState('draft');
+  const [businessProfile, setBusinessProfile] = useState(null);
   const toast = useToast();
   const lastAutosaveErrorAtRef = useRef(0);
   const didInitializeRef = useRef(false);
+  const didPrefillRef = useRef(false);
 
   // Form Data States
   const [templateData, setTemplateData] = useState(null);
@@ -163,6 +165,36 @@ const CreateCoupon = () => {
       if (!handled) await loadDraft();
     })();
   }, []);
+
+  useEffect(() => {
+    const loadBusinessProfile = async () => {
+      try {
+        const { data } = await api.get('/business');
+        setBusinessProfile(data?.data || null);
+      } catch {
+        setBusinessProfile(null);
+      }
+    };
+    loadBusinessProfile();
+  }, []);
+
+  useEffect(() => {
+    if (!businessProfile || didPrefillRef.current) return;
+    setCustomizationData((prev) => {
+      let changed = false;
+      const next = { ...prev };
+      if (!prev.businessName && businessProfile.name) {
+        next.businessName = businessProfile.name;
+        changed = true;
+      }
+      if (!prev.logo && businessProfile.logoUrl) {
+        next.logo = { url: businessProfile.logoUrl, name: 'Business logo' };
+        changed = true;
+      }
+      return changed ? next : prev;
+    });
+    didPrefillRef.current = true;
+  }, [businessProfile]);
 
   // Auto-save draft periodically with debounce
   useEffect(() => {
