@@ -47,6 +47,20 @@ export const createShareForCoupon = async ({ couponId, type, ownerId, requestOri
     throw createHttpError(403, "Access denied");
   }
 
+  const existing = await prisma.share.findFirst({ where: { couponId, type } });
+  if (existing) {
+    const existingUrl = existing.config?.shareUrl;
+    if (!existingUrl || !existingUrl.includes("/coupon/")) {
+      const shareUrl = buildShareUrl(requestOrigin, existing.id);
+      const updated = await prisma.share.update({
+        where: { id: existing.id },
+        data: { config: { ...(existing.config || {}), shareUrl } },
+      });
+      return mapShareDto(updated);
+    }
+    return mapShareDto(existing);
+  }
+
   const shareId = nanoid();
   const shareUrl = buildShareUrl(requestOrigin, shareId);
 

@@ -133,6 +133,7 @@ export const analyticsEventSchema = Joi.object({
 
 export const redemptionValidateSchema = Joi.object({
   couponId: Joi.string().required(),
+  customerRef: Joi.string().allow("", null).optional(),
 });
 
 export const redemptionConfirmSchema = Joi.object({

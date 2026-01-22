@@ -96,6 +96,7 @@ model Redemption {
   createdAt   DateTime  @default(now())
 
   @@index([couponId])
+  @@index([couponId, customerRef])
 }
 
 model RedeemToken {
