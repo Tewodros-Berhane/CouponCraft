@@ -15,7 +15,7 @@ const CustomerRedemptionFlow = ({ couponData }) => {
     {
       step: 1,
       title: 'Customer Discovers Coupon',
-      description: 'Customer finds your coupon through social media, email, or direct sharing',
+      description: 'Customer finds your coupon through a share link or QR code',
       icon: 'Search'
     },
     {
@@ -71,10 +71,10 @@ const CustomerRedemptionFlow = ({ couponData }) => {
             </div>
             <h4 className="text-lg font-semibold text-foreground mb-2">Customer's Phone</h4>
             <p className="text-sm text-muted-foreground mb-4">
-              Customer sees your coupon shared on social media or received via email
+              Customer opens a share link to view your coupon
             </p>
             <div className="bg-muted/30 rounded-lg p-4">
-              <div className="text-xs text-muted-foreground mb-2">Instagram Story</div>
+              <div className="text-xs text-muted-foreground mb-2">Share link preview</div>
               <div 
                 className="bg-white rounded-lg p-3 shadow-level-1"
                 style={{ backgroundColor: couponData?.primaryColor || '#1e40af', color: 'white' }}

@@ -49,11 +49,11 @@ const ValidationPanel = ({ couponData }) => {
 
   const optimizationSuggestions = [
     {
-      id: 'social_media',
-      title: 'Social Media Optimization',
-      description: 'Your coupon is optimized for social media sharing with proper dimensions and contrast.',
+      id: 'share_link',
+      title: 'Share Link Ready',
+      description: 'Your coupon is formatted for fast link sharing with clear visuals and contrast.',
       status: 'good',
-      icon: 'Share2'
+      icon: 'Link'
     },
     {
       id: 'mobile_friendly',
@@ -187,7 +187,7 @@ const ValidationPanel = ({ couponData }) => {
           <div className="flex items-center justify-between">
             <span className="text-sm text-muted-foreground">Link</span>
             <span className="text-sm font-medium text-foreground text-primary truncate">
-              couponcraft.com/redeem/{couponData?.id || 'abc123'}
+              couponcraft.com/coupon/{couponData?.id || 'abc123'}
             </span>
           </div>
         </div>

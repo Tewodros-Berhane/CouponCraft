@@ -10,7 +10,7 @@ const DemoSection = () => {
   const demoTabs = [
     { id: 'builder', label: 'Drag & Drop Builder', icon: '🎨' },
     { id: 'analytics', label: 'Real-time Analytics', icon: '📊' },
-    { id: 'distribution', label: 'Multi-channel Distribution', icon: '📱' }
+    { id: 'distribution', label: 'Link + QR Sharing', icon: '📱' }
   ];
 
   const demoContent = {
@@ -77,8 +77,8 @@ const DemoSection = () => {
       )
     },
     distribution: {
-      title: "Share Across All Channels",
-      description: "Distribute your coupons via QR codes, social media, email, SMS, or embed them directly on your website.",
+      title: "Share with Links and QR Codes",
+      description: "Distribute your coupons with share links and QR codes for print or digital use.",
       preview: (
         <div className="bg-white rounded-xl p-6 shadow-2xl border">
           <div className="flex items-center justify-between mb-4">
@@ -88,9 +88,9 @@ const DemoSection = () => {
           <div className="grid grid-cols-2 gap-3">
             {[
               { icon: '📱', label: 'QR Code', status: 'Generated' },
-              { icon: '📧', label: 'Email', status: 'Sent: 1,243' },
-              { icon: '💬', label: 'SMS', status: 'Scheduled' },
-              { icon: '🌐', label: 'Website', status: 'Embedded' }
+              { icon: '🔗', label: 'Share Link', status: 'Copied' },
+              { icon: '🖨️', label: 'Print Pack', status: 'Ready' },
+              { icon: '👁️', label: 'Live Views', status: 'Tracking' }
             ]?.map((channel, i) => (
               <div key={i} className="bg-muted/50 rounded-lg p-3 flex items-center space-x-2">
                 <span className="text-2xl">{channel?.icon}</span>

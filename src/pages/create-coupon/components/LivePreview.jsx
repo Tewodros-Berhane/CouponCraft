@@ -341,22 +341,6 @@ const LivePreview = ({
         </Button>
       </div>
 
-      {/* AI Suggestions */}
-      <div className="bg-accent/5 border border-accent/20 rounded-lg p-4">
-        <div className="flex items-start space-x-3">
-          <div className="w-8 h-8 bg-accent/10 rounded-lg flex items-center justify-center">
-            <Icon name="Sparkles" size={16} className="text-accent" />
-          </div>
-          <div className="flex-1">
-            <h4 className="font-medium text-foreground mb-1">AI Optimization Suggestions</h4>
-            <ul className="text-sm text-muted-foreground space-y-1 list-disc list-inside">
-              <li>Consider using a warmer color scheme to increase engagement</li>
-              <li>Adding urgency words like "Limited Time" can boost conversions</li>
-              <li>Your discount value is competitive for your industry</li>
-            </ul>
-          </div>
-        </div>
-      </div>
     </div>
   );
 };

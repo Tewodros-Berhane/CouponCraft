@@ -14,7 +14,7 @@ const BenefitsSection = () => {
       features: [
         "Up to 1,000 coupons/month",
         "Basic templates library",
-        "Email & social sharing",
+        "Link + QR sharing",
         "Basic analytics",
         "Email support"
       ],
@@ -29,7 +29,7 @@ const BenefitsSection = () => {
       features: [
         "Up to 10,000 coupons/month",
         "Premium templates + custom design",
-        "Multi-channel distribution",
+        "Link + QR distribution",
         "Advanced analytics & insights",
         "Priority support",
         "API access",
@@ -79,7 +79,7 @@ const BenefitsSection = () => {
     {
       icon: "🎯",
       title: "Higher Engagement",
-      description: "Reach customers across multiple channels and increase engagement with personalized coupon experiences.",
+      description: "Reach customers with share links and QR codes to boost engagement and redemptions.",
       stat: "+235% Engagement"
     }
   ];
@@ -93,9 +93,9 @@ const BenefitsSection = () => {
     },
     {
       feature: "Distribution Channels",
-      traditional: "1-2 channels",
-      couponcraft: "8+ channels",
-      improvement: "4x more reach"
+      traditional: "Single channel",
+      couponcraft: "Link + QR sharing",
+      improvement: "Broader reach"
     },
     {
       feature: "Performance Tracking",

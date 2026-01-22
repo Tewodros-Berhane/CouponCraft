@@ -16,7 +16,7 @@ const qrLimiter = rateLimit({
 qrRouter.get("/:shareId", qrLimiter, asyncHandler(async (req, res) => {
   const share = await prisma.share.findUnique({ where: { id: req.params.shareId } });
   if (!share) return res.status(404).json({ message: "Share not found" });
-  const link = share.config?.shareUrl || share.config?.link || share.config?.url;
+  const link = share.config?.shareUrl;
   if (!link) return res.status(400).json({ message: "Share link not available" });
   try {
     const format = (req.query.format || "png").toString().toLowerCase();

@@ -6,12 +6,12 @@ import Button from '../../components/ui/Button';
 import ShareMethodCard from './components/ShareMethodCard';
 import QRCodeGenerator from './components/QRCodeGenerator';
 import ShareHistoryPanel from './components/ShareHistoryPanel';
-import ShareLinkCustomizer from './components/ShareLinkCustomizer';
 import api from '../../apiClient';
 import { useToast } from '../../components/ui/ToastProvider';
 import { getApiErrorMessage } from '../../utils/apiError';
 import { formatDate } from '../../utils/format';
 import { copyTextToClipboard } from '../../utils/clipboard';
+import { useShareLink } from '../../hooks/useShareLink';
 
 const ShareCoupon = () => {
   const navigate = useNavigate();
@@ -22,7 +22,6 @@ const ShareCoupon = () => {
   const couponId = location?.state?.couponId || location?.state?.couponData?.id;
 
   const [shareHistory, setShareHistory] = useState([]);
-  const [shareLinks, setShareLinks] = useState({});
   const [shareStats, setShareStats] = useState({
     totalShares: 0,
     totalClicks: 0,
@@ -33,10 +32,7 @@ const ShareCoupon = () => {
   const [isQRModalVisible, setIsQRModalVisible] = useState(false);
   const [qrShareId, setQrShareId] = useState(null);
   const [qrShareUrl, setQrShareUrl] = useState(null);
-
-  const [isLinkCustomizerVisible, setIsLinkCustomizerVisible] = useState(false);
-  const [linkShareUrl, setLinkShareUrl] = useState(null);
-  const [linkShareId, setLinkShareId] = useState(null);
+  const { ensureShare, hydrateShares } = useShareLink(couponId);
 
   const displayCoupon = useMemo(() => {
     if (!couponData) return null;
@@ -68,53 +64,18 @@ const ShareCoupon = () => {
 
   const sharingMethods = [
     {
+      id: 'link',
+      type: 'link',
+      title: 'Share Link',
+      description: 'Copy a shareable link for customers',
+      features: ['Copy', 'Track clicks'],
+    },
+    {
       id: 'qr',
       type: 'qr',
       title: 'QR Code',
-      description: 'Generate scannable QR codes for print materials',
-      features: ['Multiple sizes', 'Print ready', 'Analytics'],
-    },
-    {
-      id: 'email',
-      type: 'email',
-      title: 'Email Campaign',
-      description: 'Send via email',
-      features: ['Prefilled subject', 'Tracking link'],
-    },
-    {
-      id: 'facebook',
-      type: 'facebook',
-      title: 'Facebook',
-      description: 'Share on Facebook',
-      features: ['Share dialog', 'Tracking link'],
-    },
-    {
-      id: 'instagram',
-      type: 'instagram',
-      title: 'Instagram',
-      description: 'Share on Instagram (copy link)',
-      features: ['Copy link', 'Mobile-friendly'],
-    },
-    {
-      id: 'twitter',
-      type: 'twitter',
-      title: 'Twitter',
-      description: 'Share on X/Twitter',
-      features: ['Tweet intent', 'Tracking link'],
-    },
-    {
-      id: 'whatsapp',
-      type: 'whatsapp',
-      title: 'WhatsApp',
-      description: 'Share via WhatsApp',
-      features: ['Prefilled message', 'Tracking link'],
-    },
-    {
-      id: 'link',
-      type: 'link',
-      title: 'Direct Link',
-      description: 'Copy a shareable link',
-      features: ['Copy', 'UTM builder'],
+      description: 'Generate a scannable QR code for print',
+      features: ['Multiple sizes', 'Print ready'],
     },
   ];
 
@@ -125,7 +86,7 @@ const ShareCoupon = () => {
       sharedAt: item?.createdAt,
       clicks: item?.clicks || 0,
       redemptions: item?.redemptions || 0,
-      shareUrl: item?.config?.shareUrl,
+      shareUrl: item?.shareUrl || item?.config?.shareUrl,
     }));
 
   const reloadShares = async () => {
@@ -133,13 +94,7 @@ const ShareCoupon = () => {
     const { data } = await api.get(`/shares/${couponId}`);
     const history = normalizeShares(data?.data);
     setShareHistory(history);
-    const linksMap = {};
-    history.forEach((item) => {
-      if (item?.type && item?.shareUrl) {
-        linksMap[item.type] = { id: item.id, url: item.shareUrl };
-      }
-    });
-    setShareLinks(linksMap);
+    hydrateShares(history);
   };
 
   useEffect(() => {
@@ -177,41 +132,13 @@ const ShareCoupon = () => {
     });
   }, [shareHistory]);
 
-  const ensureShare = async (method) => {
-    if (shareLinks?.[method?.type]) return shareLinks[method.type];
-    const { data } = await api.post('/shares', {
-      couponId,
-      type: method?.type,
-      channel: method?.type,
-      config: method,
-    });
-    const share = data?.data;
-    const url = share?.config?.shareUrl;
-    setShareLinks((prev) => ({
-      ...prev,
-      [method?.type]: { id: share?.id, url },
-    }));
-    return { id: share?.id, url };
-  };
-
-  const openLinkCustomizer = async () => {
-    try {
-      const share = await ensureShare({ type: 'link' });
-      setLinkShareId(share?.id || null);
-      setLinkShareUrl(share?.url || null);
-      setIsLinkCustomizerVisible(true);
-    } catch (err) {
-      toast.error(getApiErrorMessage(err, 'Failed to prepare link'));
-    }
-  };
-
   const handleShare = async (method) => {
     if (!couponId) return;
 
     if (method?.type === 'qr') {
       setIsGeneratingQR(true);
       try {
-        const share = await ensureShare(method);
+        const share = await ensureShare(method?.type);
         setQrShareId(share?.id || null);
         setQrShareUrl(share?.url || null);
         setIsQRModalVisible(true);
@@ -223,85 +150,15 @@ const ShareCoupon = () => {
       return;
     }
 
-    if (method?.type === 'link') {
-      await openLinkCustomizer();
-      return;
-    }
-
     try {
-      const share = await ensureShare(method);
+      const share = await ensureShare(method?.type);
       const resolvedShareUrl = share?.url;
       await reloadShares();
-      toast.success(`Shared via ${method?.title || method?.type}`);
-
       if (!resolvedShareUrl) return;
-      switch (method?.type) {
-        case 'email':
-          window.open(
-            `mailto:?subject=${encodeURIComponent(displayCoupon?.title || 'Exclusive offer')}&body=${encodeURIComponent(resolvedShareUrl)}`
-          );
-          break;
-        case 'facebook':
-          window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(resolvedShareUrl)}`, '_blank');
-          break;
-        case 'instagram':
-          try {
-            await copyTextToClipboard(resolvedShareUrl);
-            toast.info('Link copied. Share it in the Instagram app.');
-          } catch {
-            toast.error('Failed to copy link');
-          }
-          break;
-        case 'twitter':
-          window.open(
-            `https://twitter.com/intent/tweet?text=${encodeURIComponent(displayCoupon?.title || 'Exclusive offer')}&url=${encodeURIComponent(resolvedShareUrl)}`,
-            '_blank'
-          );
-          break;
-        case 'whatsapp':
-          window.open(`https://wa.me/?text=${encodeURIComponent(`Check out this offer: ${resolvedShareUrl}`)}`);
-          break;
-        default:
-          break;
-      }
+      await copyTextToClipboard(resolvedShareUrl);
+      toast.success('Link copied');
     } catch (err) {
       toast.error(getApiErrorMessage(err, 'Failed to share'));
-    }
-  };
-
-  const handleSaveCustomLink = async (linkData) => {
-    const finalUrl = linkData?.finalUrl || linkShareUrl;
-    if (!finalUrl) return;
-
-    if (linkShareId) {
-      const expiresAt =
-        linkData?.expirationEnabled && linkData?.expirationDate
-          ? new Date(linkData.expirationDate).toISOString()
-          : null;
-      const password =
-        linkData?.passwordProtected && linkData?.password ? linkData.password : null;
-
-      try {
-        const updated = await api.patch(`/shares/${linkShareId}`, {
-          password,
-          expiresAt,
-          config: {
-            utm: linkData?.trackingEnabled ? linkData?.utmParameters || null : null,
-          },
-        });
-        const updatedUrl = updated?.data?.data?.config?.shareUrl;
-        if (updatedUrl) setLinkShareUrl(updatedUrl);
-        await reloadShares();
-      } catch (err) {
-        toast.error(getApiErrorMessage(err, 'Failed to save link settings'));
-      }
-    }
-
-    try {
-      await copyTextToClipboard(linkShareUrl || finalUrl);
-      toast.success('Link copied');
-    } catch {
-      toast.success('Link generated');
     }
   };
 
@@ -338,7 +195,7 @@ const ShareCoupon = () => {
         <div className="max-w-7xl mx-auto px-6 py-8">
           <div className="mb-8">
             <h1 className="text-3xl font-bold text-foreground mb-2">Share your coupon</h1>
-            <p className="text-muted-foreground">Generate a tracked link or QR code to distribute your offer.</p>
+            <p className="text-muted-foreground">Generate a share link or QR code to distribute your offer.</p>
           </div>
 
           <div className="grid md:grid-cols-3 gap-6 mb-8">
@@ -359,14 +216,9 @@ const ShareCoupon = () => {
           <div className="grid lg:grid-cols-3 gap-8">
             <div className="lg:col-span-2">
               <div className="bg-white rounded-xl border border-border shadow-level-1 p-6 mb-6">
-                <div className="flex items-center justify-between mb-6">
-                  <div>
-                    <h2 className="text-xl font-semibold text-foreground">Sharing methods</h2>
-                    <p className="text-sm text-muted-foreground">Choose a channel to generate a tracked link</p>
-                  </div>
-                  <Button variant="outline" size="sm" onClick={openLinkCustomizer} iconName="Settings" iconPosition="left">
-                    Customize link
-                  </Button>
+                <div className="mb-6">
+                  <h2 className="text-xl font-semibold text-foreground">Sharing methods</h2>
+                  <p className="text-sm text-muted-foreground">Generate a link or QR code for your coupon</p>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -445,13 +297,6 @@ const ShareCoupon = () => {
           setQrShareId(null);
           setQrShareUrl(null);
         }}
-      />
-
-      <ShareLinkCustomizer
-        baseUrl={linkShareUrl}
-        isVisible={isLinkCustomizerVisible}
-        onClose={() => setIsLinkCustomizerVisible(false)}
-        onSave={handleSaveCustomLink}
       />
     </div>
   );

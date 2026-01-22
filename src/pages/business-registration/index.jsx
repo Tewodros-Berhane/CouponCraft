@@ -174,7 +174,7 @@ const BusinessRegistration = () => {
                 </div>
                 <div className="flex items-center space-x-2">
                   <Icon name="Check" size={16} className="text-success" />
-                  <span>Multi-channel Sharing</span>
+                  <span>Link + QR Sharing</span>
                 </div>
               </div>
             </div>

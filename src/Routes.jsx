@@ -1,6 +1,6 @@
 // src/Routes.js
 import React from "react";
-import { BrowserRouter, Routes as RouterRoutes, Route } from "react-router-dom";
+import { BrowserRouter, Routes as RouterRoutes, Route, Navigate, useParams } from "react-router-dom";
 import ScrollToTop from "components/ScrollToTop";
 import ErrorBoundary from "components/ErrorBoundary";
 import NotFound from "pages/NotFound";
@@ -15,6 +15,11 @@ import ShareCoupon from './pages/share-coupon';
 import RedeemCoupon from './pages/redeem';
 import ProtectedRoute from './ProtectedRoute';
 import { AuthProvider } from './AuthContext';
+
+const RedeemRedirect = () => {
+  const { shareId } = useParams();
+  return <Navigate to={`/coupon/${shareId}`} replace />;
+};
 
 const Routes = () => {
   return (
@@ -32,7 +37,8 @@ const Routes = () => {
             <Route path="/profile" element={<ProtectedRoute><BusinessProfile /></ProtectedRoute>} />
             <Route path="/coupon-preview" element={<ProtectedRoute><CouponPreview /></ProtectedRoute>} />
             <Route path="/share-coupon" element={<ProtectedRoute><ShareCoupon /></ProtectedRoute>} />
-            <Route path="/redeem/:shareId" element={<RedeemCoupon />} />
+            <Route path="/coupon/:shareId" element={<RedeemCoupon />} />
+            <Route path="/redeem/:shareId" element={<RedeemRedirect />} />
             <Route path="*" element={<NotFound />} />
           </RouterRoutes>
         </ErrorBoundary>

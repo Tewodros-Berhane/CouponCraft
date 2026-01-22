@@ -10,12 +10,7 @@ const ShareHistoryPanel = ({ shareHistory, onViewDetails, onCopyLink }) => {
   const getChannelIcon = (channel) => {
     const icons = {
       qr: 'QrCode',
-      email: 'Mail',
-      facebook: 'Facebook',
-      instagram: 'Instagram',
-      twitter: 'Twitter',
       link: 'Link',
-      whatsapp: 'MessageCircle',
     };
     return icons?.[channel] || 'Share';
   };
@@ -23,12 +18,7 @@ const ShareHistoryPanel = ({ shareHistory, onViewDetails, onCopyLink }) => {
   const getChannelColor = (channel) => {
     const colors = {
       qr: '#475569',
-      email: '#2563eb',
-      facebook: '#1877f2',
-      instagram: '#e4405f',
-      twitter: '#1da1f2',
       link: '#059669',
-      whatsapp: '#25d366',
     };
     return colors?.[channel] || '#6b7280';
   };
@@ -57,7 +47,7 @@ const ShareHistoryPanel = ({ shareHistory, onViewDetails, onCopyLink }) => {
       return needsQuotes ? `"${escaped}"` : escaped;
     };
 
-    const header = ['id', 'channel', 'sharedAt', 'clicks', 'redemptions', 'conversionRate', 'shareUrl'];
+    const header = ['id', 'type', 'sharedAt', 'clicks', 'redemptions', 'conversionRate', 'shareUrl'];
     const lines = [
       header.join(','),
       ...rows.map((item) => {
@@ -67,7 +57,7 @@ const ShareHistoryPanel = ({ shareHistory, onViewDetails, onCopyLink }) => {
 
         return [
           escapeCsv(item?.id),
-          escapeCsv(item?.channel),
+          escapeCsv(item?.type || item?.channel),
           escapeCsv(item?.sharedAt),
           escapeCsv(clicks),
           escapeCsv(redemptions),
@@ -100,7 +90,7 @@ const ShareHistoryPanel = ({ shareHistory, onViewDetails, onCopyLink }) => {
         <div className="flex items-center justify-between">
           <div>
             <h2 className="text-lg font-semibold text-foreground">Share History</h2>
-            <p className="text-sm text-muted-foreground">Track performance across all channels</p>
+            <p className="text-sm text-muted-foreground">Track performance by share type</p>
           </div>
           <Button
             variant="outline"
@@ -131,7 +121,7 @@ const ShareHistoryPanel = ({ shareHistory, onViewDetails, onCopyLink }) => {
           </div>
           <div className="bg-muted rounded-lg p-4 text-center">
             <div className="text-2xl font-bold text-foreground">{shareHistory?.length}</div>
-            <div className="text-sm text-muted-foreground">Channels</div>
+            <div className="text-sm text-muted-foreground">Shares</div>
           </div>
           <div className="bg-muted rounded-lg p-4 text-center">
             <div className="text-2xl font-bold text-foreground">
@@ -153,10 +143,14 @@ const ShareHistoryPanel = ({ shareHistory, onViewDetails, onCopyLink }) => {
             >
               <div className="flex items-center gap-4 min-w-0">
                 <div className="w-10 h-10 rounded-lg bg-white flex items-center justify-center flex-shrink-0">
-                  <Icon name={getChannelIcon(item?.channel)} size={20} color={getChannelColor(item?.channel)} />
+                  <Icon
+                    name={getChannelIcon(item?.type || item?.channel)}
+                    size={20}
+                    color={getChannelColor(item?.type || item?.channel)}
+                  />
                 </div>
                 <div className="min-w-0">
-                  <div className="font-medium text-foreground capitalize truncate">{item?.channel}</div>
+                  <div className="font-medium text-foreground capitalize truncate">{item?.type || item?.channel}</div>
                   <div className="text-sm text-muted-foreground truncate">{formatDate(item?.sharedAt)}</div>
                 </div>
               </div>
@@ -219,4 +213,3 @@ const ShareHistoryPanel = ({ shareHistory, onViewDetails, onCopyLink }) => {
 };
 
 export default ShareHistoryPanel;
-

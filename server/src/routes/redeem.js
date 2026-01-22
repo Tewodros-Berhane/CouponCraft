@@ -3,7 +3,6 @@ import rateLimit from "express-rate-limit";
 import { prisma } from "../db/prisma.js";
 import { isCouponActive } from "../utils/couponStatus.js";
 import { generateRedeemToken, hashRedeemToken } from "../utils/redeemToken.js";
-import bcrypt from "bcryptjs";
 import { asyncHandler } from "../utils/asyncHandler.js";
 
 export const redeemRouter = Router();
@@ -32,23 +31,6 @@ redeemRouter.get("/:shareId", redeemLimiter, asyncHandler(async (req, res) => {
   });
 
   if (!share) return res.status(404).json({ message: "Share not found" });
-
-  const expiresAt = share.config?.expiresAt ? new Date(share.config.expiresAt) : null;
-  if (expiresAt && Number.isFinite(expiresAt.getTime()) && expiresAt.getTime() <= Date.now()) {
-    return res.status(404).json({ message: "Coupon not available", code: "SHARE_EXPIRED" });
-  }
-
-  const passwordHash = share.config?.passwordHash;
-  if (passwordHash) {
-    const provided = req.get("X-Share-Password") || "";
-    if (!provided) {
-      return res.status(401).json({ message: "Password required", code: "PASSWORD_REQUIRED" });
-    }
-    const ok = await bcrypt.compare(String(provided), String(passwordHash));
-    if (!ok) {
-      return res.status(401).json({ message: "Invalid password", code: "INVALID_PASSWORD" });
-    }
-  }
 
   if (!isCouponActive(share.coupon)) {
     return res.status(404).json({ message: "Coupon not available" });

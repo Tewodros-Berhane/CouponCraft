@@ -14,9 +14,9 @@ const FeaturesSection = () => {
     },
     {
       icon: '📱',
-      title: 'Multi-Channel Distribution',
-      description: 'Share via QR codes, social media, email, SMS, or embed directly on your website.',
-      preview: 'All Channels Connected'
+      title: 'Link + QR Sharing',
+      description: 'Share via short links and QR codes for print or digital distribution.',
+      preview: 'Quick Share Options'
     },
     {
       icon: '📊',
@@ -25,10 +25,10 @@ const FeaturesSection = () => {
       preview: 'Live Performance Data'
     },
     {
-      icon: '🤖',
-      title: 'AI Optimization',
-      description: 'Get smart suggestions to improve coupon performance based on customer behavior.',
-      preview: 'AI-Powered Insights'
+      icon: '📈',
+      title: 'Conversion Insights',
+      description: 'See which shares convert best with click and redemption tracking.',
+      preview: 'Conversion Metrics'
     },
     {
       icon: '🔒',
