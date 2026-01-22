@@ -15,6 +15,11 @@ export default defineConfig(({ mode }) => {
       outDir: "build",
       chunkSizeWarningLimit: 2000,
     },
+    test: {
+      environment: "jsdom",
+      include: ["src/**/*.test.{js,jsx}"],
+      exclude: ["server/**", "node_modules/**"],
+    },
     plugins: [tsconfigPaths(), react(), tagger()],
     server: {
       port: "4028",

@@ -1,0 +1,7 @@
+node_modules
+build
+dist
+coverage
+server/node_modules
+server/uploads
+server/prisma

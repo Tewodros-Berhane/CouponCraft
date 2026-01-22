@@ -4,7 +4,14 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "concurrently \"npm run dev:client\" \"npm run dev:server\"",
+    "dev:client": "vite",
+    "dev:server": "npm --prefix server run dev",
+    "test": "vitest --run",
+    "test:watch": "vitest",
+    "test:server": "npm --prefix server test",
+    "lint": "eslint .",
+    "format": "prettier --write .",
     "start": "vite",
     "build": "vite build",
     "preview": "vite preview"
@@ -45,15 +52,26 @@
     "tailwindcss-fluid-type": "^2.0.7"
   },
   "devDependencies": {
+    "@eslint/js": "^8.57.0",
     "@tailwindcss/aspect-ratio": "^0.4.2",
     "@tailwindcss/container-queries": "^0.1.1",
     "@tailwindcss/line-clamp": "^0.1.0",
     "@tailwindcss/typography": "^0.5.18",
     "@vitejs/plugin-react": "^4.3.4",
     "autoprefixer": "^10.4.2",
+    "concurrently": "^8.2.2",
+    "eslint": "^8.57.0",
+    "eslint-config-prettier": "^9.1.0",
+    "eslint-plugin-react": "^7.35.0",
+    "eslint-plugin-react-hooks": "^4.6.2",
+    "eslint-plugin-react-refresh": "^0.4.12",
+    "globals": "^15.11.0",
+    "jsdom": "^24.1.0",
     "postcss": "^8.4.8",
+    "prettier": "^3.3.3",
     "tailwindcss": "^3.4.6",
     "vite": "^5.0.0",
-    "vite-tsconfig-paths": "^3.6.0"
+    "vite-tsconfig-paths": "^3.6.0",
+    "vitest": "^1.6.0"
   }
 }

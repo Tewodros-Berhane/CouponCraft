@@ -3,7 +3,11 @@
 node_modules/
 server/node_modules/
 server/uploads/
+uploads/
 build/
+dist/
+logs/
+*.log
 .vscode/
 .idea/
 
