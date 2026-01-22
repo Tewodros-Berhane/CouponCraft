@@ -14,8 +14,8 @@
    - Copy `server/.env.example` to `server/.env`
    - Update `DATABASE_URL` and `CLIENT_ORIGIN` as needed
 3. Set up the database:
-   - `npx prisma migrate dev --schema server/prisma/schema.prisma`
-   - or `npx prisma db push --schema server/prisma/schema.prisma`
+   - `cd server && npx prisma migrate dev`
+   - or `cd server && npx prisma db push`
 
 ## Environment Variables
 Client (`.env`)
@@ -47,7 +47,7 @@ Server (`server/.env`)
 
 ## Deployment
 1. Build the client bundle with `npm run build` (honors `VITE_API_URL`).
-2. Run database migrations with `npx prisma migrate deploy --schema server/prisma/schema.prisma`.
+2. Run database migrations with `cd server && npx prisma migrate deploy`.
 3. Start the API with `npm --prefix server start`.
 4. Serve the client `build/` output with your static host or reverse proxy.
 
