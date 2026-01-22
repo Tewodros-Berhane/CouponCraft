@@ -26,5 +26,42 @@ CouponCraft is a simple coupon platform built for small businesses that want to 
 ## Why it matters
 CouponCraft reduces friction between "I have a promotion" and "customers actually use it." It keeps the workflow focused, the sharing options simple, and the analytics useful at a glance.
 
+## Install and run
+### Prerequisites
+- Node.js 18+
+- npm
+- Postgres (or another database compatible with the Prisma schema)
+
+### Local setup
+1. Install dependencies:
+   - `npm install`
+   - `npm --prefix server install`
+2. Create environment files:
+   - Copy `.env.example` to `.env`
+   - Copy `server/.env.example` to `server/.env`
+   - Update `DATABASE_URL` and `CLIENT_ORIGIN`
+3. Generate Prisma client:
+   - `cd server && npx prisma generate`
+4. Run migrations:
+   - `cd server && npx prisma migrate dev`
+5. Start the app:
+   - `npm run dev`
+
+Client: `http://localhost:4028`  
+API: `http://localhost:8080`
+
+### Useful scripts
+- `npm run dev` - start client + server
+- `npm run lint` - lint the repo
+- `npm run format` - format the repo
+- `npm test` - client tests
+- `npm run test:server` - server tests
+
+### Production
+1. Build the client: `npm run build`
+2. Run migrations: `cd server && npx prisma migrate deploy`
+3. Start the API: `npm --prefix server start`
+4. Serve the client `build/` output with your static host or reverse proxy.
+
 ## Support
 Need help? Reach out at support@couponcraft.app.
