@@ -1,17 +1,16 @@
 import { Router } from "express";
-import rateLimit from "express-rate-limit";
 import { prisma } from "../db/prisma.js";
 import { isCouponActive } from "../utils/couponStatus.js";
 import { generateRedeemToken, hashRedeemToken } from "../utils/redeemToken.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
+import { createRateLimiter } from "../utils/rateLimit.js";
 
 export const redeemRouter = Router();
 
-const redeemLimiter = rateLimit({
+const redeemLimiter = createRateLimiter({
   windowMs: 60 * 1000,
-  limit: 60,
-  standardHeaders: true,
-  legacyHeaders: false,
+  limit: 30,
+  keyPrefix: "redeem",
 });
 
 // Public endpoint: resolve shareId -> coupon + business, and record a real "click" on open.

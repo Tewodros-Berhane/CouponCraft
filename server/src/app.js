@@ -1,7 +1,6 @@
 import express from "express";
 import cors from "cors";
 import helmet from "helmet";
-import rateLimit from "express-rate-limit";
 import cookieParser from "cookie-parser";
 import { config, sanitizeOrigin } from "./config.js";
 import { logger, httpLogger } from "./logger.js";
@@ -17,6 +16,7 @@ import { analyticsRouter } from "./routes/analytics.js";
 import { redemptionRouter } from "./routes/redemption.js";
 import { qrRouter } from "./routes/qr.js";
 import { redeemRouter } from "./routes/redeem.js";
+import { createRateLimiter } from "./utils/rateLimit.js";
 
 export const createApp = async () => {
   const app = express();
@@ -47,11 +47,10 @@ export const createApp = async () => {
   app.use(express.json({ limit: config.jsonLimit || "1mb" }));
   app.use(httpLogger);
 
-  const authLimiter = rateLimit({
+  const authLimiter = createRateLimiter({
     windowMs: 60 * 1000,
     limit: 20,
-    standardHeaders: true,
-    legacyHeaders: false,
+    keyPrefix: "auth-global",
   });
 
   app.use("/api/health", healthRouter);

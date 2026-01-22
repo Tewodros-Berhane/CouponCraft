@@ -1,16 +1,15 @@
 import { Router } from "express";
 import QRCode from "qrcode";
-import rateLimit from "express-rate-limit";
 import { prisma } from "../db/prisma.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
+import { createRateLimiter } from "../utils/rateLimit.js";
 
 export const qrRouter = Router();
 
-const qrLimiter = rateLimit({
+const qrLimiter = createRateLimiter({
   windowMs: 60 * 1000,
   limit: 60,
-  standardHeaders: true,
-  legacyHeaders: false,
+  keyPrefix: "qr",
 });
 
 qrRouter.get("/:shareId", qrLimiter, asyncHandler(async (req, res) => {

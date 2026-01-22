@@ -9,10 +9,17 @@ import { prisma } from "../db/prisma.js";
 import { clearSessionCookies, ensureCsrfCookie, setSessionCookies, COOKIE_NAMES } from "../utils/cookies.js";
 import { config } from "../config.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
+import { createRateLimiter } from "../utils/rateLimit.js";
 
 export const authRouter = Router();
 
-authRouter.post("/register", validate(registerSchema), asyncHandler(async (req, res) => {
+const authLimiter = createRateLimiter({
+  windowMs: 10 * 60 * 1000,
+  limit: 20,
+  keyPrefix: "auth",
+});
+
+authRouter.post("/register", authLimiter, validate(registerSchema), asyncHandler(async (req, res) => {
   const { email, password, businessName, ownerName, phone, businessType } = req.body;
   const existing = await prisma.user.findUnique({ where: { email } });
   if (existing) {
@@ -63,7 +70,7 @@ authRouter.post("/register", validate(registerSchema), asyncHandler(async (req, 
   });
 }));
 
-authRouter.post("/login", validate(loginSchema), asyncHandler(async (req, res) => {
+authRouter.post("/login", authLimiter, validate(loginSchema), asyncHandler(async (req, res) => {
   const { email, password } = req.body;
   const user = await prisma.user.findUnique({ where: { email } });
   if (!user) {

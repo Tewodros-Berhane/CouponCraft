@@ -1,5 +1,4 @@
 import { Router } from "express";
-import rateLimit from "express-rate-limit";
 import { prisma } from "../db/prisma.js";
 import { requireAuth } from "../middlewares/auth.js";
 import { validate } from "../middlewares/validate.js";
@@ -7,6 +6,7 @@ import { createShareSchema } from "../validators.js";
 import { config, sanitizeOrigin } from "../config.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { createShareForCoupon, mapShareSummary } from "../services/shareService.js";
+import { createRateLimiter } from "../utils/rateLimit.js";
 
 export const sharesRouter = Router();
 
@@ -22,11 +22,16 @@ const resolveShareOrigin = (req) => {
   return sanitizeOrigin(first) || "http://localhost:5173";
 };
 
-const trackLimiter = rateLimit({
+const clampInt = (value, { min, max, fallback }) => {
+  const parsed = parseInt(value, 10);
+  if (!Number.isFinite(parsed)) return fallback;
+  return Math.min(Math.max(parsed, min), max);
+};
+
+const trackLimiter = createRateLimiter({
   windowMs: 60 * 1000,
   limit: 60,
-  standardHeaders: true,
-  legacyHeaders: false,
+  keyPrefix: "share-track",
 });
 
 // Public tracking endpoint
@@ -63,11 +68,29 @@ sharesRouter.get("/:couponId", requireAuth, asyncHandler(async (req, res) => {
   if (!business || coupon.businessId !== business.id) {
     return res.status(403).json({ message: "Access denied" });
   }
-  const shares = await prisma.share.findMany({
-    where: { couponId: coupon.id, type: { in: ["link", "qr"] } },
-    orderBy: { createdAt: "desc" },
+  const page = clampInt(req.query?.page, { min: 1, max: 1000, fallback: 1 });
+  const limit = clampInt(req.query?.limit, { min: 1, max: 100, fallback: 50 });
+  const skip = (page - 1) * limit;
+
+  const [shares, total] = await Promise.all([
+    prisma.share.findMany({
+      where: { couponId: coupon.id, type: { in: ["link", "qr"] } },
+      orderBy: { createdAt: "desc" },
+      skip,
+      take: limit,
+    }),
+    prisma.share.count({ where: { couponId: coupon.id, type: { in: ["link", "qr"] } } }),
+  ]);
+
+  return res.json({
+    data: shares.map(mapShareSummary),
+    pagination: {
+      page,
+      limit,
+      total,
+      pages: Math.ceil(total / limit),
+    },
   });
-  return res.json({ data: shares.map(mapShareSummary) });
 }));
 
 sharesRouter.post("/", requireAuth, validate(createShareSchema), asyncHandler(async (req, res) => {

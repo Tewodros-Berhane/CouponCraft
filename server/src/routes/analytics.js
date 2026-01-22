@@ -1,6 +1,5 @@
 import { Router } from "express";
 import { nanoid } from "nanoid";
-import rateLimit from "express-rate-limit";
 import { prisma } from "../db/prisma.js";
 import { validate } from "../middlewares/validate.js";
 import { analyticsEventSchema } from "../validators.js";
@@ -8,14 +7,15 @@ import { requireAuth } from "../middlewares/auth.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { calculateConversion, getShareAnalytics } from "../services/analyticsService.js";
 import { isCouponActive } from "../utils/couponStatus.js";
+import { createRateLimiter } from "../utils/rateLimit.js";
+import { getCache, setCache } from "../utils/cache.js";
 
 export const analyticsRouter = Router();
 
-const ingestLimiter = rateLimit({
+const ingestLimiter = createRateLimiter({
   windowMs: 60 * 1000,
-  limit: 60,
-  standardHeaders: true,
-  legacyHeaders: false,
+  limit: 30,
+  keyPrefix: "analytics-ingest",
 });
 
 const clampInt = (value, { min, max, fallback }) => {
@@ -23,6 +23,8 @@ const clampInt = (value, { min, max, fallback }) => {
   if (!Number.isFinite(parsed)) return fallback;
   return Math.min(Math.max(parsed, min), max);
 };
+
+const dashboardCacheTtlMs = 60 * 1000;
 
 // Public ingestion endpoint
 analyticsRouter.post("/events", ingestLimiter, validate(analyticsEventSchema), asyncHandler(async (req, res) => {
@@ -58,6 +60,9 @@ analyticsRouter.get("/dashboard", requireAuth, asyncHandler(async (req, res) => 
 
   const days = clampInt(req.query?.days, { min: 1, max: 365, fallback: 30 });
   const since = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
+  const cacheKey = `dashboard:${business.id}:${days}`;
+  const cached = getCache(cacheKey);
+  if (cached) return res.json({ data: cached });
 
   const coupons = await prisma.coupon.findMany({
     where: { businessId: business.id },
@@ -82,15 +87,15 @@ analyticsRouter.get("/dashboard", requireAuth, asyncHandler(async (req, res) => 
   });
 
   if (couponIds.length === 0) {
-    return res.json({
-      data: {
-        totalsByCoupon: {},
-        totals: { views: 0, clicks: 0, redemptions: 0, total: 0, conversionRate: 0 },
-        series: [],
-        window: { days, since },
-        counts,
-      },
-    });
+    const responseData = {
+      totalsByCoupon: {},
+      totals: { views: 0, clicks: 0, redemptions: 0, total: 0, conversionRate: 0 },
+      series: [],
+      window: { days, since },
+      counts,
+    };
+    setCache(cacheKey, responseData, dashboardCacheTtlMs);
+    return res.json({ data: responseData });
   }
 
   const [totalsGrouped, eventsForSeries] = await Promise.all([
@@ -153,7 +158,9 @@ analyticsRouter.get("/dashboard", requireAuth, asyncHandler(async (req, res) => 
   });
   totals.conversionRate = calculateConversion(totals.clicks, totals.redemptions);
 
-  return res.json({ data: { totalsByCoupon, totals, series, window: { days, since }, counts } });
+  const responseData = { totalsByCoupon, totals, series, window: { days, since }, counts };
+  setCache(cacheKey, responseData, dashboardCacheTtlMs);
+  return res.json({ data: responseData });
 }));
 
 // Authenticated: per-share analytics for a single share.
@@ -181,16 +188,45 @@ analyticsRouter.get("/coupons/:couponId", requireAuth, asyncHandler(async (req, 
   if (!business || coupon.businessId !== business.id) {
     return res.status(403).json({ message: "Access denied" });
   }
-  const events = await prisma.analyticsEvent.findMany({
-    where: { couponId: coupon.id },
-  });
-  const summary = events.reduce(
-    (acc, ev) => {
-      acc.total += 1;
-      acc[ev.eventType] = (acc[ev.eventType] || 0) + 1;
+  const page = clampInt(req.query?.page, { min: 1, max: 1000, fallback: 1 });
+  const limit = clampInt(req.query?.limit, { min: 1, max: 100, fallback: 50 });
+  const skip = (page - 1) * limit;
+
+  const [events, total, grouped] = await Promise.all([
+    prisma.analyticsEvent.findMany({
+      where: { couponId: coupon.id },
+      orderBy: { createdAt: "desc" },
+      skip,
+      take: limit,
+    }),
+    prisma.analyticsEvent.count({ where: { couponId: coupon.id } }),
+    prisma.analyticsEvent.groupBy({
+      by: ["eventType"],
+      where: { couponId: coupon.id },
+      _count: { _all: true },
+    }),
+  ]);
+
+  const summary = grouped.reduce(
+    (acc, row) => {
+      const count = row._count?._all || 0;
+      acc.total += count;
+      acc[row.eventType] = count;
       return acc;
     },
     { total: 0 }
   );
-  return res.json({ data: { events, summary } });
+
+  return res.json({
+    data: {
+      events,
+      summary,
+      pagination: {
+        page,
+        limit,
+        total,
+        pages: Math.ceil(total / limit),
+      },
+    },
+  });
 }));

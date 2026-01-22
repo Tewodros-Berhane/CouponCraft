@@ -113,4 +113,5 @@ model RedeemToken {
 
   @@index([shareId])
   @@index([couponId])
+  @@index([expiresAt])
 }
