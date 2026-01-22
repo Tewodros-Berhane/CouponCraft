@@ -1,7 +1,54 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
+import api from '../../../apiClient';
 import Icon from '../../../components/AppIcon';
 
 const ValidationPanel = ({ couponData }) => {
+  const [shareLink, setShareLink] = useState(null);
+  const [shareLinkStatus, setShareLinkStatus] = useState('idle');
+
+  useEffect(() => {
+    let isMounted = true;
+
+    const loadShareLink = async () => {
+      if (!couponData?.id) {
+        if (isMounted) {
+          setShareLink(null);
+          setShareLinkStatus('idle');
+        }
+        return;
+      }
+
+      setShareLinkStatus('loading');
+      try {
+        const { data } = await api.post('/shares', {
+          couponId: couponData.id,
+          type: 'link',
+        });
+        const resolvedLink = data?.data?.shareUrl || data?.data?.config?.shareUrl || null;
+        if (isMounted) {
+          setShareLink(resolvedLink);
+          setShareLinkStatus(resolvedLink ? 'ready' : 'empty');
+        }
+      } catch {
+        if (isMounted) {
+          setShareLink(null);
+          setShareLinkStatus('error');
+        }
+      }
+    };
+
+    loadShareLink();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [couponData?.id]);
+
+  const shareLinkLabel = shareLink
+    ? shareLink
+    : shareLinkStatus === 'loading'
+      ? 'Generating share link...'
+      : 'Share link available after publish';
   const validationChecks = [
     {
       id: 'business_name',
@@ -187,7 +234,7 @@ const ValidationPanel = ({ couponData }) => {
           <div className="flex items-center justify-between">
             <span className="text-sm text-muted-foreground">Link</span>
             <span className="text-sm font-medium text-foreground text-primary truncate">
-              couponcraft.com/coupon/{couponData?.id || 'abc123'}
+              {shareLinkLabel}
             </span>
           </div>
         </div>

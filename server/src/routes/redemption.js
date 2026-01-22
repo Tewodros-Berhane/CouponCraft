@@ -6,8 +6,21 @@ import { hashRedeemToken } from "../utils/redeemToken.js";
 import { requireAuth } from "../middlewares/auth.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { recordRedemption, validateRedemptionEligibility } from "../services/redemptionService.js";
+import { createRateLimiter } from "../utils/rateLimit.js";
 
 export const redemptionRouter = Router();
+
+const validateLimiter = createRateLimiter({
+  windowMs: 60 * 1000,
+  limit: 60,
+  keyPrefix: "redemption-validate",
+});
+
+const confirmLimiter = createRateLimiter({
+  windowMs: 60 * 1000,
+  limit: 30,
+  keyPrefix: "redemption-confirm",
+});
 
 const httpError = (status, message) => {
   const err = new Error(message);
@@ -15,7 +28,7 @@ const httpError = (status, message) => {
   return err;
 };
 
-redemptionRouter.post("/validate", validate(redemptionValidateSchema), asyncHandler(async (req, res) => {
+redemptionRouter.post("/validate", validateLimiter, validate(redemptionValidateSchema), asyncHandler(async (req, res) => {
   const { couponId, customerRef } = req.body;
   const coupon = await prisma.coupon.findUnique({ where: { id: couponId } });
   if (!coupon) return res.status(404).json({ message: "Coupon not found" });
@@ -28,7 +41,7 @@ redemptionRouter.post("/validate", validate(redemptionValidateSchema), asyncHand
   });
 }));
 
-redemptionRouter.post("/confirm", validate(redemptionConfirmSchema), asyncHandler(async (req, res) => {
+redemptionRouter.post("/confirm", confirmLimiter, validate(redemptionConfirmSchema), asyncHandler(async (req, res) => {
   const { couponId, customerRef, context, shareId, redeemToken } = req.body;
   const coupon = await prisma.coupon.findUnique({ where: { id: couponId } });
   if (!coupon) return res.status(404).json({ message: "Coupon not found" });
