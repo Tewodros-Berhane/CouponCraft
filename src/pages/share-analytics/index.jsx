@@ -46,13 +46,13 @@ const ShareAnalytics = () => {
   }, [shareId]);
 
   const shareLabel = useMemo(() => {
-    const type = shareMeta?.type || shareMeta?.channel;
+    const type = shareMeta?.type || shareMeta?.channel || analytics?.shareType;
     if (type === 'qr') return 'QR Code';
     if (type === 'link') return 'Share Link';
     return 'Share';
-  }, [shareMeta]);
+  }, [analytics?.shareType, shareMeta]);
 
-  const shareUrl = shareMeta?.shareUrl || shareMeta?.config?.shareUrl || '';
+  const shareUrl = shareMeta?.shareUrl || shareMeta?.config?.shareUrl || analytics?.shareUrl || '';
   const shareTitle = couponMeta?.title || couponMeta?.name || 'Coupon';
 
   const clicks = analytics?.clicks ?? 0;
@@ -108,11 +108,15 @@ const ShareAnalytics = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 <div className="bg-card rounded-lg shadow-level-1 p-6">
                   <div className="text-sm text-muted-foreground">Clicks</div>
-                  <div className="text-2xl font-bold text-foreground">{formatNumber(clicks, '0')}</div>
+                  <div className="text-2xl font-bold text-foreground">
+                    {formatNumber(clicks, '0')}
+                  </div>
                 </div>
                 <div className="bg-card rounded-lg shadow-level-1 p-6">
                   <div className="text-sm text-muted-foreground">Redemptions</div>
-                  <div className="text-2xl font-bold text-foreground">{formatNumber(redemptions, '0')}</div>
+                  <div className="text-2xl font-bold text-foreground">
+                    {formatNumber(redemptions, '0')}
+                  </div>
                 </div>
                 <div className="bg-card rounded-lg shadow-level-1 p-6">
                   <div className="text-sm text-muted-foreground">Conversion Rate</div>
@@ -128,7 +132,11 @@ const ShareAnalytics = () => {
                 <div className="lg:col-span-2 bg-card rounded-lg shadow-level-1 p-6 space-y-4">
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center">
-                      <Icon name={shareLabel === 'QR Code' ? 'QrCode' : 'Link'} size={18} className="text-primary" />
+                      <Icon
+                        name={shareLabel === 'QR Code' ? 'QrCode' : 'Link'}
+                        size={18}
+                        className="text-primary"
+                      />
                     </div>
                     <div>
                       <div className="text-sm text-muted-foreground">Share Type</div>
@@ -145,13 +153,23 @@ const ShareAnalytics = () => {
                     <div className="text-sm text-muted-foreground">Share Link</div>
                     {shareUrl ? (
                       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                        <div className="text-sm font-medium text-foreground break-all">{shareUrl}</div>
-                        <Button variant="outline" size="sm" onClick={handleCopy} iconName="Copy" iconPosition="left">
+                        <div className="text-sm font-medium text-foreground break-all">
+                          {shareUrl}
+                        </div>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={handleCopy}
+                          iconName="Copy"
+                          iconPosition="left"
+                        >
                           Copy link
                         </Button>
                       </div>
                     ) : (
-                      <div className="text-sm text-muted-foreground">No link available for this share.</div>
+                      <div className="text-sm text-muted-foreground">
+                        No link available for this share.
+                      </div>
                     )}
                   </div>
                 </div>
@@ -161,7 +179,9 @@ const ShareAnalytics = () => {
                   <div className="space-y-3 text-sm text-muted-foreground">
                     <div className="flex items-start gap-2">
                       <Icon name="CheckCircle" size={16} className="text-success mt-0.5" />
-                      <span>Use the share link in emails or social posts to improve click-through.</span>
+                      <span>
+                        Use the share link in emails or social posts to improve click-through.
+                      </span>
                     </div>
                     <div className="flex items-start gap-2">
                       <Icon name="CheckCircle" size={16} className="text-success mt-0.5" />
@@ -169,7 +189,9 @@ const ShareAnalytics = () => {
                     </div>
                     <div className="flex items-start gap-2">
                       <Icon name="CheckCircle" size={16} className="text-success mt-0.5" />
-                      <span>Monitor conversion rates weekly to spot high-performing campaigns.</span>
+                      <span>
+                        Monitor conversion rates weekly to spot high-performing campaigns.
+                      </span>
                     </div>
                   </div>
                 </div>

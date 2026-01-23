@@ -28,8 +28,9 @@ const CouponPreview = () => {
 
   const displayCoupon = couponData
     ? {
-        id: couponData?.id,
+        id: couponData?.id || couponId,
         businessName: couponData?.customization?.businessName || couponData?.businessName,
+        status: couponData?.status,
         businessType: couponData?.customization?.businessType || couponData?.customization?.title,
         discountType: couponData?.discount?.type === 'fixed' ? 'fixed' : 'percentage',
         discountValue:
@@ -45,14 +46,14 @@ const CouponPreview = () => {
         customization: couponData?.customization,
         discount: couponData?.discount,
         validity: couponData?.validity,
-         template: couponData?.template,
-       }
+        template: couponData?.template,
+      }
     : null;
 
   const tabs = [
     { id: 'preview', label: 'Device Preview', icon: 'Monitor' },
     { id: 'validation', label: 'Validation', icon: 'CheckCircle' },
-    { id: 'redemption', label: 'Customer Flow', icon: 'Users' }
+    { id: 'redemption', label: 'Customer Flow', icon: 'Users' },
   ];
 
   useEffect(() => {
@@ -61,31 +62,31 @@ const CouponPreview = () => {
   }, []);
 
   useEffect(() => {
-      const loadCoupon = async () => {
-        if (couponData) return;
-        if (!couponId) return;
-        setIsFetching(true);
-        try {
-          const { data } = await api.get(`/coupons/${couponId}`);
-          setCouponData(data?.data);
-        } catch (error) {
-          toast.error(getApiErrorMessage(error, 'Failed to load coupon'));
-        } finally {
-          setIsFetching(false);
-        }
-      };
-      loadCoupon();
-    }, [couponId, couponData]);
+    const loadCoupon = async () => {
+      if (couponData) return;
+      if (!couponId) return;
+      setIsFetching(true);
+      try {
+        const { data } = await api.get(`/coupons/${couponId}`);
+        setCouponData(data?.data);
+      } catch (error) {
+        toast.error(getApiErrorMessage(error, 'Failed to load coupon'));
+      } finally {
+        setIsFetching(false);
+      }
+    };
+    loadCoupon();
+  }, [couponId, couponData]);
 
   // Preview is a business-only view; avoid recording customer analytics from this page.
 
   const handleEdit = () => {
-    navigate('/create-coupon', { 
-      state: { 
-        editMode: true, 
+    navigate('/create-coupon', {
+      state: {
+        editMode: true,
         couponData: couponData || displayCoupon,
         couponId: couponId || couponData?.id,
-      } 
+      },
     });
   };
 
@@ -228,7 +229,8 @@ const CouponPreview = () => {
                         onClick={() => handleTabChange(tab?.id)}
                         className={`flex items-center space-x-2 py-4 border-b-2 font-medium text-sm transition-colors duration-200 ${
                           activeTab === tab?.id
-                            ? 'border-primary text-primary' :'border-transparent text-muted-foreground hover:text-foreground hover:border-muted'
+                            ? 'border-primary text-primary'
+                            : 'border-transparent text-muted-foreground hover:text-foreground hover:border-muted'
                         }`}
                       >
                         <Icon name={tab?.icon} size={18} />
@@ -239,9 +241,7 @@ const CouponPreview = () => {
                 </div>
 
                 {/* Tab Content */}
-                <div className="p-6">
-                  {renderTabContent()}
-                </div>
+                <div className="p-6">{renderTabContent()}</div>
               </div>
             </div>
 
@@ -303,10 +303,7 @@ const CouponPreview = () => {
         {(isFetching || isExporting) && (
           <div className="fixed inset-0 bg-black/20 backdrop-blur-sm z-50 flex items-center justify-center">
             <div className="bg-white rounded-lg shadow-level-4 p-6 flex items-center space-x-3">
-              <Loader
-                label={isExporting ? "Exporting coupon" : "Loading coupon"}
-                showLabel
-              />
+              <Loader label={isExporting ? 'Exporting coupon' : 'Loading coupon'} showLabel />
             </div>
           </div>
         )}

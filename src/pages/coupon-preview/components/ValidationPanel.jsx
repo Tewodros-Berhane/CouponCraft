@@ -6,14 +6,16 @@ const ValidationPanel = ({ couponData }) => {
   const [shareLink, setShareLink] = useState(null);
   const [shareLinkStatus, setShareLinkStatus] = useState('idle');
 
+  const canGenerateShare = couponData?.status === 'active';
+
   useEffect(() => {
     let isMounted = true;
 
     const loadShareLink = async () => {
-      if (!couponData?.id) {
+      if (!couponData?.id || !canGenerateShare) {
         if (isMounted) {
           setShareLink(null);
-          setShareLinkStatus('idle');
+          setShareLinkStatus(canGenerateShare ? 'idle' : 'disabled');
         }
         return;
       }
@@ -42,92 +44,109 @@ const ValidationPanel = ({ couponData }) => {
     return () => {
       isMounted = false;
     };
-  }, [couponData?.id]);
+  }, [couponData?.id, canGenerateShare]);
 
   const shareLinkLabel = shareLink
     ? shareLink
     : shareLinkStatus === 'loading'
       ? 'Generating share link...'
-      : 'Share link available after publish';
+      : shareLinkStatus === 'error'
+        ? 'Unable to load share link'
+        : canGenerateShare
+          ? 'Share link not available'
+          : 'Publish coupon to generate share link';
   const validationChecks = [
     {
       id: 'business_name',
       label: 'Business Name',
       status: couponData?.businessName ? 'valid' : 'invalid',
       message: couponData?.businessName ? 'Business name is set' : 'Business name is required',
-      required: true
+      required: true,
     },
     {
       id: 'discount_value',
       label: 'Discount Value',
       status: couponData?.discountValue ? 'valid' : 'invalid',
-      message: couponData?.discountValue ? 'Discount value is configured' : 'Discount value is required',
-      required: true
+      message: couponData?.discountValue
+        ? 'Discount value is configured'
+        : 'Discount value is required',
+      required: true,
     },
     {
       id: 'expiry_date',
       label: 'Expiry Date',
       status: couponData?.expiryDate ? 'valid' : 'warning',
       message: couponData?.expiryDate ? 'Expiry date is set' : 'Consider setting an expiry date',
-      required: false
+      required: false,
     },
     {
       id: 'description',
       label: 'Description',
       status: couponData?.description ? 'valid' : 'warning',
-      message: couponData?.description ? 'Description is provided' : 'Description helps customers understand the offer',
-      required: false
+      message: couponData?.description
+        ? 'Description is provided'
+        : 'Description helps customers understand the offer',
+      required: false,
     },
     {
       id: 'minimum_order',
       label: 'Minimum Order',
       status: couponData?.minimumOrder ? 'valid' : 'warning',
-      message: couponData?.minimumOrder ? 'Minimum order amount is set' : 'Consider setting a minimum order amount',
-      required: false
+      message: couponData?.minimumOrder
+        ? 'Minimum order amount is set'
+        : 'Consider setting a minimum order amount',
+      required: false,
     },
     {
       id: 'usage_limit',
       label: 'Usage Limit',
       status: couponData?.usageLimit ? 'valid' : 'warning',
-      message: couponData?.usageLimit ? 'Usage limit is configured' : 'Consider setting a usage limit',
-      required: false
-    }
+      message: couponData?.usageLimit
+        ? 'Usage limit is configured'
+        : 'Consider setting a usage limit',
+      required: false,
+    },
   ];
 
   const optimizationSuggestions = [
     {
       id: 'share_link',
       title: 'Share Link Ready',
-      description: 'Your coupon is formatted for fast link sharing with clear visuals and contrast.',
+      description:
+        'Your coupon is formatted for fast link sharing with clear visuals and contrast.',
       status: 'good',
-      icon: 'Link'
+      icon: 'Link',
     },
     {
       id: 'mobile_friendly',
       title: 'Mobile Friendly',
       description: 'Coupon design adapts well to mobile devices with readable text and clear CTAs.',
       status: 'good',
-      icon: 'Smartphone'
+      icon: 'Smartphone',
     },
     {
       id: 'print_ready',
       title: 'Print Quality',
-      description: 'High resolution export available for print materials and physical distribution.',
+      description:
+        'High resolution export available for print materials and physical distribution.',
       status: 'good',
-      icon: 'Printer'
+      icon: 'Printer',
     },
     {
       id: 'accessibility',
       title: 'Accessibility',
-      description: couponData?.primaryColor ? 'Good color contrast for accessibility compliance.' : 'Consider using higher contrast colors for better accessibility.',
+      description: couponData?.primaryColor
+        ? 'Good color contrast for accessibility compliance.'
+        : 'Consider using higher contrast colors for better accessibility.',
       status: couponData?.primaryColor ? 'good' : 'warning',
-      icon: 'Eye'
-    }
+      icon: 'Eye',
+    },
   ];
 
   const getStatusIcon = (status) => {
     switch (status) {
-      case 'valid': case'good':
+      case 'valid':
+      case 'good':
         return <Icon name="CheckCircle" size={16} className="text-success" />;
       case 'warning':
         return <Icon name="AlertTriangle" size={16} className="text-warning" />;
@@ -138,9 +157,11 @@ const ValidationPanel = ({ couponData }) => {
     }
   };
 
-  const validCount = validationChecks?.filter(check => check?.status === 'valid')?.length;
-  const totalRequired = validationChecks?.filter(check => check?.required)?.length;
-  const requiredValid = validationChecks?.filter(check => check?.required && check?.status === 'valid')?.length;
+  const validCount = validationChecks?.filter((check) => check?.status === 'valid')?.length;
+  const totalRequired = validationChecks?.filter((check) => check?.required)?.length;
+  const requiredValid = validationChecks?.filter(
+    (check) => check?.required && check?.status === 'valid'
+  )?.length;
 
   return (
     <div className="space-y-6">
@@ -201,9 +222,7 @@ const ValidationPanel = ({ couponData }) => {
         <div className="space-y-4">
           {optimizationSuggestions?.map((suggestion) => (
             <div key={suggestion?.id} className="flex items-start space-x-3">
-              <div className="flex-shrink-0">
-                {getStatusIcon(suggestion?.status)}
-              </div>
+              <div className="flex-shrink-0">{getStatusIcon(suggestion?.status)}</div>
               <div className="flex-1 min-w-0">
                 <div className="flex items-center space-x-2">
                   <Icon name={suggestion?.icon} size={16} className="text-muted-foreground" />

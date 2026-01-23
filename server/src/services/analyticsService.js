@@ -1,4 +1,4 @@
-import { prisma } from "../db/prisma.js";
+import { prisma } from '../db/prisma.js';
 
 export const calculateConversion = (clicks, redemptions) => {
   const safeClicks = Number(clicks) || 0;
@@ -13,12 +13,12 @@ export const getShareAnalytics = async (shareId) => {
 
   const [grouped, lastEvent] = await Promise.all([
     prisma.analyticsEvent.groupBy({
-      by: ["eventType"],
+      by: ['eventType'],
       where: {
         couponId: share.couponId,
-        eventType: { in: ["click", "redemption"] },
+        eventType: { in: ['click', 'redemption'] },
         meta: {
-          path: ["shareId"],
+          path: ['shareId'],
           equals: shareId,
         },
       },
@@ -28,11 +28,11 @@ export const getShareAnalytics = async (shareId) => {
       where: {
         couponId: share.couponId,
         meta: {
-          path: ["shareId"],
+          path: ['shareId'],
           equals: shareId,
         },
       },
-      orderBy: { createdAt: "desc" },
+      orderBy: { createdAt: 'desc' },
       select: { createdAt: true },
     }),
   ]);
@@ -41,14 +41,16 @@ export const getShareAnalytics = async (shareId) => {
   let redemptions = 0;
   grouped.forEach((row) => {
     const count = row?._count?._all || 0;
-    if (row.eventType === "click") clicks = count;
-    if (row.eventType === "redemption") redemptions = count;
+    if (row.eventType === 'click') clicks = count;
+    if (row.eventType === 'redemption') redemptions = count;
   });
 
   const conversionRate = calculateConversion(clicks, redemptions);
 
   return {
     shareId: share.id,
+    shareType: share.type,
+    shareUrl: share?.config?.shareUrl || null,
     clicks,
     redemptions,
     conversionRate,
