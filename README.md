@@ -77,8 +77,10 @@ API: `http://localhost:8080`
 #### API (server)
 
 1. Create a Vercel project with root directory set to `server`.
-2. Build command: `npm run vercel-build`.
-3. Environment variables (minimum):
+2. Framework preset: Node.js (or Other).
+3. Build command: `npm run vercel-build`.
+4. Output directory: leave empty (do not set `build` or `dist`).
+5. Environment variables (minimum):
    - `DATABASE_URL`
    - Or, when using Vercel Postgres, ensure `POSTGRES_PRISMA_URL` (or `POSTGRES_URL`) is present
    - `JWT_SECRET`
@@ -86,16 +88,17 @@ API: `http://localhost:8080`
    - `COOKIE_SECURE=true`
    - `COOKIE_SAMESITE=none`
    - `UPLOADS_ENABLED=false`
-4. Deploy and verify: `https://<api-domain>/api/health/healthz`.
+6. Deploy and verify: `https://<api-domain>/api/health/healthz`.
 
 #### Client (frontend)
 
 1. Create a second Vercel project with root directory set to `.`.
-2. Build command: `npm run build`.
-3. Output directory: `build`.
-4. Environment variables:
+2. Framework preset: Vite (or Other).
+3. Build command: `npm run build`.
+4. Output directory: `build`.
+5. Environment variables:
    - `VITE_API_URL=https://<api-domain>/api`
-5. Deploy and test sign-in + share flow.
+6. Deploy and test sign-in + share flow.
 
 #### Uploads in production
 
@@ -103,4 +106,4 @@ Uploads currently store assets on local disk. For Vercel, switch to a persistent
 
 ## Support
 
-Need help? Reach out at support@couponcraft.app.
+Need help? Reach out at tewodrosberhaneabraha@gmail.com.
