@@ -18,7 +18,11 @@ const BusinessDashboard = () => {
   const [chartData, setChartData] = useState([]);
   const [analyticsByCoupon, setAnalyticsByCoupon] = useState({});
   const [analyticsRange, setAnalyticsRange] = useState('30d');
-  const [dashboardTotals, setDashboardTotals] = useState({ clicks: 0, redemptions: 0, conversionRate: 0 });
+  const [dashboardTotals, setDashboardTotals] = useState({
+    clicks: 0,
+    redemptions: 0,
+    conversionRate: 0,
+  });
   const { user } = useAuth();
   const toast = useToast();
 
@@ -56,35 +60,35 @@ const BusinessDashboard = () => {
 
     return [
       {
-        title: "Active Coupons",
+        title: 'Active Coupons',
         value: active.toString(),
         change: `${active} active`,
-        changeType: active > 0 ? "positive" : "neutral",
-        icon: "Ticket",
+        changeType: active > 0 ? 'positive' : 'neutral',
+        icon: 'Ticket',
         trend: toTrend(active * 10),
       },
       {
-        title: "Expired Coupons",
+        title: 'Expired Coupons',
         value: expired.toString(),
         change: `${expired} expired`,
-        changeType: expired > 0 ? "negative" : "neutral",
-        icon: "Clock",
+        changeType: expired > 0 ? 'negative' : 'neutral',
+        icon: 'Clock',
         trend: toTrend(expired * 10),
       },
       {
-        title: "Drafts",
+        title: 'Drafts',
         value: draft.toString(),
         change: `${draft} in progress`,
-        changeType: "neutral",
-        icon: "ClipboardList",
+        changeType: 'neutral',
+        icon: 'ClipboardList',
         trend: toTrend(draft * 10),
       },
       {
-        title: "Total Coupons",
+        title: 'Total Coupons',
         value: total.toString(),
-        change: "All time",
-        changeType: "neutral",
-        icon: "Layers",
+        change: 'All time',
+        changeType: 'neutral',
+        icon: 'Layers',
         trend: toTrend(total * 10),
       },
     ];
@@ -100,7 +104,7 @@ const BusinessDashboard = () => {
         const fallbackCounts = buildCountsFallback(list);
         setMetricsData(buildMetrics(fallbackCounts));
       } catch (err) {
-        toast.error(getApiErrorMessage(err, "Failed to load dashboard data"));
+        toast.error(getApiErrorMessage(err, 'Failed to load dashboard data'));
       } finally {
         setIsLoading(false);
       }
@@ -117,13 +121,24 @@ const BusinessDashboard = () => {
       try {
         const dashboard = await api.get(`/analytics/dashboard?days=${days}`);
         const totalsByCoupon = dashboard?.data?.data?.totalsByCoupon || {};
-        const totals = dashboard?.data?.data?.totals || { clicks: 0, redemptions: 0, total: 0, conversionRate: 0 };
+        const totals = dashboard?.data?.data?.totals || {
+          clicks: 0,
+          redemptions: 0,
+          total: 0,
+          conversionRate: 0,
+        };
         const series = dashboard?.data?.data?.series || [];
         const counts = dashboard?.data?.data?.counts || buildCountsFallback(coupons);
 
         const analyticsMap = {};
         coupons.forEach((c) => {
-          const t = totalsByCoupon?.[c.id] || { views: 0, clicks: 0, redemptions: 0, total: 0, conversionRate: 0 };
+          const t = totalsByCoupon?.[c.id] || {
+            views: 0,
+            clicks: 0,
+            redemptions: 0,
+            total: 0,
+            conversionRate: 0,
+          };
           analyticsMap[c.id] = { totals: t };
         });
         setAnalyticsByCoupon(analyticsMap);
@@ -143,7 +158,7 @@ const BusinessDashboard = () => {
         });
         setMetricsData(buildMetrics(counts));
       } catch (err) {
-        toast.error(getApiErrorMessage(err, "Some analytics could not be loaded"));
+        toast.error(getApiErrorMessage(err, 'Some analytics could not be loaded'));
         setAnalyticsByCoupon({});
         setChartData([]);
         setDashboardTotals({ clicks: 0, redemptions: 0, conversionRate: 0 });
@@ -164,7 +179,7 @@ const BusinessDashboard = () => {
       id: c.id,
       name: c.customization?.title || 'Untitled coupon',
       discount: formatDiscount(c.discount),
-      redemptions: totals.redemptions || "0",
+      redemptions: totals.redemptions || '0',
       limit: c.validity?.totalLimit || c.validity?.usageLimit || 'unlimited',
       expiration: c.validity?.endDate || 'N/A',
       status: c.status,
@@ -184,6 +199,29 @@ const BusinessDashboard = () => {
     })
     .sort((a, b) => b.performance - a.performance)
     .slice(0, 4);
+
+  const handleDeleteCoupon = async (coupon) => {
+    if (!coupon?.id) return false;
+    try {
+      await api.delete(`/coupons/${coupon.id}`);
+      setCoupons((prev) => {
+        const next = prev.filter((item) => item.id !== coupon.id);
+        const fallbackCounts = buildCountsFallback(next);
+        setMetricsData(buildMetrics(fallbackCounts));
+        return next;
+      });
+      setAnalyticsByCoupon((prev) => {
+        const next = { ...(prev || {}) };
+        delete next[coupon.id];
+        return next;
+      });
+      toast.success('Coupon deleted');
+      return true;
+    } catch (err) {
+      toast.error(getApiErrorMessage(err, 'Failed to delete coupon'));
+      return false;
+    }
+  };
 
   if (isLoading) {
     return (
@@ -240,8 +278,8 @@ const BusinessDashboard = () => {
 
           {/* Main Content Grid */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
-             {/* Left Column - Charts and Tables */}
-             <div className="lg:col-span-2 space-y-8">
+            {/* Left Column - Charts and Tables */}
+            <div className="lg:col-span-2 space-y-8">
               <RedemptionChart
                 data={chartData}
                 timeRange={analyticsRange}
@@ -249,7 +287,10 @@ const BusinessDashboard = () => {
                 loading={isAnalyticsLoading}
                 summary={dashboardTotals}
               />
-              <CouponActivityTable coupons={couponActivityData} />
+              <CouponActivityTable
+                coupons={couponActivityData}
+                onDeleteCoupon={handleDeleteCoupon}
+              />
             </div>
 
             {/* Right Column - Quick Actions and Performance */}

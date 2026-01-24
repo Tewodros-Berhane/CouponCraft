@@ -6,13 +6,24 @@ import IconButton from '../../../components/ui/IconButton';
 import Input from '../../../components/ui/Input';
 import Select from '../../../components/ui/Select';
 import EmptyState from '../../../components/ui/EmptyState';
+import {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '../../../components/ui/Dialog';
 
-const CouponActivityTable = ({ coupons }) => {
+const CouponActivityTable = ({ coupons, onDeleteCoupon }) => {
   const navigate = useNavigate();
   const [sortField, setSortField] = useState('name');
   const [sortDirection, setSortDirection] = useState('asc');
   const [query, setQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
+  const [deleteTarget, setDeleteTarget] = useState(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const getAriaSort = (field) => {
     if (sortField !== field) return 'none';
@@ -29,9 +40,9 @@ const CouponActivityTable = ({ coupons }) => {
       active: { color: 'bg-success/10 text-success', label: 'Active' },
       expired: { color: 'bg-error/10 text-error', label: 'Expired' },
       paused: { color: 'bg-warning/10 text-warning', label: 'Paused' },
-      draft: { color: 'bg-muted text-muted-foreground', label: 'Draft' }
+      draft: { color: 'bg-muted text-muted-foreground', label: 'Draft' },
     };
-    
+
     const config = statusConfig?.[status] || statusConfig?.draft;
     return (
       <span className={`px-2 py-1 rounded-full text-xs font-medium ${config?.color}`}>
@@ -64,6 +75,24 @@ const CouponActivityTable = ({ coupons }) => {
     navigate('/share-coupon', { state: { couponId: coupon.id } });
   };
 
+  const handleDeleteRequest = (coupon) => {
+    if (!coupon?.id) return;
+    setDeleteTarget(coupon);
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!deleteTarget || !onDeleteCoupon) return;
+    setIsDeleting(true);
+    try {
+      const removed = await onDeleteCoupon(deleteTarget);
+      if (removed) {
+        setDeleteTarget(null);
+      }
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
   const normalizedCoupons = Array.isArray(coupons) ? coupons : [];
   const normalizedQuery = query?.trim()?.toLowerCase();
 
@@ -79,7 +108,7 @@ const CouponActivityTable = ({ coupons }) => {
   const sortedCoupons = [...filteredCoupons]?.sort((a, b) => {
     let aValue = a?.[sortField];
     let bValue = b?.[sortField];
-    
+
     if (sortField === 'redemptions') {
       aValue = parseInt(aValue, 10) || 0;
       bValue = parseInt(bValue, 10) || 0;
@@ -87,7 +116,7 @@ const CouponActivityTable = ({ coupons }) => {
       aValue = String(aValue ?? '').toLowerCase();
       bValue = String(bValue ?? '').toLowerCase();
     }
-    
+
     if (sortDirection === 'asc') {
       return aValue > bValue ? 1 : aValue < bValue ? -1 : 0;
     } else {
@@ -136,8 +165,8 @@ const CouponActivityTable = ({ coupons }) => {
           </div>
         </div>
       </div>
-       {/* Desktop Table */}
-       <div className="hidden md:block overflow-x-auto">
+      {/* Desktop Table */}
+      <div className="hidden md:block overflow-x-auto">
         {sortedCoupons?.length === 0 ? (
           <EmptyState
             iconName="Inbox"
@@ -145,79 +174,101 @@ const CouponActivityTable = ({ coupons }) => {
             description="Try adjusting your search or filter."
           />
         ) : (
-         <table className="w-full">
-           <thead className="bg-muted/30">
-             <tr>
-              <th className="px-6 py-3 text-left" scope="col" aria-sort={getAriaSort('name')}>
-                <button
-                  type="button"
-                  onClick={() => handleSort('name')}
-                  className="flex items-center space-x-1 text-sm font-medium text-muted-foreground hover:text-foreground"
-                  aria-label={getSortButtonLabel('name', 'coupon name')}
+          <table className="w-full">
+            <thead className="bg-muted/30">
+              <tr>
+                <th className="px-6 py-3 text-left" scope="col" aria-sort={getAriaSort('name')}>
+                  <button
+                    type="button"
+                    onClick={() => handleSort('name')}
+                    className="flex items-center space-x-1 text-sm font-medium text-muted-foreground hover:text-foreground"
+                    aria-label={getSortButtonLabel('name', 'coupon name')}
+                  >
+                    <span>Coupon Name</span>
+                    <Icon name="ArrowUpDown" size={14} />
+                  </button>
+                </th>
+                <th
+                  className="px-6 py-3 text-left"
+                  scope="col"
+                  aria-sort={getAriaSort('redemptions')}
                 >
-                  <span>Coupon Name</span>
-                  <Icon name="ArrowUpDown" size={14} />
-                </button>
-              </th>
-              <th className="px-6 py-3 text-left" scope="col" aria-sort={getAriaSort('redemptions')}>
-                <button
-                  type="button"
-                  onClick={() => handleSort('redemptions')}
-                  className="flex items-center space-x-1 text-sm font-medium text-muted-foreground hover:text-foreground"
-                  aria-label={getSortButtonLabel('redemptions', 'redemptions')}
-                >
-                  <span>Redemptions</span>
-                  <Icon name="ArrowUpDown" size={14} />
-                </button>
-              </th>
-              <th className="px-6 py-3 text-left" scope="col">
-                <span className="text-sm font-medium text-muted-foreground">Expiration</span>
-              </th>
-              <th className="px-6 py-3 text-left" scope="col">
-                <span className="text-sm font-medium text-muted-foreground">Status</span>
-              </th>
-              <th className="px-6 py-3 text-left" scope="col">
-                <span className="text-sm font-medium text-muted-foreground">Actions</span>
-              </th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-border">
-            {sortedCoupons?.map((coupon) => (
-              <tr key={coupon?.id} className="hover:bg-muted/20 transition-colors duration-150">
-                <td className="px-6 py-4">
-                  <div className="flex items-center space-x-3">
-                    <div className="w-10 h-10 bg-gradient-to-br from-primary to-accent rounded-lg flex items-center justify-center">
-                      <Icon name="Percent" size={16} className="text-white" />
-                    </div>
-                    <div>
-                      <p className="text-sm font-medium text-foreground">{coupon?.name}</p>
-                      <p className="text-xs text-muted-foreground">{coupon?.discount}</p>
-                    </div>
-                  </div>
-                </td>
-                <td className="px-6 py-4">
-                  <div className="flex items-center space-x-2">
-                    <span className="text-sm font-medium text-foreground">{coupon?.redemptions}</span>
-                    <span className="text-xs text-muted-foreground">/ {coupon?.limit}</span>
-                  </div>
-                </td>
-                <td className="px-6 py-4">
-                  <span className="text-sm text-muted-foreground">{coupon?.expiration}</span>
-                </td>
-                <td className="px-6 py-4">
-                  {getStatusBadge(coupon?.status)}
-                </td>
-                <td className="px-6 py-4">
-                  <div className="flex items-center space-x-2">
-                    <IconButton ariaLabel="View coupon" iconName="Eye" onClick={() => handleView(coupon)} />
-                    <IconButton ariaLabel="Edit coupon" iconName="Edit" onClick={() => handleEdit(coupon)} />
-                    <IconButton ariaLabel="Share coupon" iconName="Share" onClick={() => handleShare(coupon)} />
-                  </div>
-                </td>
+                  <button
+                    type="button"
+                    onClick={() => handleSort('redemptions')}
+                    className="flex items-center space-x-1 text-sm font-medium text-muted-foreground hover:text-foreground"
+                    aria-label={getSortButtonLabel('redemptions', 'redemptions')}
+                  >
+                    <span>Redemptions</span>
+                    <Icon name="ArrowUpDown" size={14} />
+                  </button>
+                </th>
+                <th className="px-6 py-3 text-left" scope="col">
+                  <span className="text-sm font-medium text-muted-foreground">Expiration</span>
+                </th>
+                <th className="px-6 py-3 text-left" scope="col">
+                  <span className="text-sm font-medium text-muted-foreground">Status</span>
+                </th>
+                <th className="px-6 py-3 text-left" scope="col">
+                  <span className="text-sm font-medium text-muted-foreground">Actions</span>
+                </th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody className="divide-y divide-border">
+              {sortedCoupons?.map((coupon) => (
+                <tr key={coupon?.id} className="hover:bg-muted/20 transition-colors duration-150">
+                  <td className="px-6 py-4">
+                    <div className="flex items-center space-x-3">
+                      <div className="w-10 h-10 bg-gradient-to-br from-primary to-accent rounded-lg flex items-center justify-center">
+                        <Icon name="Percent" size={16} className="text-white" />
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium text-foreground">{coupon?.name}</p>
+                        <p className="text-xs text-muted-foreground">{coupon?.discount}</p>
+                      </div>
+                    </div>
+                  </td>
+                  <td className="px-6 py-4">
+                    <div className="flex items-center space-x-2">
+                      <span className="text-sm font-medium text-foreground">
+                        {coupon?.redemptions}
+                      </span>
+                      <span className="text-xs text-muted-foreground">/ {coupon?.limit}</span>
+                    </div>
+                  </td>
+                  <td className="px-6 py-4">
+                    <span className="text-sm text-muted-foreground">{coupon?.expiration}</span>
+                  </td>
+                  <td className="px-6 py-4">{getStatusBadge(coupon?.status)}</td>
+                  <td className="px-6 py-4">
+                    <div className="flex items-center space-x-2">
+                      <IconButton
+                        ariaLabel="View coupon"
+                        iconName="Eye"
+                        onClick={() => handleView(coupon)}
+                      />
+                      <IconButton
+                        ariaLabel="Edit coupon"
+                        iconName="Edit"
+                        onClick={() => handleEdit(coupon)}
+                      />
+                      <IconButton
+                        ariaLabel="Share coupon"
+                        iconName="Share"
+                        onClick={() => handleShare(coupon)}
+                      />
+                      <IconButton
+                        ariaLabel="Delete coupon"
+                        iconName="Trash2"
+                        className="text-error hover:text-error"
+                        onClick={() => handleDeleteRequest(coupon)}
+                      />
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         )}
       </div>
       {/* Mobile Accordion */}
@@ -244,27 +295,83 @@ const CouponActivityTable = ({ coupons }) => {
                 </div>
                 {getStatusBadge(coupon?.status)}
               </div>
-              
+
               <div className="grid grid-cols-2 gap-4 mb-3">
                 <div>
                   <p className="text-xs text-muted-foreground">Redemptions</p>
-                  <p className="text-sm font-medium text-foreground">{coupon?.redemptions} / {coupon?.limit}</p>
+                  <p className="text-sm font-medium text-foreground">
+                    {coupon?.redemptions} / {coupon?.limit}
+                  </p>
                 </div>
                 <div>
                   <p className="text-xs text-muted-foreground">Expires</p>
                   <p className="text-sm font-medium text-foreground">{coupon?.expiration}</p>
                 </div>
               </div>
-               
-               <div className="flex items-center space-x-2">
-                 <IconButton ariaLabel="View coupon" iconName="Eye" onClick={() => handleView(coupon)} />
-                 <IconButton ariaLabel="Edit coupon" iconName="Edit" onClick={() => handleEdit(coupon)} />
-                 <IconButton ariaLabel="Share coupon" iconName="Share" onClick={() => handleShare(coupon)} />
-               </div>
-             </div>
-           </div>
-         ))}
+
+              <div className="flex items-center space-x-2">
+                <IconButton
+                  ariaLabel="View coupon"
+                  iconName="Eye"
+                  onClick={() => handleView(coupon)}
+                />
+                <IconButton
+                  ariaLabel="Edit coupon"
+                  iconName="Edit"
+                  onClick={() => handleEdit(coupon)}
+                />
+                <IconButton
+                  ariaLabel="Share coupon"
+                  iconName="Share"
+                  onClick={() => handleShare(coupon)}
+                />
+                <IconButton
+                  ariaLabel="Delete coupon"
+                  iconName="Trash2"
+                  className="text-error hover:text-error"
+                  onClick={() => handleDeleteRequest(coupon)}
+                />
+              </div>
+            </div>
+          </div>
+        ))}
       </div>
+      <Dialog
+        open={Boolean(deleteTarget)}
+        onOpenChange={(open) => {
+          if (!open && !isDeleting) {
+            setDeleteTarget(null);
+          }
+        }}
+      >
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Delete coupon</DialogTitle>
+            <DialogDescription>
+              This will permanently remove the coupon and all related shares, redemptions, and
+              analytics.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="rounded-lg border border-border bg-muted/40 p-4 text-sm text-muted-foreground">
+            {deleteTarget?.name || 'Untitled coupon'}
+          </div>
+          <DialogFooter>
+            <DialogClose asChild>
+              <Button variant="outline" disabled={isDeleting}>
+                Cancel
+              </Button>
+            </DialogClose>
+            <Button
+              variant="danger"
+              onClick={handleDeleteConfirm}
+              loading={isDeleting}
+              disabled={isDeleting}
+            >
+              Delete
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
