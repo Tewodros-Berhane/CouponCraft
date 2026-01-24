@@ -1,5 +1,6 @@
-import React, { createContext, useContext, useEffect, useMemo, useState } from "react";
-import api from "./apiClient";
+import React, { createContext, useContext, useEffect, useMemo, useState } from 'react';
+import api from './apiClient';
+import { clearAuthTokens, getRefreshToken, setAuthTokens } from './utils/authTokens';
 
 const AuthContext = createContext(null);
 
@@ -11,7 +12,7 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => {
     const bootstrap = async () => {
       try {
-        const { data } = await api.get("/auth/me");
+        const { data } = await api.get('/auth/me');
         const payload = data?.data || data;
         setUser(payload?.user);
         setBusiness(payload?.business);
@@ -26,16 +27,22 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   const login = async (email, password) => {
-    const { data } = await api.post("/auth/login", { email, password });
+    const { data } = await api.post('/auth/login', { email, password });
     const payload = data?.data || data;
+    if (payload?.tokens?.accessToken) {
+      setAuthTokens(payload.tokens);
+    }
     setUser(payload?.user);
     setBusiness(payload?.business);
     return payload;
   };
 
   const register = async (payload) => {
-    const { data } = await api.post("/auth/register", payload);
+    const { data } = await api.post('/auth/register', payload);
     const result = data?.data || data;
+    if (result?.tokens?.accessToken) {
+      setAuthTokens(result.tokens);
+    }
     setUser(result?.user);
     setBusiness(result?.business);
     return result;
@@ -43,10 +50,12 @@ export const AuthProvider = ({ children }) => {
 
   const logout = async () => {
     try {
-      await api.post("/auth/logout");
+      const refreshToken = getRefreshToken();
+      await api.post('/auth/logout', refreshToken ? { refreshToken } : undefined);
     } catch {
       // ignore
     }
+    clearAuthTokens();
     setUser(null);
     setBusiness(null);
   };

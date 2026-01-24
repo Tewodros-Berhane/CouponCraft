@@ -1,8 +1,14 @@
-import axios from "axios";
+import axios from 'axios';
+import {
+  getAccessToken,
+  getRefreshToken,
+  setAuthTokens,
+  clearAuthTokens,
+} from './utils/authTokens';
 
 const resolveApiBaseUrl = () => {
   const configured = import.meta.env.VITE_API_URL;
-  if (!configured) return "/api";
+  if (!configured) return '/api';
 
   const isAbsolute = /^https?:\/\//i.test(configured);
   if (!isAbsolute) return configured;
@@ -17,9 +23,9 @@ const resolveApiBaseUrl = () => {
     if (
       currentOrigin &&
       url.origin !== currentOrigin &&
-      (url.hostname === "localhost" || url.hostname === "127.0.0.1")
+      (url.hostname === 'localhost' || url.hostname === '127.0.0.1')
     ) {
-      return "/api";
+      return '/api';
     }
 
     return configured;
@@ -35,27 +41,53 @@ let refreshPromise = null;
 const api = axios.create({
   baseURL: API_BASE_URL,
   withCredentials: true,
-  xsrfCookieName: "XSRF-TOKEN",
-  xsrfHeaderName: "X-XSRF-TOKEN",
+  xsrfCookieName: 'XSRF-TOKEN',
+  xsrfHeaderName: 'X-XSRF-TOKEN',
 });
 
 const authApi = axios.create({
   baseURL: API_BASE_URL,
   withCredentials: true,
-  xsrfCookieName: "XSRF-TOKEN",
-  xsrfHeaderName: "X-XSRF-TOKEN",
+  xsrfCookieName: 'XSRF-TOKEN',
+  xsrfHeaderName: 'X-XSRF-TOKEN',
 });
 
 const refreshAccessToken = async () => {
   if (!refreshPromise) {
+    const refreshToken = getRefreshToken();
     refreshPromise = authApi
-      .post("/auth/refresh")
+      .post('/auth/refresh', refreshToken ? { refreshToken } : undefined)
+      .then((response) => {
+        const tokens = response?.data?.data?.tokens;
+        if (tokens?.accessToken) {
+          setAuthTokens(tokens);
+        }
+        return response;
+      })
+      .catch((error) => {
+        clearAuthTokens();
+        throw error;
+      })
       .finally(() => {
         refreshPromise = null;
       });
   }
   return refreshPromise;
 };
+
+const applyAuthHeader = (config) => {
+  const token = getAccessToken();
+  if (token) {
+    config.headers = config.headers || {};
+    if (!config.headers.Authorization && !config.headers.authorization) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+  }
+  return config;
+};
+
+api.interceptors.request.use(applyAuthHeader);
+authApi.interceptors.request.use(applyAuthHeader);
 
 api.interceptors.response.use(
   (response) => response,
@@ -64,13 +96,20 @@ api.interceptors.response.use(
     const status = error?.response?.status;
     const code = error?.response?.data?.code;
     const message = error?.response?.data?.message;
-    const url = originalRequest?.url || "";
+    const url = originalRequest?.url || '';
+    const hasAccessToken = Boolean(getAccessToken());
 
     // If the caller isn't authenticated yet (common on first load), avoid a pointless refresh attempt.
-    if (status === 401 && (url.includes("/auth/me") || code === "AUTH_TOKEN_MISSING" || message === "Missing auth token")) {
+    if (
+      status === 401 &&
+      !hasAccessToken &&
+      (url.includes('/auth/me') ||
+        code === 'AUTH_TOKEN_MISSING' ||
+        message === 'Missing auth token')
+    ) {
       return Promise.reject(error);
     }
-    if (status === 401 && url.includes("/auth/refresh")) {
+    if (status === 401 && url.includes('/auth/refresh')) {
       return Promise.reject(error);
     }
     if (status === 401 && !originalRequest._retry) {
