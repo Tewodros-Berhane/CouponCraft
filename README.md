@@ -80,6 +80,7 @@ API: `http://localhost:8080`
 2. Build command: `npm run vercel-build`.
 3. Environment variables (minimum):
    - `DATABASE_URL`
+   - Or, when using Vercel Postgres, ensure `POSTGRES_PRISMA_URL` (or `POSTGRES_URL`) is present
    - `JWT_SECRET`
    - `CLIENT_ORIGIN` (your frontend URL)
    - `COOKIE_SECURE=true`

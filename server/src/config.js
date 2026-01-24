@@ -19,6 +19,12 @@ export const buildConfig = (env = {}) => {
   const envName = env.NODE_ENV || 'development';
   const clientOrigin = sanitizeOrigin(env.CLIENT_ORIGIN || 'http://localhost:5173');
   const corsOrigins = parseOriginList(env.CLIENT_ORIGIN || clientOrigin);
+  const databaseUrl =
+    env.DATABASE_URL ||
+    env.POSTGRES_PRISMA_URL ||
+    env.POSTGRES_URL_NON_POOLING ||
+    env.POSTGRES_URL ||
+    env.NEON_DATABASE_URL;
   const uploadsEnabled =
     typeof env.UPLOADS_ENABLED === 'string'
       ? env.UPLOADS_ENABLED === 'true'
@@ -35,7 +41,7 @@ export const buildConfig = (env = {}) => {
     jsonLimit: env.JSON_BODY_LIMIT || '1mb',
     uploadLimit: env.UPLOAD_BODY_LIMIT || '5mb',
     uploadsEnabled,
-    databaseUrl: env.DATABASE_URL,
+    databaseUrl,
     cookieSecure:
       typeof env.COOKIE_SECURE === 'string'
         ? env.COOKIE_SECURE === 'true'

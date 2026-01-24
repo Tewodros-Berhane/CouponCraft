@@ -1,11 +1,13 @@
-import { PrismaClient } from "@prisma/client";
-import { PrismaPg } from "@prisma/adapter-pg";
-import { Pool } from "pg";
-import { config } from "../config.js";
+import { PrismaClient } from '@prisma/client';
+import { PrismaPg } from '@prisma/adapter-pg';
+import { Pool } from 'pg';
+import { config } from '../config.js';
 
 const connectionString = config.databaseUrl;
 if (!connectionString) {
-  throw new Error("DATABASE_URL is not set");
+  throw new Error(
+    'Database URL is not set. Provide DATABASE_URL or POSTGRES_PRISMA_URL/POSTGRES_URL in the environment.'
+  );
 }
 
 const pool = globalThis.__prismaPool || new Pool({ connectionString });
